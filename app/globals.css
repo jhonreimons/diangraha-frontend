@@ -24,3 +24,8 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+#__next-build-watcher,
+.__next-build-indicator {
+  display: none !important;
+}
