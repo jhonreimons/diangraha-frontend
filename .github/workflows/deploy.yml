@@ -21,8 +21,9 @@ jobs:
             set -e
             
             # Setup aplikasi directory
-            if [ ! -d "/srv/myapp" ]; then
-              echo ">>> Initial clone repository"
+            if [ ! -d "/srv/myapp/.git" ]; then
+              echo ">>> Hapus folder lama dan clone fresh"
+              sudo rm -rf /srv/myapp
               git clone https://github.com/jhonreimons/diangraha-frontend.git /srv/myapp
             fi
             
