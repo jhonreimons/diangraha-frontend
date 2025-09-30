@@ -132,11 +132,6 @@ export default function ServicesSection() {
                     <div 
                         ref={scrollRef}
                         className="flex gap-8 overflow-x-auto scrollbar-hide pb-4 cursor-grab select-none"
-                        style={{
-                            scrollbarWidth: 'none',
-                            msOverflowStyle: 'none',
-                            WebkitScrollbar: { display: 'none' }
-                        }}
                     >
                         {/* Duplicate services untuk infinite scroll */}
                         {[...services, ...services].map((service, index) => (

@@ -1,17 +1,31 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  devIndicators: {
-    buildActivity: false,
-  },
+  output: 'standalone',
   images: {
-    domains: ["images.unsplash.com", "via.placeholder.com", "dummyimage.com", "cdn-icons-png.flaticon.com"],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'dummyimage.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn-icons-png.flaticon.com',
+      },
+    ],
+    unoptimized: false,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
-
 };
 
 export default nextConfig;
-

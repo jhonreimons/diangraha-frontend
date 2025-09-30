@@ -1,0 +1,33 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main   # jalankan otomatis kalau push ke branch main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Connect to VPS and deploy
+        uses: appleboy/[email protected]
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            echo ">>> Masuk ke folder aplikasi"
+            cd /srv/myapp || { git clone https://github.com/jhonreimons/diangraha-frontend.git /srv/myapp; cd /srv/myapp; }
+
+            echo ">>> Reset ke origin/main"
+            git fetch --all
+            git reset --hard origin/main
+
+            echo ">>> Build dan restart container"
+            docker compose up -d --build --remove-orphans
+
+            echo ">>> Bersihkan image tidak terpakai"
+            docker image prune -f
