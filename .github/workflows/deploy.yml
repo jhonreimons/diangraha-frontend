@@ -19,15 +19,24 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             set -e
+            
+            # Setup aplikasi directory
+            if [ ! -d "/srv/myapp" ]; then
+              echo ">>> Initial clone repository"
+              git clone https://github.com/jhonreimons/diangraha-frontend.git /srv/myapp
+            fi
+            
             echo ">>> Masuk ke folder aplikasi"
-            cd /srv/myapp || { git clone https://github.com/jhonreimons/diangraha-frontend.git /srv/myapp; cd /srv/myapp; }
-
-            echo ">>> Reset ke origin/main"
-            git fetch --all
+            cd /srv/myapp
+            
+            # Pastikan di branch main dan pull latest changes
+            echo ">>> Update ke versi terbaru"
+            git checkout main
+            git fetch origin main
             git reset --hard origin/main
 
             echo ">>> Build dan restart container"
             docker compose up -d --build --remove-orphans
 
-            echo ">>> Bersihkan image tidak terpakai"
+            echo ">>> Cleanup unused images"
             docker image prune -f
