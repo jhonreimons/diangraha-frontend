@@ -1,16 +1,29 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 
-const awards = [
-    { id: 1, title: "Award Best Partner" },
-    { id: 2, title: "Award Best Partner" },
-    { id: 3, title: "Award Best Partner" },
-    { id: 4, title: "Award Best Partner" },
-    { id: 5, title: "Award Best Partner" },
-    { id: 6, title: "Award Best Partner" },
+interface Award {
+    id: number;
+    title: string;
+    image?: string;
+    description?: string;
+}
+
+interface AchievementProps {
+    awards?: Award[];
+}
+
+// Default data sebagai fallback
+const defaultAwards: Award[] = [
+    { id: 1, title: "Award Best Partner", image: "https://dummyimage.com/80x80/ffd700/ffffff.png&text=🏅" },
+    { id: 2, title: "Award Best Partner", image: "https://dummyimage.com/80x80/ffd700/ffffff.png&text=🏅" },
+    { id: 3, title: "Award Best Partner", image: "https://dummyimage.com/80x80/ffd700/ffffff.png&text=🏅" },
+    { id: 4, title: "Award Best Partner", image: "https://dummyimage.com/80x80/ffd700/ffffff.png&text=🏅" },
+    { id: 5, title: "Award Best Partner", image: "https://dummyimage.com/80x80/ffd700/ffffff.png&text=🏅" },
+    { id: 6, title: "Award Best Partner", image: "https://dummyimage.com/80x80/ffd700/ffffff.png&text=🏅" },
 ];
 
-export default function Achievement() {
+export default function Achievement({ awards = defaultAwards }: AchievementProps) {
     const [page, setPage] = useState(0);
     const itemsPerPage = 4; // tampil 4 card per halaman
 
@@ -42,9 +55,11 @@ export default function Achievement() {
                                             key={award.id}
                                             className="border rounded-xl shadow-md p-6 flex flex-col items-center bg-white"
                                         >
-                                            <img
-                                                src="https://dummyimage.com/80x80/ffd700/ffffff.png&text=🏅"
-                                                alt="Award Icon"
+                                            <Image
+                                                src={award.image || "https://dummyimage.com/80x80/ffd700/ffffff.png&text=🏅"}
+                                                alt={award.title}
+                                                width={80}
+                                                height={80}
                                                 className="mb-4"
                                             />
                                             <p className="font-medium">{award.title}</p>

@@ -4,7 +4,20 @@ import { useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-const brands = [
+interface Brand {
+    id: number;
+    name: string;
+    img: string;
+    description?: string;
+    website?: string;
+}
+
+interface BrandsProps {
+    brands?: Brand[];
+}
+
+// Default data sebagai fallback
+const defaultBrands: Brand[] = [
     { id: 1, name: "Schneider Electric", img: "https://dummyimage.com/150x150/4f46e5/ffffff.png&text=Schneider" },
     { id: 2, name: "ABB", img: "https://dummyimage.com/150x150/dc2626/ffffff.png&text=ABB" },
     { id: 3, name: "Siemens", img: "https://dummyimage.com/150x150/059669/ffffff.png&text=Siemens" },
@@ -19,7 +32,7 @@ const brands = [
     { id: 12, name: "Danfoss", img: "https://dummyimage.com/150x150/374151/ffffff.png&text=Danfoss" },
 ];
 
-export default function Brands() {
+export default function Brands({ brands = defaultBrands }: BrandsProps) {
     const [index, setIndex] = useState(0);
     const itemsPerPage = 4;
 
