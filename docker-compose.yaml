@@ -1,4 +1,4 @@
-version: "3.8"
+# version: "3.8"
 services:
   web:
     build:
@@ -8,5 +8,5 @@ services:
     ports:
       - "80:3000"    
     env_file: 
-      - .env         
+      # - .env         
 
