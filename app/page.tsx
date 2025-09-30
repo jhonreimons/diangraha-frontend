@@ -11,12 +11,24 @@ export default function Home() {
   return (
     <main>
       <Navbar />
-      <Hero />
-      <Achievement />
-      <AboutUs />
-      <Brands />
-      <ServicesSection />
-      <ContactForm />
+      <section id="home">
+        <Hero />
+      </section>
+      <section id="achievements">
+        <Achievement />
+      </section>
+      <section id="about">
+        <AboutUs />
+      </section>
+      <section id="brands">
+        <Brands />
+      </section>
+      <section id="services">
+        <ServicesSection />
+      </section>
+      <section id="contact">
+        <ContactForm />
+      </section>
       <Footer />
     </main>
   );

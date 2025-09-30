@@ -42,11 +42,14 @@ export default function Brands({ brands = defaultBrands }: BrandsProps) {
     const prev = () => setIndex((prev) => (prev > 0 ? prev - 1 : prev));
 
     return (
-        <section className="py-16 bg-gray-50">
-            <div className="max-w-6xl mx-auto px-4 text-center">
-                <h2 className="text-2xl font-bold mb-2">Our Brands</h2>
+        <section className="py-20 md:py-24 bg-gray-50">
+            <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 text-center">
+                <h2 className="font-bold mb-6 text-gray-800" style={{fontSize: '25px'}}>Our Brands</h2>
+                <p className="text-gray-600 py-8 mb-8 max-w-4xl mx-auto leading-relaxed" style={{fontSize: '18px'}}>
+                    We're proud to work with companies of all sizes, from startups to Fortune 500 enterprises, helping them achieve their digital transformation goals.
+                </p>
 
-                <div className="mt-8">
+                <div className="mt-4">
                     {/* Carousel wrapper */}
                     <div className="overflow-hidden rounded-lg">
                         <div 

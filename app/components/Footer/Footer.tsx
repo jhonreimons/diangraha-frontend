@@ -2,10 +2,10 @@ import Image from "next/image";
 
 export default function Footer() {
     return (
-        <footer className="bg-blue-900 text-white py-12">
-            <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10">
+        <footer className="bg-blue-900 text-white py-8">
+            <div className="w-full px-2 grid grid-cols-1 md:grid-cols-5 gap-4">
                 {/* Company Info */}
-                <div>
+                <div className="md:col-span-2 ml-10">
                     <h3 className="text-lg font-bold mb-4">PT Dian Graha Elektrika</h3>
                     <p className="text-sm leading-relaxed">
                         Jl. Pahlawan Revolusi No.46b, RT.10/RW.3, Pd. Bambu, Kec. Duren
@@ -28,7 +28,7 @@ export default function Footer() {
                 </div>
 
                 {/* Jam Operasional */}
-                <div>
+                <div className="ml-12">
                     <h4 className="font-semibold mb-4">Jam Operasional</h4>
                     <p className="text-sm">Senin - Jumat: 08.00 – 17.00 WIB</p>
                     <p className="text-sm">Sabtu: 08.00 – 12.00 WIB</p>
@@ -36,7 +36,7 @@ export default function Footer() {
                 </div>
 
                 {/* Company */}
-                <div>
+                <div className="text-center">
                     <h4 className="font-semibold mb-4">Company</h4>
                     <ul className="space-y-2 text-sm">
                         <li><a href="#" className="hover:underline">About Us</a></li>
@@ -58,15 +58,15 @@ export default function Footer() {
             </div>
 
             {/* Bottom Section */}
-            <div className="max-w-6xl mx-auto px-6 flex justify-between items-center mt-10 pt-6 border-t border-blue-800">
+            <div className="w-full px-2 flex justify-between items-center mt-6 pt-4 border-t border-blue-800">
                 {/* Logo DGE sejajar dengan nama perusahaan */}
-                <div>
+                <div className="ml-8">
                     <h3 className="text-lg font-bold">DGE</h3>
                     <p className="text-sm">PT Dian Graha Elektrika</p>
                 </div>
                 
                 {/* Copyright di kanan */}
-                <div className="text-sm text-gray-300">
+                <div className="text-sm text-gray-300 mr-6">
                     © 2024 PT Dian Graha Elektrika. All rights reserved.
                 </div>
             </div>
