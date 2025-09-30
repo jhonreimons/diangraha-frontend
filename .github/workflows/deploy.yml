@@ -20,15 +20,17 @@ jobs:
           script: |
             set -e
             
-            # Setup aplikasi directory
-            if [ ! -d "/srv/myapp/.git" ]; then
+            # Setup aplikasi directory di home folder
+            APP_DIR="$HOME/myapp"
+            
+            if [ ! -d "$APP_DIR/.git" ]; then
               echo ">>> Hapus folder lama dan clone fresh"
-              sudo rm -rf /srv/myapp
-              git clone https://github.com/jhonreimons/diangraha-frontend.git /srv/myapp
+              rm -rf "$APP_DIR"
+              git clone https://github.com/jhonreimons/diangraha-frontend.git "$APP_DIR"
             fi
             
             echo ">>> Masuk ke folder aplikasi"
-            cd /srv/myapp
+            cd "$APP_DIR"
             
             # Pastikan di branch main dan pull latest changes
             echo ">>> Update ke versi terbaru"
