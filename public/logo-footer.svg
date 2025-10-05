@@ -1,0 +1,27 @@
+<svg width="180" height="45" viewBox="0 0 180 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main circle background -->
+  <circle cx="22.5" cy="22.5" r="21" fill="#1e40af" stroke="#ffffff" stroke-width="1"/>
+  
+  <!-- Inner design elements -->
+  <circle cx="22.5" cy="22.5" r="16.5" fill="none" stroke="#ffffff" stroke-width="0.5" opacity="0.3"/>
+  
+  <!-- Lightning/Electric symbol -->
+  <path d="M15 15 L26.25 15 L21 22.5 L30 22.5 L18.75 30 L24 22.5 L15 22.5 Z" fill="#ffffff"/>
+  
+  <!-- Decorative elements -->
+  <circle cx="22.5" cy="11.25" r="1.5" fill="#ffffff" opacity="0.6"/>
+  <circle cx="22.5" cy="33.75" r="1.5" fill="#ffffff" opacity="0.6"/>
+  <circle cx="11.25" cy="22.5" r="1" fill="#ffffff" opacity="0.4"/>
+  <circle cx="33.75" cy="22.5" r="1" fill="#ffffff" opacity="0.4"/>
+  
+  <!-- Company text -->
+  <text x="52.5" y="16.5" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#ffffff">
+    PT DIAN GRAHA
+  </text>
+  <text x="52.5" y="28.5" font-family="Arial, sans-serif" font-size="9" font-weight="normal" fill="#ffffff" opacity="0.9">
+    ELEKTRIKA
+  </text>
+  <text x="52.5" y="37.5" font-family="Arial, sans-serif" font-size="6" font-weight="normal" fill="#ffffff" opacity="0.7">
+    ELECTRICAL SOLUTIONS
+  </text>
+</svg>

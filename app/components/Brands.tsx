@@ -38,8 +38,8 @@ export default function Brands({ brands = defaultBrands }: BrandsProps) {
 
     const maxIndex = Math.ceil(brands.length / itemsPerPage) - 1;
 
-    const next = () => setIndex((prev) => (prev < maxIndex ? prev + 1 : prev));
-    const prev = () => setIndex((prev) => (prev > 0 ? prev - 1 : prev));
+    const next = () => setIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
+    const prev = () => setIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
 
     return (
         <section className="py-20 md:py-24 bg-gray-50">
@@ -49,9 +49,17 @@ export default function Brands({ brands = defaultBrands }: BrandsProps) {
                     We're proud to work with companies of all sizes, from startups to Fortune 500 enterprises, helping them achieve their digital transformation goals.
                 </p>
 
-                <div className="mt-4">
+                <div className="mt-4 relative">
+                    {/* Left Arrow */}
+                    <button
+                        onClick={prev}
+                        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white border-2 border-gray-200 rounded-full p-3 shadow-lg hover:bg-gray-50 hover:border-blue-300 transition-all duration-300"
+                    >
+                        <ChevronLeft className="w-5 h-5 text-gray-600" />
+                    </button>
+
                     {/* Carousel wrapper */}
-                    <div className="overflow-hidden rounded-lg">
+                    <div className="overflow-hidden rounded-lg mx-16">
                         <div 
                             className="flex transition-all duration-700 ease-in-out"
                             style={{ transform: `translateX(-${index * 100}%)` }}
@@ -61,7 +69,7 @@ export default function Brands({ brands = defaultBrands }: BrandsProps) {
                                     {brands
                                         .slice(pageIndex * itemsPerPage, (pageIndex + 1) * itemsPerPage)
                                         .map((brand) => (
-                                            <div key={brand.id} className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                                            <div key={brand.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-2xl transition-all duration-500 transform hover:scale-110 hover:-translate-y-3 border border-gray-200 hover:border-blue-300 group">
                                                 <Image
                                                     src={brand.img}
                                                     alt={brand.name}
@@ -78,23 +86,13 @@ export default function Brands({ brands = defaultBrands }: BrandsProps) {
                         </div>
                     </div>
 
-                    {/* Buttons - Di bawah carousel dan center */}
-                    <div className="flex justify-center items-center gap-4 mt-6">
-                        <button
-                            onClick={prev}
-                            disabled={index === 0}
-                            className="bg-white border-2 border-gray-200 rounded-full p-3 shadow-lg hover:bg-gray-50 hover:border-blue-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300"
-                        >
-                            <ChevronLeft className="w-5 h-5 text-gray-600" />
-                        </button>
-                        <button
-                            onClick={next}
-                            disabled={index === maxIndex}
-                            className="bg-white border-2 border-gray-200 rounded-full p-3 shadow-lg hover:bg-gray-50 hover:border-blue-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300"
-                        >
-                            <ChevronRight className="w-5 h-5 text-gray-600" />
-                        </button>
-                    </div>
+                    {/* Right Arrow */}
+                    <button
+                        onClick={next}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white border-2 border-gray-200 rounded-full p-3 shadow-lg hover:bg-gray-50 hover:border-blue-300 transition-all duration-300"
+                    >
+                        <ChevronRight className="w-5 h-5 text-gray-600" />
+                    </button>
                 </div>
             </div>
         </section>

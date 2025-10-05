@@ -59,10 +59,15 @@ export default function Footer() {
 
             {/* Bottom Section */}
             <div className="w-full px-2 flex justify-between items-center mt-6 pt-4 border-t border-blue-800">
-                {/* Logo DGE sejajar dengan nama perusahaan */}
-                <div className="ml-8">
-                    <h3 className="text-lg font-bold">DGE</h3>
-                    <p className="text-sm">PT Dian Graha Elektrika</p>
+                {/* Logo */}
+                <div className="ml-8 flex items-center">
+                    <Image
+                        src="/logo.svg"
+                        alt="PT Dian Graha Elektrika"
+                        width={120}
+                        height={36}
+                        className="h-8 w-auto"
+                    />
                 </div>
                 
                 {/* Copyright di kanan */}

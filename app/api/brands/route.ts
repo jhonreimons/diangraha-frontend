@@ -1,93 +1,80 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-// Static data untuk brands
-const brands = [
-  {
-    id: 1,
-    name: "Schneider Electric",
-    img: "https://dummyimage.com/150x150/4f46e5/ffffff.png&text=Schneider",
-    description: "Global leader in energy management and automation",
-    website: "https://schneider-electric.com"
-  },
-  {
-    id: 2,
-    name: "ABB",
-    img: "https://dummyimage.com/150x150/dc2626/ffffff.png&text=ABB",
-    description: "Technology leader in electrification and automation",
-    website: "https://abb.com"
-  },
-  {
-    id: 3,
-    name: "Siemens",
-    img: "https://dummyimage.com/150x150/059669/ffffff.png&text=Siemens",
-    description: "Industrial manufacturing and infrastructure solutions",
-    website: "https://siemens.com"
-  },
-  {
-    id: 4,
-    name: "Legrand",
-    img: "https://dummyimage.com/150x150/7c3aed/ffffff.png&text=Legrand",
-    description: "Electrical and digital building infrastructures",
-    website: "https://legrand.com"
-  },
-  {
-    id: 5,
-    name: "Eaton",
-    img: "https://dummyimage.com/150x150/ea580c/ffffff.png&text=Eaton",
-    description: "Power management solutions",
-    website: "https://eaton.com"
-  },
-  {
-    id: 6,
-    name: "Mitsubishi Electric",
-    img: "https://dummyimage.com/150x150/be123c/ffffff.png&text=Mitsubishi",
-    description: "Electrical and electronic equipment manufacturer",
-    website: "https://mitsubishielectric.com"
-  },
-  {
-    id: 7,
-    name: "Omron",
-    img: "https://dummyimage.com/150x150/0891b2/ffffff.png&text=Omron",
-    description: "Industrial automation and electronic components",
-    website: "https://omron.com"
-  },
-  {
-    id: 8,
-    name: "Phoenix Contact",
-    img: "https://dummyimage.com/150x150/65a30d/ffffff.png&text=Phoenix",
-    description: "Electrical connection and automation technology",
-    website: "https://phoenixcontact.com"
-  },
-  {
-    id: 9,
-    name: "Weidmuller",
-    img: "https://dummyimage.com/150x150/c2410c/ffffff.png&text=Weidmuller",
-    description: "Electrical connectivity and automation solutions",
-    website: "https://weidmuller.com"
-  },
-  {
-    id: 10,
-    name: "Rittal",
-    img: "https://dummyimage.com/150x150/1d4ed8/ffffff.png&text=Rittal",
-    description: "Enclosures, power distribution, and cooling systems",
-    website: "https://rittal.com"
-  },
-  {
-    id: 11,
-    name: "Fluke",
-    img: "https://dummyimage.com/150x150/facc15/000000.png&text=Fluke",
-    description: "Electronic test tools and software",
-    website: "https://fluke.com"
-  },
-  {
-    id: 12,
-    name: "Danfoss",
-    img: "https://dummyimage.com/150x150/374151/ffffff.png&text=Danfoss",
-    description: "Energy efficient solutions for heating, cooling, and motion",
-    website: "https://danfoss.com"
-  }
-];
+const BACKEND_URL = 'http://103.103.20.23:8080/api';
 
 export async function GET() {
-  return NextResponse.json(brands);
+  try {
+    const response = await fetch(`${BACKEND_URL}/brands`, {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Backend API error:', error);
+    return NextResponse.json({ error: 'Failed to fetch brands' }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    
+    const response = await fetch(`${BACKEND_URL}/brands`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const data = await response.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Backend API error:', error);
+    return NextResponse.json({ error: 'Failed to create brand' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const id = formData.get('id');
+    
+    const response = await fetch(`${BACKEND_URL}/brands/${id}`, {
+      method: 'PUT',
+      body: formData,
+    });
+    
+    const data = await response.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Backend API error:', error);
+    return NextResponse.json({ error: 'Failed to update brand' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { id } = await request.json();
+    
+    const response = await fetch(`${BACKEND_URL}/brands/delete/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id }),
+    });
+    
+    const data = await response.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Backend API error:', error);
+    return NextResponse.json({ error: 'Failed to delete brand' }, { status: 500 });
+  }
 }

@@ -57,7 +57,7 @@ const ServiceSection = () => {
                 
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {services.map((service) => (
-                        <div key={service.id} className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 text-center border border-gray-200">
+                        <div key={service.id} className="bg-white p-6 rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 text-center border border-gray-200 hover:border-blue-300 transform hover:-translate-y-2 hover:scale-105 group">
                             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 {service.icon}
                             </div>

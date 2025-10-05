@@ -77,7 +77,7 @@ export default function Achievement({ awards = defaultAwards }: AchievementProps
                                         key={`${award.id}-${Math.floor(index / awards.length)}`} 
                                         className="flex-shrink-0 w-1/4 px-3"
                                     >
-                                        <div className="border rounded-xl shadow-md p-6 flex flex-col items-center bg-white hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                                        <div className="border border-gray-200 rounded-xl shadow-md p-6 flex flex-col items-center bg-white hover:shadow-2xl transition-all duration-500 transform hover:scale-110 hover:-translate-y-3 hover:border-blue-300 group">
                                             <Image
                                                 src={award.image || "https://dummyimage.com/80x80/ffd700/ffffff.png&text=🏅"}
                                                 alt={award.title}
