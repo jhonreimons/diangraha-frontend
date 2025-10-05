@@ -1,5 +1,5 @@
-import { SERVER_BASE_URL } from './config';
-
+import { SERVER_BASE_URL  } from './config';
+import { API_BASE_URL } from './config';
 export interface LoginRequest {
   username: string;
   password: string;

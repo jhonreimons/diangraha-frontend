@@ -1,12 +1,27 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import AdminSidebar from "@/app/components/AdminSidebar";
 import AdminHeader from "@/app/components/AdminHeader";
-import { Plus, Edit, Trash2, ChevronLeft, ChevronRight, Search, ArrowUpDown } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  ArrowUpDown,
+} from "lucide-react";
 import Link from "next/link";
 import DeleteConfirmModal from "@/app/components/DeleteConfirmModal";
-import { API_BASE_URL, getImageUrl } from "@/lib/config";
+import { API_BASE_URL, safeImageUrl } from "@/lib/config";
+
+interface Brand {
+  id: number;
+  name: string;
+  logoUrl?: string | null;
+}
 
 export default function BrandManagementPage() {
   const [user, setUser] = useState<any>(null);
@@ -15,34 +30,32 @@ export default function BrandManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [brandToDelete, setBrandToDelete] = useState<any>(null);
-  const [brands, setBrands] = useState<any[]>([]);
+  const [brandToDelete, setBrandToDelete] = useState<Brand | null>(null);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [showLogoModal, setShowLogoModal] = useState(false);
-  const [selectedLogo, setSelectedLogo] = useState<{url: string, name: string} | null>(null);
+  const [selectedLogo, setSelectedLogo] = useState<{ url: string; name: string } | null>(null);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const { logout } = useAuth();
 
   const fetchBrands = async () => {
     try {
-      console.log('Fetching brands...');
-      const response = await fetch(`${API_BASE_URL}/brands`);
-      console.log('Response status:', response.status);
-      
+      const response = await fetch(`${API_BASE_URL}/brands`, {
+        cache: "no-store",
+      });
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
-      
+
       const data = await response.json();
-      console.log('Brands data:', data);
       setBrands(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching brands:', error);
-      // Use mock data as fallback
+      console.error("Error fetching brands:", error);
       setBrands([
         { id: 1, name: "PT Dian Graha Elektrika", logoUrl: "/uploads/brands/sample1.png" },
         { id: 2, name: "Schneider Electric", logoUrl: "/uploads/brands/sample2.png" },
-        { id: 3, name: "ABB", logoUrl: "/uploads/brands/sample3.png" },
+        { id: 3, name: "ABB", logoUrl: null },
       ]);
     } finally {
       setLoading(false);
@@ -69,28 +82,28 @@ export default function BrandManagementPage() {
     logout();
   };
 
-  const handleDeleteClick = (brand: any) => {
+  const handleDeleteClick = (brand: Brand) => {
     setBrandToDelete(brand);
     setShowDeleteModal(true);
   };
 
   const handleDeleteConfirm = async () => {
     if (!brandToDelete) return;
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/brands/${brandToDelete.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-      
+
       if (response.ok) {
-        setBrands(brands.filter(brand => brand.id !== brandToDelete.id));
+        setBrands(brands.filter((brand) => brand.id !== brandToDelete.id));
         setShowDeleteModal(false);
         setBrandToDelete(null);
       } else {
-        console.error('Failed to delete brand');
+        console.error("Failed to delete brand");
       }
     } catch (error) {
-      console.error('Error deleting brand:', error);
+      console.error("Error deleting brand:", error);
     }
   };
 
@@ -99,18 +112,15 @@ export default function BrandManagementPage() {
     setBrandToDelete(null);
   };
 
-  // Filter by search
   const filteredBrands = brands.filter((brand) =>
     brand.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Sorting
   const sortedBrands = [...filteredBrands].sort((a, b) => {
     if (sortOrder === "asc") return a.name.localeCompare(b.name);
     return b.name.localeCompare(a.name);
   });
 
-  // Pagination logic
   const totalPages = Math.ceil(sortedBrands.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -120,10 +130,7 @@ export default function BrandManagementPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-blue-400 rounded-full animate-pulse mx-auto"></div>
-          </div>
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Loading Brand Management</h2>
           <p className="text-gray-600">Please wait while we fetch your data...</p>
         </div>
@@ -136,8 +143,8 @@ export default function BrandManagementPage() {
       <AdminSidebar onToggle={setSidebarOpen} />
 
       <main className={`transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-20"}`}>
-        <AdminHeader title="Brand Management" user={user} onLogout={handleLogout} sidebarOpen={sidebarOpen} />
-        
+        <AdminHeader title="Brand Management" user={user} onLogout={handleLogout} />
+
         <div className="p-6 bg-gray-50/50 min-h-screen">
           {/* Header with Add Button */}
           <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
@@ -157,7 +164,6 @@ export default function BrandManagementPage() {
           {/* Search + Sort */}
           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              {/* Search */}
               <div className="relative w-80">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
@@ -169,7 +175,6 @@ export default function BrandManagementPage() {
                 />
               </div>
 
-              {/* Sort Button */}
               <button
                 onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
                 className="flex items-center space-x-2 px-4 py-2 border rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
@@ -179,7 +184,6 @@ export default function BrandManagementPage() {
               </button>
             </div>
 
-            {/* Items per page */}
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-700">Show:</span>
               <select
@@ -223,21 +227,18 @@ export default function BrandManagementPage() {
                         <div className="text-sm font-medium text-gray-900">{brand.name}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {brand.logoUrl ? (
-                          <img
-                            src={getImageUrl(brand.logoUrl)}
-                            alt={brand.name}
-                            className="w-12 h-12 rounded-lg object-cover shadow-sm cursor-pointer hover:opacity-80 transition-opacity"
-                            onClick={() => {
-                              setSelectedLogo({url: getImageUrl(brand.logoUrl), name: brand.name});
-                              setShowLogoModal(true);
-                            }}
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
-                            <span className="text-gray-400 text-xs">No Logo</span>
-                          </div>
-                        )}
+                        <img
+                          src={safeImageUrl(brand.logoUrl)}
+                          alt={brand.name}
+                          className="w-12 h-12 rounded-lg object-cover shadow-sm cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => {
+                            setSelectedLogo({
+                              url: safeImageUrl(brand.logoUrl),
+                              name: brand.name,
+                            });
+                            setShowLogoModal(true);
+                          }}
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
@@ -272,13 +273,12 @@ export default function BrandManagementPage() {
             {/* Pagination */}
             <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-gray-700">
-                    Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
-                    <span className="font-medium">{Math.min(endIndex, sortedBrands.length)}</span>{" "}
-                    of <span className="font-medium">{sortedBrands.length}</span> results
-                  </p>
-                </div>
+                <p className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
+                  <span className="font-medium">{Math.min(endIndex, sortedBrands.length)}</span> of{" "}
+                  <span className="font-medium">{sortedBrands.length}</span> results
+                </p>
+
                 <div>
                   <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                     <button
@@ -313,6 +313,8 @@ export default function BrandManagementPage() {
               </div>
             </div>
           </div>
+
+          {/* Delete Modal */}
           <DeleteConfirmModal
             isOpen={showDeleteModal}
             itemName={brandToDelete?.name || ""}
@@ -322,26 +324,35 @@ export default function BrandManagementPage() {
 
           {/* Logo View Modal */}
           {showLogoModal && selectedLogo && (
-            <div className="fixed inset-0 flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
-              <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">{selectedLogo.name} Logo</h3>
-                  <button
-                    onClick={() => setShowLogoModal(false)}
-                    className="text-gray-500 hover:text-gray-700 text-2xl font-bold transition-colors"
-                  >
-                    ×
-                  </button>
-                </div>
-                <div className="p-6 flex justify-center">
-                  <img
-                    src={selectedLogo.url}
-                    alt={selectedLogo.name}
-                    className="max-w-full max-h-96 object-contain rounded-lg shadow-lg"
-                  />
+            <>
+              <div
+                className="fixed inset-0 bg-black/50 z-40"
+                onClick={() => setShowLogoModal(false)}
+              ></div>
+
+              <div className="fixed inset-0 flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
+                <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+                  <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {selectedLogo.name} Logo
+                    </h3>
+                    <button
+                      onClick={() => setShowLogoModal(false)}
+                      className="text-gray-500 hover:text-gray-700 text-2xl font-bold transition-colors"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="p-6 flex justify-center">
+                    <img
+                      src={selectedLogo.url}
+                      alt={selectedLogo.name}
+                      className="max-w-full max-h-96 object-contain rounded-lg shadow-lg"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </main>
