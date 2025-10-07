@@ -2,13 +2,14 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer/Footer";
 
+
 export default function CareerPage() {
   return (
     <main className="bg-white">
       <Navbar />
 
       {/* ===== HERO ===== */}
-      <section
+      {/* <section
         className="relative w-full h-[420px] md:h-[520px] overflow-hidden flex items-center justify-center"
         style={{
           backgroundImage:
@@ -16,18 +17,29 @@ export default function CareerPage() {
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
-      >
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/40" />
+      > */}
 
-        {/* Centered Text */}
-        <div className="relative z-10 flex justify-center">
-          <span className="inline-block px-6 py-3 rounded-md text-white text-3xl md:text-4xl font-extrabold 
-                           bg-gradient-to-r from-indigo-600 to-violet-600/90 backdrop-blur-sm shadow-lg">
-            Join Us
-          </span>
-        </div>
-      </section>
+<section className="relative w-full h-[420px] md:h-[520px] flex items-center justify-center overflow-hidden">
+  {/* Background GIF */}
+  {/* eslint-disable-next-line @next/next/no-img-element */}
+  <img
+    src="/background.gif"
+    alt="Hero Background"
+    className="absolute inset-0 w-full h-full object-cover z-0"
+  />
+
+  {/* Overlay */}
+  <div className="absolute inset-0 bg-black/40 z-10" />
+
+  {/* Centered Text */}
+  <div className="relative z-20 flex justify-center">
+    <span className="inline-block px-6 py-3 rounded-md text-white text-3xl md:text-4xl font-extrabold 
+                     bg-gradient-to-r from-indigo-600 to-violet-600/90 backdrop-blur-sm shadow-lg">
+      Join Us
+    </span>
+  </div>
+</section>
+
 
       {/* ===== WHY JOIN ===== */}
       <section className="py-16 md:py-20">
@@ -80,7 +92,7 @@ export default function CareerPage() {
           <a
             href="#"
             className="group bg-white border border-gray-200 rounded-xl p-8 text-center flex flex-col items-center
-                       shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300"
+                      shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300"
           >
             <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl shadow-md bg-emerald-600">
               👤

@@ -3,10 +3,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [openService, setOpenService] = useState(false); // ✅ tambahan toggle khusus service
   const pathname = usePathname();
 
   const menuItems = [
@@ -18,8 +19,8 @@ export default function Navbar() {
   ];
 
   const serviceItems = [
-    { href: "/service/", label: "Outsourcing" },
-    { href: "", label: "HR Management" },
+    { href: "/service/outsourcing", label: "Outsourcing" },
+    { href: "/service/hr-management", label: "HR Management" },
   ];
 
   const isActive = (href: string) => {
@@ -47,7 +48,6 @@ export default function Navbar() {
           {menuItems.map((item) =>
             item.label === "Services" ? (
               <li key={item.href} className="relative group">
-                {/* Services button (area hover luas) */}
                 <div
                   className={`flex items-center cursor-pointer transition-all duration-200 ${
                     isActive(item.href)
@@ -58,8 +58,7 @@ export default function Navbar() {
                   {item.label}
                   <ChevronDown className="ml-1 w-4 h-4" />
                 </div>
-
-                {/* Dropdown - tetap terbuka selama hover group */}
+                {/* Dropdown Desktop */}
                 <ul className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   {serviceItems.map((service) => (
                     <li key={service.href}>
@@ -106,33 +105,39 @@ export default function Navbar() {
 
       {/* Menu Mobile */}
       {open && (
-        <div className="md:hidden bg-blue-900/90 backdrop-blur-md flex flex-col items-center space-y-4 py-6 shadow-lg">
+        <div className="md:hidden bg-blue-900/95 backdrop-blur-md flex flex-col items-center space-y-4 py-6 shadow-lg">
           {menuItems.map((item) =>
             item.label === "Services" ? (
               <div key={item.href} className="w-full flex flex-col items-center">
+                {/* Toggle untuk Services */}
                 <button
-                  onClick={() => setOpen(!open)}
+                  onClick={() => setOpenService(!openService)}
                   className={`flex items-center space-x-1 transition-all duration-200 ${
-                    isActive(item.href)
-                      ? "text-white font-semibold"
-                      : "text-gray-200 hover:text-white"
+                    isActive(item.href) ? "text-white font-semibold" : "text-gray-200 hover:text-white"
                   }`}
                 >
                   <span>{item.label}</span>
-                  <ChevronDown className="w-4 h-4" />
+                  {openService ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
                 </button>
-                <div className="flex flex-col space-y-2 mt-2">
-                  {serviceItems.map((service) => (
-                    <Link
-                      key={service.href}
-                      href={service.href}
-                      className="text-gray-200 hover:text-white text-sm"
-                      onClick={() => setOpen(false)}
-                    >
-                      {service.label}
-                    </Link>
-                  ))}
-                </div>
+                {/* Submenu Mobile */}
+                {openService && (
+                  <div className="flex flex-col space-y-2 mt-2">
+                    {serviceItems.map((service) => (
+                      <Link
+                        key={service.href}
+                        href={service.href}
+                        className="text-gray-200 hover:text-white text-sm"
+                        onClick={() => setOpen(false)}
+                      >
+                        {service.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <Link
@@ -140,9 +145,7 @@ export default function Navbar() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={`transition-all duration-200 ${
-                  isActive(item.href)
-                    ? "text-white font-semibold"
-                    : "text-gray-200 hover:text-white"
+                  isActive(item.href) ? "text-white font-semibold" : "text-gray-200 hover:text-white"
                 }`}
               >
                 {item.label}
