@@ -49,24 +49,27 @@ export default function AboutPage() {
     <main>
       <Navbar />
       <div className="min-h-screen">
-        {/* Hero Section */}
-        <section
-          className="relative w-full bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage:
-              'url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80")',
-            height: "575px",
-          }}
+      <section className="relative w-full h-[420px] md:h-[520px] flex items-center justify-center overflow-hidden">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover z-0"
         >
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div
-              className="text-center text-white px-6 py-3 rounded-lg"
-              style={{ backgroundColor: "rgba(50, 46, 229, 0.48)" }}
-            >
-              <h1 className="font-bold text-3xl">About Us</h1>
-            </div>
-          </div>
-        </section>
+          <source src="/background.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        <div className="absolute inset-0 bg-black/40 z-10" />
+        <div className="relative z-20 flex justify-center">
+          <span className="inline-block px-6 py-3 rounded-md 
+                          text-gray-50 text-3xl md:text-4xl font-bold 
+                          bg-gradient-to-r from-indigo-500/60 to-purple-500/60 
+                          backdrop-blur-sm shadow-md">
+            About Us
+          </span>
+        </div>
+      </section>
 
         {/* Company Description */}
         <section className="py-16 bg-white">

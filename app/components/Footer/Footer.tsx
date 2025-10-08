@@ -62,7 +62,7 @@ export default function Footer() {
         {/* Logo */}
         <div className="flex items-center mb-4 md:mb-0">
           <Image
-            src="/logo.svg"
+            src="/diangraha-logo.png"
             alt="PT Dian Graha Elektrika"
             width={140}
             height={40}

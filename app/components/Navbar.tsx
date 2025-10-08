@@ -7,19 +7,19 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const [openService, setOpenService] = useState(false); // ✅ tambahan toggle khusus service
+  const [openService, setOpenService] = useState(false);
   const pathname = usePathname();
 
   const menuItems = [
     { href: "/", label: "Home" },
     { href: "/about", label: "About Us" },
-    { href: "/services", label: "Services" }, // dropdown
+    { href: "/services", label: "Services" },
     { href: "/career", label: "Career" },
     { href: "/contact", label: "Contact Us" },
   ];
 
   const serviceItems = [
-    { href: "/service/outsourcing", label: "Outsourcing" },
+    { href: "/service", label: "Outsourcing" },
     { href: "/service/hr-management", label: "HR Management" },
   ];
 
@@ -34,7 +34,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center">
           <Image
-            src="/logo.svg"
+            src="/diangraha-logo.png"
             alt="PT Dian Graha Elektrika"
             width={120}
             height={36}
@@ -48,8 +48,10 @@ export default function Navbar() {
           {menuItems.map((item) =>
             item.label === "Services" ? (
               <li key={item.href} className="relative group">
-                <div
-                  className={`flex items-center cursor-pointer transition-all duration-200 ${
+                {/* Services now clickable */}
+                <Link
+                  href={item.href}
+                  className={`flex items-center transition-all duration-200 ${
                     isActive(item.href)
                       ? "text-white font-semibold border-b-2 border-white pb-1"
                       : "text-gray-200 hover:text-white"
@@ -57,7 +59,8 @@ export default function Navbar() {
                 >
                   {item.label}
                   <ChevronDown className="ml-1 w-4 h-4" />
-                </div>
+                </Link>
+
                 {/* Dropdown Desktop */}
                 <ul className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   {serviceItems.map((service) => (
@@ -98,7 +101,10 @@ export default function Navbar() {
         </Link>
 
         {/* Hamburger Mobile */}
-        <button className="md:hidden text-2xl text-white" onClick={() => setOpen(!open)}>
+        <button
+          className="md:hidden text-2xl text-white"
+          onClick={() => setOpen(!open)}
+        >
           ☰
         </button>
       </div>
@@ -113,7 +119,9 @@ export default function Navbar() {
                 <button
                   onClick={() => setOpenService(!openService)}
                   className={`flex items-center space-x-1 transition-all duration-200 ${
-                    isActive(item.href) ? "text-white font-semibold" : "text-gray-200 hover:text-white"
+                    isActive(item.href)
+                      ? "text-white font-semibold"
+                      : "text-gray-200 hover:text-white"
                   }`}
                 >
                   <span>{item.label}</span>
@@ -145,7 +153,9 @@ export default function Navbar() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={`transition-all duration-200 ${
-                  isActive(item.href) ? "text-white font-semibold" : "text-gray-200 hover:text-white"
+                  isActive(item.href)
+                    ? "text-white font-semibold"
+                    : "text-gray-200 hover:text-white"
                 }`}
               >
                 {item.label}

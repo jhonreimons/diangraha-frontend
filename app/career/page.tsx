@@ -7,29 +7,19 @@ export default function CareerPage() {
   return (
     <main className="bg-white">
       <Navbar />
-
-      {/* ===== HERO ===== */}
-      {/* <section
-        className="relative w-full h-[420px] md:h-[520px] overflow-hidden flex items-center justify-center"
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1800&q=80')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      > */}
-
 <section className="relative w-full h-[420px] md:h-[520px] flex items-center justify-center overflow-hidden">
-  {/* Background GIF */}
-  {/* eslint-disable-next-line @next/next/no-img-element */}
-  <img
-    src="/background.gif"
-    alt="Hero Background"
-    className="absolute inset-0 w-full h-full object-cover z-0"
-  />
-
-  {/* Overlay */}
-  <div className="absolute inset-0 bg-black/40 z-10" />
+    <video
+      autoPlay
+      muted
+      loop
+      playsInline
+      className="absolute inset-0 w-full h-full object-cover z-0"
+    >
+      <source src="/background.mp4" type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/40 z-10" />
 
   {/* Centered Text */}
   <div className="relative z-20 flex justify-center">
