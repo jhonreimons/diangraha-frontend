@@ -47,7 +47,7 @@ export default function AdminHeader({ title, user, onLogout, sidebarOpen = true,
         <div className="flex items-center space-x-1">
           <button
             onClick={() => onToggle?.(!sidebarOpen)}
-            className="-ml-10 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
           >
             <Menu className="w-5 h-5 text-gray-700" />
           </button>

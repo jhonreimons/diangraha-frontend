@@ -25,7 +25,7 @@ export default function SessionExpiredModal({ isOpen, onClose }: SessionExpiredM
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-50">
       <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Session Expired</h2>
