@@ -27,7 +27,7 @@ export default function Navbar() {
   ];
 
   const serviceItems = services.map(service => ({
-    href: `/service/${service.id}`,
+    href: `/service/${encodeURIComponent(service.name.toLowerCase().replace(/\s+/g, '-'))}`,
     label: service.name
   }));
 

@@ -27,10 +27,24 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
+    const authHeader = request.headers.get('authorization');
 
-    const response = await fetch(`${BACKEND_URL}/services`, {
+    const name = formData.get('name') as string;
+    const longDesc = formData.get('longDesc') as string;
+    const imageFile = formData.get('imageFile') as File;
+
+    const url = new URL(`${BACKEND_URL}/services`);
+    url.searchParams.append('name', name);
+    url.searchParams.append('shortDesc', longDesc);
+    url.searchParams.append('longDesc', longDesc);
+
+    const body = imageFile ? new FormData() : null;
+    if (body) body.append('imageFile', imageFile);
+
+    const response = await fetch(url.toString(), {
       method: 'POST',
-      body: formData,
+      headers: authHeader ? { 'Authorization': authHeader } : {},
+      body: body,
     });
 
     const data = await response.json();
@@ -41,23 +55,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
-  try {
-    const formData = await request.formData();
-    const id = formData.get('id');
 
-    const response = await fetch(`${BACKEND_URL}/services/${id}`, {
-      method: 'PUT',
-      body: formData,
-    });
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Backend API error:', error);
-    return NextResponse.json({ error: 'Failed to update service' }, { status: 500 });
-  }
-}
 
 export async function DELETE(request: NextRequest) {
   try {

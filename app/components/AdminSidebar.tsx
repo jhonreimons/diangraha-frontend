@@ -42,9 +42,17 @@ export default function AdminSidebar({ sidebarOpen, onToggle }: AdminSidebarProp
 
   return (
     <>
+      {/* Backdrop for mobile */}
+      {sidebarOpen && isMobile && (
+        <div
+          className="fixed inset-0 bg-black/50 z-75"
+          onClick={() => onToggle(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-blue-700 via-blue-600 to-blue-500 text-white shadow-xl transition-transform duration-500 ease-in-out z-60 w-64 ${sidebarOpen ? 'translate-x-0' : isMobile ? '-translate-x-full' : '-translate-x-44'}`}
+        className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-blue-700 via-blue-600 to-blue-500 text-white ${sidebarOpen ? 'shadow-xl' : ''} transition-all duration-500 ease-in-out z-80 w-64 ${sidebarOpen ? 'translate-x-0 pointer-events-auto opacity-100' : isMobile ? '-translate-x-full pointer-events-none opacity-0' : '-translate-x-44 pointer-events-none opacity-100'}`}
       >
         {/* Logo & Toggle */}
         <div className="p-4 border-b border-blue-400/20">
@@ -69,7 +77,7 @@ export default function AdminSidebar({ sidebarOpen, onToggle }: AdminSidebarProp
         </div>
 
         {/* Navigation */}
-        <nav className={`mt-6 space-y-1 transition-transform duration-500 ease-in-out ${sidebarOpen ? '' : 'translate-x-44'}`}>
+        <nav className={`mt-6 space-y-1 transition-transform duration-500 ease-in-out ${sidebarOpen ? 'pointer-events-auto' : 'pointer-events-none'} ${sidebarOpen ? '' : 'translate-x-44'}`}>
           {menuItems.map((item) => (
             <Link
               key={item.href}

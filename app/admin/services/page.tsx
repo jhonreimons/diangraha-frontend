@@ -218,17 +218,17 @@ export default function ServicesPage() {
           <p className="text-xs md:text-base text-gray-600 mb-4 md:mb-6">Manage your services and features</p>
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-4">
-            <div className="flex items-center gap-3">
-              <Search className="w-4 h-4 text-gray-400" />
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search services..."
+                placeholder="Search services"
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="border rounded-lg px-3 py-2 w-full md:w-64 text-sm focus:ring-2 focus:ring-blue-400"
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-gray-600 placeholder-gray-500 transition-all"
               />
             </div>
             <Link

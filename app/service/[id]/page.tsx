@@ -21,16 +21,28 @@ interface Service {
 
 export default function ServiceDetailPage() {
   const params = useParams();
-  const id = params.id as string;
+  const slug = params.id as string;
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      fetch(`http://103.103.20.23:8080/api/services/${id}`)
-        .then(res => res.json())
-        .then(data => {
-          setService(data);
+    if (slug) {
+      const decodedSlug = decodeURIComponent(slug);
+      fetch('/api/services')
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then(services => {
+          const found = services.find((s: Service) => s.name.toLowerCase().replace(/\s+/g, '-') === decodedSlug);
+          if (found) {
+            setService({
+              ...found,
+              features: Array.isArray(found.features) ? found.features : []
+            });
+          } else {
+            setService(null);
+          }
           setLoading(false);
         })
         .catch(err => {
@@ -38,7 +50,7 @@ export default function ServiceDetailPage() {
           setLoading(false);
         });
     }
-  }, [id]);
+  }, [slug]);
 
   if (loading) {
     return (

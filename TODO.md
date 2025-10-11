@@ -1,11 +1,7 @@
-# TODO: Fix Admin 404 Layout
+# TODO: Fix Edit Service API
 
-## Tasks
-- [x] Revert `app/admin/layout.tsx` to original state to avoid affecting other admin pages.
-- [x] Ensure `app/admin/not-found.tsx` includes AdminSidebar and AdminHeader for 404-specific admin layout.
-- [x] Adjust AdminHeader title in 404 to "Page Not Found" for clarity.
-
-## Notes
-- Changes limited to admin 404 page only, as per user clarification.
-- Other admin pages remain unchanged to avoid duplication issues.
-- Task complete: Admin 404 now displays with sidebar and header.
+## Steps to Complete
+- [x] Add PUT method to app/api/services/[id]/route.ts for updating a specific service
+- [x] Update AddServiceForm.tsx to call PUT to /api/services/${editId} for edit mode and remove id from formData
+- [x] Remove PUT method from app/api/services/route.ts as edit is now handled in [id]/route.ts
+- [x] Test the edit functionality to ensure no more HTTP 500 error

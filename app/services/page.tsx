@@ -133,7 +133,7 @@ export default function ServicesPage() {
                     <p className="text-[20px] text-gray-600 leading-relaxed mb-8">
                       {generateSummary(service.longDesc, 255)}
                     </p>
-                    <Link href={`/service/${service.id}`}>
+                    <Link href={`/service/${encodeURIComponent(service.name.toLowerCase().replace(/\s+/g, '-'))}`}>
                       <button className={`${buttonClass} text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center gap-2`}>
                         View More
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

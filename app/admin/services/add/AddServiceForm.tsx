@@ -13,7 +13,7 @@ import { SERVER_BASE_URL, getImageUrl } from "@/lib/config";
 export default function AddServiceForm() {
   const [user, setUser] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [formData, setFormData] = useState({ name: "", longDesc: "" });
+  const [formData, setFormData] = useState({ name: "", description: "" });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
@@ -25,16 +25,18 @@ export default function AddServiceForm() {
   const editId = searchParams.get("edit");
   const isEditMode = !!editId;
 
+  // 🔹 Ambil data lama untuk mode edit
   const fetchServiceData = async (id: string) => {
     try {
-      const response = await fetch('/api/services');
+      const response = await fetch(`${SERVER_BASE_URL}/api/services`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const services = await response.json();
       const service = services.find((s: any) => s.id === parseInt(id));
+
       if (service) {
         setFormData({
-          name: service.name,
-          longDesc: service.longDesc || "",
+          name: service.name || "",
+          description: service.longDesc || "",
         });
         if (service.imageUrl) {
           setExistingImageUrl(getImageUrl(service.imageUrl));
@@ -45,6 +47,7 @@ export default function AddServiceForm() {
     }
   };
 
+  // 🔹 Auth check dan fetch data edit
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
@@ -54,9 +57,7 @@ export default function AddServiceForm() {
       return;
     }
 
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
+    if (userData) setUser(JSON.parse(userData));
 
     if (isEditMode && editId) {
       fetchServiceData(editId);
@@ -88,41 +89,63 @@ export default function AddServiceForm() {
     setImagePreview(null);
     if (isEditMode) setExistingImageUrl(null);
   };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  try {
+    let response;
 
-    try {
+    if (isEditMode) {
+      // URL sesuai API backend kamu
+      const url = `${SERVER_BASE_URL}/api/services/${editId}?name=${encodeURIComponent(
+        formData.name
+      )}&shortDesc=${encodeURIComponent(formData.description)}&longDesc=${encodeURIComponent(formData.description)}`;
+
+      // Selalu kirim FormData, meski tanpa gambar
+      const formDataToSend = new FormData();
+
+      // hanya tambahkan file jika ada gambar baru
+      if (selectedImage) {
+        formDataToSend.append("imageFile", selectedImage);
+      }
+
+      response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+          // ❌ jangan set Content-Type manual biarkan browser generate boundary otomatis
+        },
+        body: formDataToSend,
+      });
+    } else {
+      // Mode tambah baru (POST)
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
-      formDataToSend.append("longDesc", formData.longDesc);
+      formDataToSend.append("shortDesc", formData.description);
+      formDataToSend.append("longDesc", formData.description);
       if (selectedImage) formDataToSend.append("imageFile", selectedImage);
-      if (isEditMode) formDataToSend.append("id", editId);
 
-      const url = isEditMode
-        ? `${SERVER_BASE_URL}/api/services/${editId}`
-        : `${SERVER_BASE_URL}/api/services`;
-
-      const method = isEditMode ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
+      response = await fetch(`${SERVER_BASE_URL}/api/services`, {
+        method: "POST",
         headers: {
-          'Authorization': 'Bearer ' + localStorage.getItem("token"),
+          Authorization: "Bearer " + localStorage.getItem("token"),
         },
-        body: formDataToSend
+        body: formDataToSend,
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-      setShowSuccess(true);
-    } catch (error) {
-      console.error("Error saving service:", error);
-      alert("Failed to save service. Please try again.");
-    } finally {
-      setLoading(false);
     }
-  };
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    setShowSuccess(true);
+  } catch (error) {
+    console.error("Error saving service:", error);
+    alert("Failed to save service. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleSuccessClose = () => {
     setShowSuccess(false);
@@ -144,21 +167,21 @@ export default function AddServiceForm() {
         onToggle={setSidebarOpen}
       />
 
-      <main className={`pt-20 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-20"}`}>
-        <div className="p-6 bg-gray-50/50 min-h-screen flex justify-center">
-          <div className="w-full max-w-2xl">
+      <main className={`pt-20 transition-all duration-300 ${sidebarOpen ? "md:ml-64" : "md:ml-20"}`}>
+        <div className="p-4 md:p-6 bg-gray-50/50 min-h-screen flex justify-center">
+          <div className="w-full">
             <div className="mb-6">
               <Link href="/admin/services" className="inline-flex items-center text-blue-600 hover:text-blue-800">
                 <ArrowLeft className="w-4 h-4 mr-2" /> Back to Service Management
               </Link>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-md p-8">
+            <div className="bg-white rounded-2xl shadow-md p-4 md:p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 {isEditMode ? "Edit Service" : "Add New Service"}
               </h2>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
                 {/* Name */}
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -175,17 +198,15 @@ export default function AddServiceForm() {
                   />
                 </div>
 
-
-
-                {/* Long Description */}
+                {/* Description */}
                 <div>
-                  <label htmlFor="longDesc" className="block text-sm font-medium text-gray-700 mb-2">
-                    Long Description
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
                   </label>
                   <textarea
-                    id="longDesc"
-                    name="longDesc"
-                    value={formData.longDesc}
+                    id="description"
+                    name="description"
+                    value={formData.description}
                     onChange={handleInputChange}
                     required
                     rows={5}
@@ -200,7 +221,11 @@ export default function AddServiceForm() {
                   <div className="relative border-2 border-dashed p-6 text-center rounded-lg">
                     {(imagePreview || existingImageUrl) ? (
                       <div className="relative">
-                        <img src={imagePreview || existingImageUrl || ""} alt="Preview" className="mx-auto max-h-48 rounded-lg" />
+                        <img
+                          src={imagePreview || existingImageUrl || ""}
+                          alt="Preview"
+                          className="mx-auto max-h-48 rounded-lg"
+                        />
                         <button
                           type="button"
                           onClick={removeImage}
@@ -215,7 +240,12 @@ export default function AddServiceForm() {
                         <p className="text-gray-600">Click to upload service image</p>
                       </div>
                     )}
-                    <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
                   </div>
                 </div>
 
