@@ -42,8 +42,8 @@ export default function AdminHeader({ title, user, onLogout, sidebarOpen = true,
   };
 
   return (
-    <header className="fixed md:sticky top-0 z-50 transition-all duration-300 w-screen">
-      <div className={`bg-white/80 backdrop-blur-md shadow-sm border-b flex items-center justify-between pl-2 pr-4 md:pl-4 md:pr-6 py-3 ${sidebarOpen ? 'md:ml-60' : 'md:ml-16'}`}>
+    <header className="fixed md:sticky top-0 z-70 transition-all duration-500 ease-in-out w-screen">
+      <div className={`bg-white/80 backdrop-blur-md shadow-sm border-b flex items-center justify-between pl-2 pr-4 md:pl-4 md:pr-6 py-3 transition-all duration-500 ease-in-out ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
         <div className="flex items-center space-x-1">
           <button
             onClick={() => onToggle?.(!sidebarOpen)}

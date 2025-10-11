@@ -44,7 +44,7 @@ export default function AdminSidebar({ sidebarOpen, onToggle }: AdminSidebarProp
     <>
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-blue-700 via-blue-600 to-blue-500 text-white shadow-xl transition-all duration-300 z-60 ${sidebarOpen ? 'w-64' : isMobile ? 'hidden' : 'w-20'}`}
+        className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-blue-700 via-blue-600 to-blue-500 text-white shadow-xl transition-all duration-500 ease-in-out z-60 ${sidebarOpen ? 'w-64' : isMobile ? 'hidden' : 'w-20'}`}
       >
         {/* Logo & Toggle */}
         <div className="p-4 border-b border-blue-400/20">

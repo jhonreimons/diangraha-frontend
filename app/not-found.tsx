@@ -52,7 +52,7 @@ export default function NotFound() {
         <div className="flex-1 flex flex-col">
           <AdminHeader title="Not Found" user={user} onLogout={handleLogout} sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
 
-          <main className={`flex-1 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
+          <main className={`flex-1 transition-all duration-500 ease-in-out ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
             <div className="pt-20 p-2 md:p-6 bg-gray-50/50">
               <div className="text-center max-w-md mx-auto">
                 <AlertTriangle className="w-24 h-24 mx-auto mb-6 text-blue-500" />
