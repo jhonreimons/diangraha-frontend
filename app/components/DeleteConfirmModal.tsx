@@ -14,7 +14,7 @@ export default function DeleteConfirmModal({ isOpen, itemName, onConfirm, onCanc
   const handleConfirm = () => {
     setShowSuccess(true);
     onConfirm();
-    
+
     // Hide success animation after 2 seconds
     setTimeout(() => {
       setShowSuccess(false);

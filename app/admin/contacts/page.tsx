@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import AdminSidebar from "@/app/components/AdminSidebar";
 import AdminHeader from "@/app/components/AdminHeader";
-import { Search, Mail, Phone, Building, Calendar, Eye, Trash2 } from "lucide-react";
+import { Search, Mail, Phone, Building, Calendar, Eye, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import DeleteConfirmModal from "@/app/components/DeleteConfirmModal";
 
 interface ContactMessage {
@@ -17,14 +17,21 @@ interface ContactMessage {
   createdAt: string;
 }
 
+interface User {
+  name?: string;
+  role?: string;
+}
+
 export default function ContactsPage() {
-  const [user, setUser] = useState<any>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, messageId: null as number | null, messageName: "" });
   const [loading, setLoading] = useState(true);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const { logout } = useAuth();
 
   const fetchContactMessages = async () => {
@@ -32,6 +39,7 @@ export default function ContactsPage() {
       const response = await fetch('http://103.103.20.23:8080/api/contact-messages', {
         headers: {
           'Accept': '*/*',
+          'Authorization': 'Bearer ' + localStorage.getItem("token"),
         },
       });
       
@@ -40,7 +48,8 @@ export default function ContactsPage() {
       }
       
       const data = await response.json();
-      setMessages(Array.isArray(data) ? data : []);
+      const sortedData = Array.isArray(data) ? data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) : [];
+      setMessages(sortedData);
     } catch (error) {
       console.error('Error fetching contact messages:', error);
       setMessages([]);
@@ -65,6 +74,30 @@ export default function ContactsPage() {
     fetchContactMessages();
   }, []);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setItemsPerPage(window.innerWidth < 768 ? 3 : 5);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleLogout = () => {
     logout();
   };
@@ -80,7 +113,7 @@ export default function ContactsPage() {
           method: 'DELETE',
           headers: {
             'Accept': '*/*',
-            'Authorization': 'Basic ' + btoa('admin:diangraha-dev'),
+            'Authorization': 'Bearer ' + localStorage.getItem("token"),
           },
         });
         
@@ -115,14 +148,16 @@ export default function ContactsPage() {
     message.interestedIn?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredMessages.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentMessages = filteredMessages.slice(startIndex, endIndex);
+
   if (!user || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-blue-400 rounded-full animate-pulse mx-auto"></div>
-          </div>
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Loading Contact Messages</h2>
           <p className="text-gray-600">Please wait while we fetch your data...</p>
         </div>
@@ -131,15 +166,19 @@ export default function ContactsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <AdminSidebar onToggle={setSidebarOpen} />
+    <div className="bg-slate-100 flex flex-col md:flex-row">
+      <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
 
-      <main className={`transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-20"}`}>
-        <AdminHeader title="Contact Management" user={user} onLogout={handleLogout} />
+      <div className="flex-1 flex flex-col">
+        <AdminHeader title="Contact Management" user={user} onLogout={handleLogout} sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
 
-        <div className="p-6">
-          <div className="mb-6">
-            <div className="relative max-w-md">
+        <main className={`flex-1 pt-16 md:pt-0 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
+
+          <div className="p-2 md:p-6">
+          <h2 className="text-base md:text-2xl font-bold text-gray-900 mb-2 pt-4 md:pt-0 block md:hidden">Contact Management</h2>
+          <p className="text-xs md:text-base text-gray-600 mb-4 md:mb-6 block md:hidden">Manage your contact messages and inquiries</p>
+          <div className="mb-4 md:mb-6 flex items-center justify-between gap-3 flex-wrap">
+            <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
@@ -149,10 +188,29 @@ export default function ContactsPage() {
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 focus:outline-none w-full text-gray-600 placeholder-gray-500"
               />
             </div>
+
+            <div className="flex items-center space-x-1 md:space-x-2">
+              <span className="text-xs md:text-sm text-gray-700">Show:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="border border-gray-300 rounded-lg px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-gray-900 bg-white"
+              >
+                <option value={3}>3</option>
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+              <span className="text-xs md:text-sm text-gray-700">per page</span>
+            </div>
           </div>
 
           <div className="grid gap-6">
-            {filteredMessages.map((message) => (
+            {currentMessages.map((message) => (
               <div
                 key={message.id}
                 className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all border border-gray-100"
@@ -207,9 +265,9 @@ export default function ContactsPage() {
 
                   {message.message && (
                     <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                      <p className="text-gray-700 text-sm leading-relaxed">
-                        {message.message.length > 150 
-                          ? `${message.message.substring(0, 150)}...` 
+                      <p className="text-gray-700 text-sm leading-relaxed" style={{ whiteSpace: 'pre-wrap' }}>
+                        {message.message.length > 150
+                          ? `${message.message.substring(0, 150)}...`
                           : message.message
                         }
                       </p>
@@ -225,7 +283,7 @@ export default function ContactsPage() {
             ))}
           </div>
 
-          {filteredMessages.length === 0 && (
+          {currentMessages.length === 0 && (
             <div className="text-center py-12">
               <Mail className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No messages found</h3>
@@ -234,11 +292,44 @@ export default function ContactsPage() {
               </p>
             </div>
           )}
+
+          {/* Pagination */}
+          {filteredMessages.length > itemsPerPage && (
+            <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+              <p className="text-sm text-gray-700">
+                Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
+                <span className="font-medium">{Math.min(endIndex, filteredMessages.length)}</span> of{" "}
+                <span className="font-medium">{filteredMessages.length}</span> results
+              </p>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                <span className="text-sm text-gray-700">
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <button
+                  onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {selectedMessage && (
-          <div className="fixed inset-0 flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
-            <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300">
+          <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">Message Details</h3>
                 <button
@@ -285,7 +376,7 @@ export default function ContactsPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
                     <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-gray-900 leading-relaxed">{selectedMessage.message}</p>
+                      <p className="text-gray-900 leading-relaxed" style={{ whiteSpace: 'pre-wrap' }}>{selectedMessage.message}</p>
                     </div>
                   </div>
                 )}
@@ -307,5 +398,6 @@ export default function ContactsPage() {
         />
       </main>
     </div>
+  </div>
   );
 }

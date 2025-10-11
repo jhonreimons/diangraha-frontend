@@ -13,7 +13,7 @@ import { SERVER_BASE_URL, getImageUrl } from "@/lib/config";
 export default function AddServiceForm() {
   const [user, setUser] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [formData, setFormData] = useState({ name: "", description: "" });
+  const [formData, setFormData] = useState({ name: "", longDesc: "" });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
@@ -27,14 +27,14 @@ export default function AddServiceForm() {
 
   const fetchServiceData = async (id: string) => {
     try {
-      const response = await fetch(`${SERVER_BASE_URL}/api/services`);
+      const response = await fetch('/api/services');
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const services = await response.json();
       const service = services.find((s: any) => s.id === parseInt(id));
       if (service) {
         setFormData({
           name: service.name,
-          description: service.longDesc || service.shortDesc,
+          longDesc: service.longDesc || "",
         });
         if (service.imageUrl) {
           setExistingImageUrl(getImageUrl(service.imageUrl));
@@ -95,21 +95,24 @@ export default function AddServiceForm() {
 
     try {
       const formDataToSend = new FormData();
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("longDesc", formData.longDesc);
       if (selectedImage) formDataToSend.append("imageFile", selectedImage);
-
-      const queryParams = new URLSearchParams({
-        name: formData.name,
-        shortDesc: formData.description,
-        longDesc: formData.description,
-      });
+      if (isEditMode) formDataToSend.append("id", editId);
 
       const url = isEditMode
-        ? `${SERVER_BASE_URL}/api/services/${editId}?${queryParams}`
-        : `${SERVER_BASE_URL}/api/services?${queryParams}`;
+        ? `${SERVER_BASE_URL}/api/services/${editId}`
+        : `${SERVER_BASE_URL}/api/services`;
 
       const method = isEditMode ? "PUT" : "POST";
 
-      const response = await fetch(url, { method, body: formDataToSend });
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem("token"),
+        },
+        body: formDataToSend
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       setShowSuccess(true);
@@ -132,15 +135,16 @@ export default function AddServiceForm() {
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <AdminSidebar onToggle={setSidebarOpen} />
-      <main className={`transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-20"}`}>
-        <AdminHeader
-          title={isEditMode ? "Edit Service" : "Add New Service"}
-          user={user}
-          onLogout={handleLogout}
-          sidebarOpen={sidebarOpen}
-        />
+      <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
+      <AdminHeader
+        title={isEditMode ? "Edit Service" : "Add New Service"}
+        user={user}
+        onLogout={handleLogout}
+        sidebarOpen={sidebarOpen}
+        onToggle={setSidebarOpen}
+      />
 
+      <main className={`pt-20 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-20"}`}>
         <div className="p-6 bg-gray-50/50 min-h-screen flex justify-center">
           <div className="w-full max-w-2xl">
             <div className="mb-6">
@@ -171,19 +175,22 @@ export default function AddServiceForm() {
                   />
                 </div>
 
-                {/* Description */}
+
+
+                {/* Long Description */}
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                    Service Description
+                  <label htmlFor="longDesc" className="block text-sm font-medium text-gray-700 mb-2">
+                    Long Description
                   </label>
                   <textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
+                    id="longDesc"
+                    name="longDesc"
+                    value={formData.longDesc}
                     onChange={handleInputChange}
                     required
-                    rows={4}
+                    rows={5}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                    placeholder="Detailed description for service pages"
                   />
                 </div>
 

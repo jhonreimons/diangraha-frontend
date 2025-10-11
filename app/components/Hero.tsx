@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Hero() {
   return (
 <section className="h-screen flex items-center justify-center px-6 relative overflow-hidden">
@@ -30,12 +32,15 @@ export default function Hero() {
     >
       PT Dian Graha Elektrika <br />
       <span className="text-xl text-gray-300">
-        Siap Membantu Bisnis Anda Berkembang
+        {/* Siap Membantu Bisnis Anda Berkembang */}
+        Empowering Your Business to Grow
       </span>
     </h2>
-    <button className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg shadow-lg">
-      Learn more
-    </button>
+    <Link href="/about">
+      <button className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg shadow-lg">
+        Learn more
+      </button>
+    </Link>
   </div>
 </section>
 

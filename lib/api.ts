@@ -1,5 +1,5 @@
-import { SERVER_BASE_URL  } from './config';
-import { API_BASE_URL } from './config';
+import { SERVER_BASE_URL, API_BASE_URL } from './config';
+
 export interface LoginRequest {
   username: string;
   password: string;
@@ -12,52 +12,120 @@ export interface LoginResponse {
   [key: string]: any;
 }
 
-async function apiRequest<T>(endpoint: string, options: RequestInit = {}) {
+/**
+ * Generic API request wrapper
+ */
+async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   try {
     const url = `${API_BASE_URL}${endpoint}`;
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    
+
     const config: RequestInit = {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
         ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
-      ...options,
     };
 
     const response = await fetch(url, config);
-    const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.message || 'API Error');
+    // ambil raw text dulu
+    const raw = await response.text();
+    let data: any = null;
+
+    if (raw) {
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        console.error('Invalid JSON response:', raw);
+        throw new Error('Invalid JSON response');
+      }
     }
 
-    return data;
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Token expired or invalid, logout directly
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        throw new Error('Session expired');
+      }
+      const msg = data?.message || `API Error: ${response.status}`;
+      throw new Error(msg);
+    }
+
+    return data as T;
   } catch (error) {
     throw error instanceof Error ? error : new Error('Network error');
   }
 }
 
+export interface Achievement {
+  id: number;
+  title: string;
+  imageUrl: string;
+}
+
+export const achievementsAPI = {
+  /**
+   * Fetch achievements from external API
+   */
+  fetchAchievements: async (): Promise<Achievement[]> => {
+    try {
+      const response = await fetch(`${SERVER_BASE_URL}/api/achievements`, {
+        method: 'GET',
+        headers: {
+          'accept': '*/*',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch achievements: ${response.status}`);
+      }
+
+      const data: Achievement[] = await response.json();
+      return data;
+    } catch (error) {
+      throw error instanceof Error ? error : new Error('Network error');
+    }
+  },
+};
+
 export const authAPI = {
+  /**
+   * Login API
+   */
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     try {
       const response = await fetch(`${SERVER_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Basic ' + btoa('admin:diangraha-dev'),
         },
         body: JSON.stringify(credentials),
       });
 
-      const data = await response.json();
+      // ambil raw text dulu
+      const raw = await response.text();
+      let data: any = null;
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+      if (raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          console.error('Invalid JSON from login API:', raw);
+          throw new Error('Invalid JSON from login API');
+        }
       }
 
-      return data;
+      if (!response.ok) {
+        const msg = data?.message || `Login failed: ${response.status}`;
+        throw new Error(msg);
+      }
+
+      return data as LoginResponse;
     } catch (error) {
       throw error instanceof Error ? error : new Error('Network error');
     }
@@ -65,5 +133,20 @@ export const authAPI = {
 
   logout: async () => {
     return apiRequest('/auth/logout', { method: 'POST' });
+  },
+};
+
+export interface Brand {
+  id: number;
+  name: string;
+  logoUrl?: string;
+}
+
+export const brandsAPI = {
+  /**
+   * Delete a brand
+   */
+  deleteBrand: async (id: number): Promise<void> => {
+    return apiRequest(`/brands/${id}`, { method: 'DELETE' });
   },
 };

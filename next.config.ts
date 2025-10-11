@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'cdn-icons-png.flaticon.com',
       },
+      {
+        protocol: 'http',
+        hostname: '103.103.20.23',
+      },
     ],
     unoptimized: false,
   },

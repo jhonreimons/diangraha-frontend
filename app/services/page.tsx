@@ -1,8 +1,58 @@
 "use client";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer/Footer";
+import { getImageUrl } from "@/lib/config";
+
+interface Service {
+  id: number;
+  name: string;
+  longDesc: string;
+  imageUrl: string;
+}
+
+function generateSummary(text: string, maxLength = 100) {
+  if (text.length <= maxLength) return text;
+  const truncated = text.slice(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(" ");
+  return truncated.slice(0, lastSpace) + "...";
+}
 
 export default function ServicesPage() {
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await fetch("http://103.103.20.23:8080/api/services");
+        if (!response.ok) throw new Error("Failed to fetch services");
+        const data = await response.json();
+        setServices(data);
+      } catch (error) {
+        console.error("Error fetching services:", error);
+        setServices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  if (loading) {
+    return (
+      <main>
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center">
+          <div>Loading services...</div>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
   return (
     <main>
       <Navbar />
@@ -57,81 +107,55 @@ export default function ServicesPage() {
             <p className="text-[25px] mb-8 leading-relaxed">
               We'll help you find the right strategy to achieve better results—simple, effective, and personalized.
             </p>
-            <button className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-3 rounded-lg font-semibold hover:from-yellow-500 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl">
-              Consult Now
-            </button>
+            <Link href="/contact">
+              <button className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-3 rounded-lg font-semibold hover:from-yellow-500 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl">
+                Consult Now
+              </button>
+            </Link>
           </div>
         </section>
 
-        {/* Outsourcing Section */}
-        <section className="py-16 px-6 md:px-12 lg:px-20 bg-gradient-to-br from-blue-50 to-indigo-100">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-12">
-              {/* Left Content */}
-              <div className="max-w-2xl">
-                <h2 className="text-[30px] font-bold text-gray-800 mb-6">
-                  Outsourcing
-                </h2>
-                <h3 className="text-[25px] font-semibold text-gray-700 mb-6 leading-relaxed">
-                  Solusi tenaga kerja profesional untuk mendukung bisnis Anda dan mendorong pertumbuhan perusahaan.
-                </h3>
-                <p className="text-[20px] text-gray-600 leading-relaxed mb-8">
-                  Biarkan kebutuhan HR dan tenaga kerja Anda ditangani oleh para ahli. Kurangi risiko kesalahan, hemat waktu, biaya, dan sumber daya. Serahkan operasional Anda kepada kami, sehingga Anda dapat lebih fokus pada tujuan utama bisnis.
-                </p>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center gap-2">
-                  View More
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-              
-              {/* Right Image */}
-              <div className="flex-shrink-0">
-                <img 
-                  src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80" 
-                  alt="Outsourcing Team" 
-                  className="w-full h-96 object-cover rounded-lg shadow-lg"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* Services Sections */}
+        {services.map((service, index) => {
+          const isEven = index % 2 === 0;
+          const bgClass = isEven ? "from-blue-50 to-indigo-100" : "from-green-50 to-emerald-100";
+          const buttonClass = isEven ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700";
 
-        {/* Digital Solutions Section */}
-        <section className="py-16 px-6 md:px-12 lg:px-20 bg-gradient-to-br from-green-50 to-emerald-100">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-12">
-              {/* Left Content */}
-              <div className="max-w-2xl">
-                <h2 className="text-[30px] font-bold text-gray-800 mb-6">
-                  Digital Solutions
-                </h2>
-                <h3 className="text-[25px] font-semibold text-gray-700 mb-6 leading-relaxed">
-                  Transformasi digital yang inovatif untuk mengoptimalkan efisiensi operasional perusahaan Anda.
-                </h3>
-                <p className="text-[20px] text-gray-600 leading-relaxed mb-8">
-                  Manfaatkan teknologi terdepan untuk mengotomatisasi proses bisnis, meningkatkan produktivitas, dan menciptakan pengalaman pelanggan yang luar biasa. Solusi digital kami dirancang khusus untuk memenuhi kebutuhan unik industri Anda.
-                </p>
-                <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center gap-2">
-                  View More
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+          return (
+            <section key={service.id} id={service.name.toLowerCase().replace(/\s+/g, '-')} className={`py-16 px-6 md:px-12 lg:px-20 bg-gradient-to-br ${bgClass}`}>
+              <div className="max-w-7xl mx-auto">
+                <div className={`flex flex-col md:flex-row items-center justify-between gap-12 ${!isEven ? 'md:flex-row-reverse' : ''}`}>
+                  {/* Content */}
+                  <div className="max-w-2xl">
+                    <h2 className="text-[30px] font-bold text-gray-800 mb-6">
+                      {service.name}
+                    </h2>
+                    <p className="text-[20px] text-gray-600 leading-relaxed mb-8">
+                      {generateSummary(service.longDesc, 255)}
+                    </p>
+                    <Link href={`/service/${service.id}`}>
+                      <button className={`${buttonClass} text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center gap-2`}>
+                        View More
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </Link>
+                  </div>
+
+                  {/* Image */}
+                  <div className="flex-shrink-0">
+                    <img
+                      src={getImageUrl(service.imageUrl)}
+                      alt={service.name}
+                      className="w-full h-auto max-h-96 object-contain rounded-lg shadow-lg"
+                    />
+                  </div>
+                </div>
               </div>
-              
-              {/* Right Image */}
-              <div className="flex-shrink-0">
-                <img 
-                  src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=800&q=80" 
-                  alt="Digital Solutions" 
-                  className="w-full h-96 object-cover rounded-lg shadow-lg"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
+            </section>
+          );
+        })}
 
       </div>
       

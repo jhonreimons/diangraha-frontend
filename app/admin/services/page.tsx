@@ -33,9 +33,14 @@ interface Service {
   features: Feature[];
 }
 
+interface User {
+  name?: string;
+  role?: string;
+}
+
 export default function ServicesPage() {
-  const [user, setUser] = useState<any>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [services, setServices] = useState<Service[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedServices, setExpandedServices] = useState<Set<number>>(new Set());
@@ -94,6 +99,30 @@ export default function ServicesPage() {
     }
   }, []);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setItemsPerPage(window.innerWidth < 768 ? 3 : 5);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const toggleServiceExpansion = (serviceId: number) => {
     const newExpanded = new Set(expandedServices);
     if (newExpanded.has(serviceId)) {
@@ -109,6 +138,9 @@ export default function ServicesPage() {
       try {
         const res = await fetch(`${SERVER_BASE_URL}/api/services/${deleteModal.serviceId}`, {
           method: "DELETE",
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem("token"),
+          },
         });
         if (!res.ok) throw new Error("Failed to delete");
         setServices(services.filter((s) => s.id !== deleteModal.serviceId));
@@ -125,7 +157,12 @@ export default function ServicesPage() {
       try {
         const res = await fetch(
           `${SERVER_BASE_URL}/api/services/${deleteFeatureModal.serviceId}/features/${deleteFeatureModal.featureId}`,
-          { method: "DELETE" }
+          {
+            method: "DELETE",
+            headers: {
+              'Authorization': 'Bearer ' + localStorage.getItem("token"),
+            },
+          }
         );
         if (!res.ok) throw new Error("Failed to delete feature");
 
@@ -169,14 +206,18 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <AdminSidebar onToggle={setSidebarOpen} />
-      <main className={`transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-20"}`}>
-        <AdminHeader title="Service Management" user={user} onLogout={logout} sidebarOpen={sidebarOpen} />
+    <div className="bg-slate-100 flex flex-col md:flex-row">
+      <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
+      <div className="flex-1 flex flex-col">
+        <AdminHeader title="Service Management" user={user} onLogout={logout} sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
 
-        <div className="p-6">
+        <main className={`flex-1 pt-20 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
+
+          <div className="p-2 md:p-6">
+          <h2 className="text-base md:text-2xl font-bold text-gray-900 mb-2">Service Management</h2>
+          <p className="text-xs md:text-base text-gray-600 mb-4 md:mb-6">Manage your services and features</p>
           {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-4">
             <div className="flex items-center gap-3">
               <Search className="w-4 h-4 text-gray-400" />
               <input
@@ -187,7 +228,7 @@ export default function ServicesPage() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="border rounded-lg px-3 py-2 w-64 text-sm focus:ring-2 focus:ring-blue-400"
+                className="border rounded-lg px-3 py-2 w-full md:w-64 text-sm focus:ring-2 focus:ring-blue-400"
               />
             </div>
             <Link
@@ -203,12 +244,12 @@ export default function ServicesPage() {
             {currentServices.map((service) => (
               <div
                 key={service.id}
-                className="bg-white rounded-xl shadow-md border p-6 hover:shadow-lg transition"
+                className="bg-white rounded-xl shadow-md border p-4 md:p-6 hover:shadow-lg transition"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 pr-4">
-                    <h3 className="text-lg font-semibold text-gray-900">{service.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <h3 className="text-base md:text-lg font-semibold text-gray-900">{service.name}</h3>
+                    <p className="text-xs md:text-sm text-gray-600 mt-1" style={{ whiteSpace: 'pre-wrap' }}>
                       {service.shortDesc || service.longDesc || "No description available"}
                     </p>
                   </div>
@@ -218,7 +259,7 @@ export default function ServicesPage() {
                       <img
                         src={safeImageUrl(service.imageUrl)}
                         alt={service.name}
-                        className="w-16 h-16 rounded-lg object-cover border"
+                        className="w-12 h-12 md:w-16 md:h-16 rounded-lg object-cover border"
                       />
                     )}
                     <div className="flex items-center gap-2">
@@ -266,11 +307,11 @@ export default function ServicesPage() {
                         {service.features.map((f) => (
                           <li
                             key={f.id}
-                            className="flex justify-between items-start bg-gray-50 p-4 rounded-lg border hover:border-blue-300 transition"
+                            className="flex justify-between items-start bg-gray-50 p-2 md:p-4 rounded-lg border hover:border-blue-300 transition"
                           >
                             <div>
                               <p className="font-medium text-gray-900">{f.featureName}</p>
-                              <p className="text-sm text-gray-600">{f.featureDesc}</p>
+                              <p className="text-xs md:text-sm text-gray-600" style={{ whiteSpace: 'pre-wrap' }}>{f.featureDesc}</p>
                             </div>
                             <div className="flex gap-2">
                               <Link
@@ -297,7 +338,7 @@ export default function ServicesPage() {
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-sm text-gray-500">No features available</p>
+                      <p className="text-xs md:text-sm text-gray-500">No features available</p>
                     )}
                   </div>
                 )}
@@ -306,7 +347,7 @@ export default function ServicesPage() {
           </div>
 
           {/* Pagination - selalu render */}
-          <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="mt-4 md:mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
             {/* Info + Dropdown */}
             {filteredServices.length > 0 ? (
               <div className="flex items-center gap-3 text-sm text-gray-600">
@@ -326,6 +367,7 @@ export default function ServicesPage() {
                   }}
                   className="border rounded-lg px-2 py-1 text-sm"
                 >
+                  <option value={3}>3 per page</option>
                   <option value={5}>5 per page</option>
                   <option value={10}>10 per page</option>
                   <option value={20}>20 per page</option>
@@ -385,5 +427,6 @@ export default function ServicesPage() {
         />
       </main>
     </div>
+  </div>
   );
 }

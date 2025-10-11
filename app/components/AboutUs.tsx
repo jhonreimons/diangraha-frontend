@@ -19,20 +19,17 @@ export default function AboutUs() {
           {/* Left Content */}
           <div className="space-y-6">
             <p className="text-lg text-gray-700 leading-relaxed">
-              Sejak berdirinya pada tahun <span className="font-semibold text-blue-600">1977</span>, PT. Dian Graha Elektrika telah
-              menjadi salah satu perusahaan nasional yang kokoh hingga saat ini,
-              dengan memanfaatkan keahlian dan sumber dayanya untuk
-              memprioritaskan penyediaan layanan berkualitas tinggi dan membina
-              hubungan pelanggan yang berkesinambungan.
+              Established in 1977, PT. Dian Graha Elektrika became one of the most solid national
+              companies until now, by utilizing our expertise and resources to prioritize
+              high-quality services and foster existing customer relationships.
             </p>
             
             <p className="text-lg text-gray-700 leading-relaxed">
-              Bisnis layanan Manajemen Sumber Daya Manusia kami dimulai pada tahun
-              <span className="font-semibold text-blue-600"> 2001</span> bersamaan dengan permintaan pasar akan kebutuhan penyediaan
-              sumber daya manusia. Komitmen kami terhadap keunggulan dan didukung
-              dengan sistem yang selalu mengikuti perubahan teknologi terkini,
-              memastikan penyediaan tenaga kerja terampil untuk berbagai industri
-              dan perusahaan.
+              Our human resource management services business began in 2001 in response to
+              market demand for human resource service. Our commitment to excellence,
+              supported by systems that stay shoulder to shoulder with the latest technological
+              changes, ensures the services of skilled manpower for various industries and
+              companies.
             </p>
           </div>
 

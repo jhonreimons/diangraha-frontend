@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -10,6 +10,12 @@ interface Brand {
     img: string;
     description?: string;
     website?: string;
+}
+
+interface ApiBrand {
+    id: number;
+    name: string;
+    logoUrl: string;
 }
 
 interface BrandsProps {
@@ -32,9 +38,62 @@ const defaultBrands: Brand[] = [
     { id: 12, name: "Danfoss", img: "https://dummyimage.com/150x150/374151/ffffff.png&text=Danfoss" },
 ];
 
-export default function Brands({ brands = defaultBrands }: BrandsProps) {
+export default function Brands({ brands: propBrands }: BrandsProps) {
+    const [brands, setBrands] = useState<Brand[]>(defaultBrands);
+    const [loading, setLoading] = useState(true);
     const [index, setIndex] = useState(0);
-    const itemsPerPage = 4;
+    const [itemsPerPage, setItemsPerPage] = useState(4);
+    const [originalBrands, setOriginalBrands] = useState<Brand[]>([]);
+
+    useEffect(() => {
+        const fetchBrands = async () => {
+            try {
+                const response = await fetch('http://103.103.20.23:8080/api/brands');
+                if (!response.ok) throw new Error('Failed to fetch brands');
+                const data = await response.json();
+                const mappedBrands: Brand[] = data.map((item: ApiBrand) => ({
+                    id: item.id,
+                    name: item.name,
+                    img: item.logoUrl,
+                }));
+                setOriginalBrands(mappedBrands);
+            } catch (error) {
+                console.error('Error fetching brands:', error);
+                setOriginalBrands(defaultBrands);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBrands();
+    }, []);
+
+    // Calculate extended brands based on itemsPerPage
+    useEffect(() => {
+        if (originalBrands.length === 0) return;
+
+        const remainder = originalBrands.length % itemsPerPage;
+        const toAdd = remainder === 0 ? itemsPerPage : itemsPerPage - remainder;
+        const extended = [...originalBrands, ...originalBrands.slice(0, toAdd)];
+        setBrands(extended);
+    }, [originalBrands, itemsPerPage]);
+
+    // Responsive items per page
+    useEffect(() => {
+        const updateItemsPerPage = () => {
+            if (window.innerWidth < 640) {
+                setItemsPerPage(1);
+            } else if (window.innerWidth < 1024) {
+                setItemsPerPage(2);
+            } else {
+                setItemsPerPage(4);
+            }
+        };
+
+        updateItemsPerPage();
+        window.addEventListener("resize", updateItemsPerPage);
+        return () => window.removeEventListener("resize", updateItemsPerPage);
+    }, []);
 
     const maxIndex = Math.ceil(brands.length / itemsPerPage) - 1;
 
@@ -46,7 +105,7 @@ export default function Brands({ brands = defaultBrands }: BrandsProps) {
             <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 text-center">
                 <h2 className="font-bold mb-6 text-gray-800" style={{fontSize: '25px'}}>Our Brands</h2>
                 <p className="text-gray-600 py-8 mb-8 max-w-4xl mx-auto leading-relaxed" style={{fontSize: '18px'}}>
-                    We're proud to work with companies of all sizes, from startups to Fortune 500 enterprises, helping them achieve their digital transformation goals.
+                    We are proud to work with companies of all sizes, from startups to Fortune 500 enterprises, helping them achieve their digital transformation goals.
                 </p>
 
                 <div className="mt-4 relative">
@@ -65,16 +124,16 @@ export default function Brands({ brands = defaultBrands }: BrandsProps) {
                             style={{ transform: `translateX(-${index * 100}%)` }}
                         >
                             {Array.from({ length: Math.ceil(brands.length / itemsPerPage) }).map((_, pageIndex) => (
-                                <div key={pageIndex} className="grid grid-cols-2 md:grid-cols-4 gap-6 min-w-full px-2">
+                                <div key={pageIndex} className={`grid gap-4 md:gap-6 min-w-full px-2 ${itemsPerPage === 1 ? 'grid-cols-1' : itemsPerPage === 2 ? 'grid-cols-2' : 'grid-cols-4'}`}>
                                     {brands
                                         .slice(pageIndex * itemsPerPage, (pageIndex + 1) * itemsPerPage)
-                                        .map((brand) => (
-                                            <div key={brand.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-2xl transition-all duration-500 transform hover:scale-110 hover:-translate-y-3 border border-gray-200 hover:border-blue-300 group">
+                                        .map((brand, idx) => (
+                                            <div key={`${brand.id}-${pageIndex}-${idx}`} className="bg-white p-6 rounded-lg shadow-md hover:shadow-2xl transition-all duration-500 transform hover:scale-110 hover:-translate-y-3 border border-gray-200 hover:border-blue-300 group">
                                                 <Image
                                                     src={brand.img}
                                                     alt={brand.name}
-                                                    width={100}
-                                                    height={100}
+                                                    width={120}
+                                                    height={120}
                                                     className="mx-auto mb-4"
                                                 />
                                                 <p className="font-semibold text-sm">{brand.name}</p>

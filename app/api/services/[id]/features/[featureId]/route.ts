@@ -1,4 +1,4 @@
-// app/api/brands/[id]/route.ts
+// app/api/services/[id]/features/[featureId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = "http://103.103.20.23:8080/api";
@@ -6,9 +6,10 @@ const BACKEND_URL = "http://103.103.20.23:8080/api";
 export async function DELETE(request: NextRequest, context: any) {
   try {
     const id = context.params?.id;
+    const featureId = context.params?.featureId;
 
-    if (!id) {
-      return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    if (!id || !featureId) {
+      return NextResponse.json({ error: "Missing id or featureId" }, { status: 400 });
     }
 
     const authHeader = request.headers.get("authorization");
@@ -17,7 +18,7 @@ export async function DELETE(request: NextRequest, context: any) {
       return NextResponse.json({ error: "Missing authorization header" }, { status: 401 });
     }
 
-    const res = await fetch(`${BACKEND_URL}/brands/${id}`, {
+    const res = await fetch(`${BACKEND_URL}/services/${id}/features/${featureId}`, {
       method: "DELETE",
       headers: {
         accept: "*/*",
@@ -35,6 +36,6 @@ export async function DELETE(request: NextRequest, context: any) {
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.error("Backend API error:", error);
-    return NextResponse.json({ error: "Failed to delete brand" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete feature" }, { status: 500 });
   }
 }

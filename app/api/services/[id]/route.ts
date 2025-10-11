@@ -14,7 +14,10 @@ export async function DELETE(request: NextRequest, context: any) {
     const authHeader = request.headers.get("authorization");
 
     if (!authHeader) {
-      return NextResponse.json({ error: "Missing authorization header" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Missing authorization header" },
+        { status: 401 }
+      );
     }
 
     const res = await fetch(`${BACKEND_URL}/brands/${id}`, {
@@ -35,6 +38,9 @@ export async function DELETE(request: NextRequest, context: any) {
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.error("Backend API error:", error);
-    return NextResponse.json({ error: "Failed to delete brand" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to delete brand" },
+      { status: 500 }
+    );
   }
 }

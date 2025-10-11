@@ -81,13 +81,16 @@ export default function AboutPage() {
                 </h2>
                 <div className="space-y-6 text-gray-700 text-lg leading-relaxed">
                   <p>
-                    Sejak berdirinya pada tahun 1977, PT. Dian Graha Elektrika
-                    telah menjadi salah satu perusahaan nasional yang kokoh
-                    hingga saat ini...
+                    Established in 1977, PT. Dian Graha Elektrika became one of the most solid national
+                    companies until now, by utilizing our expertise and resources to prioritize
+                    high-quality services and foster existing customer relationships.
                   </p>
                   <p>
-                    Bisnis layanan Manajemen Sumber Daya Manusia kami dimulai
-                    pada tahun 2001 bersamaan dengan permintaan pasar...
+                    Our human resource management services business began in 2001 in response to
+                    market demand for human resource service. Our commitment to excellence,
+                    supported by systems that stay shoulder to shoulder with the latest technological
+                    changes, ensures the services of skilled manpower for various industries and
+                    companies.
                   </p>
                 </div>
               </div>
@@ -97,20 +100,21 @@ export default function AboutPage() {
                 <div className="mb-8">
                   <h3 className="text-2xl font-bold text-blue-800 mb-4">Visi</h3>
                   <p className="text-gray-700 text-lg leading-relaxed">
-                    Menjadi mitra terkemuka, memberikan solusi bisnis yang
-                    efisien, handal, dan berkelanjutan
+                      Becoming a leading partner and providing efficient, reliable, and sustainable
+                      business solutions.
                   </p>
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold text-blue-800 mb-4">Misi</h3>
                   <div className="space-y-4 text-gray-700 text-lg leading-relaxed">
                     <p>
-                      Memberikan layanan yang berkualitas, terampil, dan
-                      berkomitmen dalam berbagai bidang bisnis...
+                      roviding high-quality, skilled, committed services in various industries,
+                      including human resources, finance, IT and others to fulfill our client needs.
                     </p>
                     <p>
-                      Mengoptimalkan efisiensi operasional dan produktivitas
-                      klien dengan solusi yang disesuaikan...
+                        Optimizing operational efficiency and client productivity with customized
+                        and modern solutions, along with focusing on technological innovation and
+                        process to improve service quality.
                     </p>
                   </div>
                 </div>
@@ -218,49 +222,65 @@ export default function AboutPage() {
             <div className="grid md:grid-cols-4 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300 text-center">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  ✅
+                  <img
+                    src="https://unpkg.com/heroicons@2.0.18/24/solid/scale.svg"
+                    alt="Integrity Icon"
+                    className="w-8 h-8"
+                  />
                 </div>
                 <h3 className="font-semibold text-gray-800 text-lg mb-2">
                   Integrity
                 </h3>
-                <p className="text-gray-600 text-sm">
-                  Maintaining honesty and strong moral principles...
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  We maintain high standards of honesty and responsibility in every decision and action, ensuring trust and transparency with our clients.
+                </p>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300 text-center">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <img
+                    src="https://unpkg.com/heroicons@2.0.18/24/solid/light-bulb.svg"
+                    alt="Innovative Icon"
+                    className="w-8 h-8"
+                  />
+                </div>
+                <h3 className="font-semibold text-gray-800 text-lg mb-2">
+                  Innovative
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  We continuously seek new ways to improve, adapt, and lead in a rapidly changing environment.
                 </p>
               </div>
 
               <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300 text-center">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  🚀
+                  <img
+                    src="https://unpkg.com/heroicons@2.0.18/24/solid/bolt.svg"
+                    alt="Efficient Icon"
+                    className="w-8 h-8"
+                  />
                 </div>
                 <h3 className="font-semibold text-gray-800 text-lg mb-2">
-                  Excellence
+                  Efficient
                 </h3>
-                <p className="text-gray-600 text-sm">
-                  Striving for the highest quality in everything...
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  We strive to deliver the best results with optimal use of time and resources, ensuring that every effort drives measurable value and sustainable growth.
                 </p>
               </div>
 
               <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300 text-center">
                 <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  🤝
+                  <img
+                    src="https://unpkg.com/heroicons@2.0.18/24/solid/users.svg"
+                    alt="Collaborative Icon"
+                    className="w-8 h-8"
+                  />
                 </div>
                 <h3 className="font-semibold text-gray-800 text-lg mb-2">
-                  Collaboration
+                  Collaborative
                 </h3>
-                <p className="text-gray-600 text-sm">
-                  Working together to achieve common goals...
-                </p>
-              </div>
-
-              <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300 text-center">
-                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  💡
-                </div>
-                <h3 className="font-semibold text-gray-800 text-lg mb-2">
-                  Innovation
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Embracing creativity and new ideas...
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  By fostering open communication and mutual respect, we create strong partnerships that drive shared achievements.
                 </p>
               </div>
             </div>

@@ -8,17 +8,16 @@ export default function LoginPage() {
     username: "",
     password: "",
   });
-  
+
   const { login, loading, error } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await login(formData);
-      // Redirect to dashboard on success
       window.location.href = "/dashboard";
     } catch (err) {
-      // Error handled by useAuth hook
+      console.error("Login error:", err);
     }
   };
 
@@ -32,7 +31,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-orange-50 px-4">
       <div className="w-full max-w-sm bg-white rounded-xl shadow-lg p-8">
-        {/* Logo */}
         <div className="flex flex-col items-center mb-6">
           <div className="bg-blue-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-lg font-bold">
             DGE
@@ -45,13 +43,9 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
               Username
             </label>
             <input
@@ -67,10 +61,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               Password
             </label>
             <input
@@ -87,7 +78,7 @@ export default function LoginPage() {
 
           {error && (
             <div className="text-red-600 text-sm text-center bg-red-50 p-2 rounded">
-              {error}
+              Username or password incorrect
             </div>
           )}
 

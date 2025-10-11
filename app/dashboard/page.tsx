@@ -3,11 +3,33 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import AdminSidebar from "@/app/components/AdminSidebar";
 import AdminHeader from "@/app/components/AdminHeader";
-import { BarChart3, Users, Clock, FilePlus, Settings, UserCog } from "lucide-react";
+import { BarChart3, Users, Clock, FilePlus, Settings, UserCog, Cog, Building2, Trophy, Mail, Eye, EyeOff, Calendar } from "lucide-react";
+
+interface User {
+  name?: string;
+  role?: string;
+}
+
+interface ContactMessage {
+  id: number;
+  fullName: string;
+  email: string;
+  phoneNumber?: string;
+  companyName?: string;
+  interestedIn?: string;
+  message?: string;
+  createdAt: string;
+}
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [totalServices, setTotalServices] = useState(0);
+  const [totalBrands, setTotalBrands] = useState(0);
+  const [totalAchievements, setTotalAchievements] = useState(0);
+  const [recentMessages, setRecentMessages] = useState<ContactMessage[]>([]);
+  const [readMessages, setReadMessages] = useState<Set<number>>(new Set());
+  const [expandedMessage, setExpandedMessage] = useState<number | null>(null);
   const { logout } = useAuth();
 
   useEffect(() => {
@@ -24,8 +46,78 @@ export default function DashboardPage() {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const [servicesRes, brandsRes, achievementsRes, messagesRes] = await Promise.all([
+          fetch('http://103.103.20.23:8080/api/services'),
+          fetch('http://103.103.20.23:8080/api/brands'),
+          fetch('http://103.103.20.23:8080/api/achievements'),
+          fetch('http://103.103.20.23:8080/api/contact-messages', {
+            headers: {
+              'Accept': '*/*',
+              'Authorization': 'Bearer ' + localStorage.getItem("token"),
+            },
+          })
+        ]);
+
+        const servicesData = servicesRes.ok ? await servicesRes.json() : [];
+        const brandsData = brandsRes.ok ? await brandsRes.json() : [];
+        const achievementsData = achievementsRes.ok ? await achievementsRes.json() : [];
+        const messagesData = messagesRes.ok ? await messagesRes.json() : [];
+
+        setTotalServices(Array.isArray(servicesData) ? servicesData.length : 0);
+        setTotalBrands(Array.isArray(brandsData) ? brandsData.length : 0);
+        setTotalAchievements(Array.isArray(achievementsData) ? achievementsData.length : 0);
+
+        // Filter messages from last 30 days
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const recent = Array.isArray(messagesData) ? messagesData.filter((msg: ContactMessage) => new Date(msg.createdAt) >= thirtyDaysAgo).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) : [];
+        setRecentMessages(recent);
+      } catch (error) {
+        console.error('Error fetching counts:', error);
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleLogout = () => {
     logout();
+  };
+
+  const markAsRead = (id: number) => {
+    setReadMessages(prev => new Set(prev).add(id));
+  };
+
+  const toggleMessage = (id: number) => {
+    setExpandedMessage(expandedMessage === id ? null : id);
+    if (!readMessages.has(id)) {
+      markAsRead(id);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   if (!user) {
@@ -37,19 +129,19 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <AdminSidebar onToggle={setSidebarOpen} />
-      
-      <main className={`transition-all duration-300 ${
-        sidebarOpen ? "ml-64" : "ml-20"
-      }`}>
-        <AdminHeader title="Dashboard" user={user} onLogout={handleLogout} />
-        <div className="p-6 bg-gray-50/50 min-h-screen space-y-6">
+    <div className="bg-slate-100 flex flex-col md:flex-row">
+      <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
+
+      <div className="flex-1 flex flex-col">
+        <AdminHeader title="Dashboard" user={user} onLogout={handleLogout} sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
+
+    <main className={`flex-1 pt-20 md:pt-6 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
+          <div className="p-6 bg-gray-50/50 space-y-6">
         {/* Welcome */}
         <div className="bg-white overflow-hidden shadow rounded-xl">
-          <div className="px-6 py-5 sm:p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back, Admin!</h2>
-            <p className="text-gray-600">
+          <div className="px-6 py-3 sm:py-4">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Welcome back, Admin!</h2>
+            <p className="text-sm md:text-base text-gray-600">
               You have successfully logged in to PT Dian Graha Elektrika dashboard.
             </p>
           </div>
@@ -60,11 +152,11 @@ export default function DashboardPage() {
           <div className="bg-white rounded-xl shadow-sm p-5 border hover:shadow-md transition-all">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
-                <BarChart3 className="w-5 h-5" />
+                <Cog className="w-5 h-5" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-500">Total Projects</p>
-                <p className="text-lg font-semibold text-gray-900">24</p>
+                <p className="text-sm text-gray-500">Total Services</p>
+                <p className="text-lg font-semibold text-gray-900">{totalServices}</p>
               </div>
             </div>
           </div>
@@ -72,11 +164,11 @@ export default function DashboardPage() {
           <div className="bg-white rounded-xl shadow-sm p-5 border hover:shadow-md transition-all">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
-                <Users className="w-5 h-5" />
+                <Building2 className="w-5 h-5" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-500">Active Clients</p>
-                <p className="text-lg font-semibold text-gray-900">12</p>
+                <p className="text-sm text-gray-500">Total Brands</p>
+                <p className="text-lg font-semibold text-gray-900">{totalBrands}</p>
               </div>
             </div>
           </div>
@@ -84,51 +176,126 @@ export default function DashboardPage() {
           <div className="bg-white rounded-xl shadow-sm p-5 border hover:shadow-md transition-all">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center">
-                <Clock className="w-5 h-5" />
+                <Trophy className="w-5 h-5" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-500">Pending Tasks</p>
-                <p className="text-lg font-semibold text-gray-900">8</p>
+                <p className="text-sm text-gray-500">Total Achievements</p>
+                <p className="text-lg font-semibold text-gray-900">{totalAchievements}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Management Sections */}
         <div className="bg-white shadow rounded-xl p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Management Sections</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <button className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:scale-105 transition-all flex flex-col items-center">
+            <a href="/admin/brands" className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:scale-105 transition-all flex flex-col items-center">
               <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-3">
                 <BarChart3 className="w-5 h-5" />
               </div>
-              <span className="text-sm font-medium text-gray-900">View Reports</span>
-            </button>
+              <span className="text-sm font-medium text-gray-900">Brand Management</span>
+            </a>
 
-            <button className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:scale-105 transition-all flex flex-col items-center">
+            <a href="/admin/services" className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:scale-105 transition-all flex flex-col items-center">
               <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-3">
                 <FilePlus className="w-5 h-5" />
               </div>
-              <span className="text-sm font-medium text-gray-900">Add Project</span>
-            </button>
+              <span className="text-sm font-medium text-gray-900">Service Management</span>
+            </a>
 
-            <button className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:scale-105 transition-all flex flex-col items-center">
+            <a href="/admin/achievements" className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:scale-105 transition-all flex flex-col items-center">
               <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-3">
                 <UserCog className="w-5 h-5" />
               </div>
-              <span className="text-sm font-medium text-gray-900">Manage Users</span>
-            </button>
+              <div className="text-center">
+                <span className="text-sm font-medium text-gray-900">Achievement Management</span>
+                <p className="text-xs text-gray-600 mt-1">Manage your company achievements and awards</p>
+              </div>
+            </a>
 
-            <button className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:scale-105 transition-all flex flex-col items-center">
+            <a href="/admin/contacts" className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:scale-105 transition-all flex flex-col items-center">
               <div className="w-10 h-10 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center mb-3">
                 <Settings className="w-5 h-5" />
               </div>
-              <span className="text-sm font-medium text-gray-900">Settings</span>
-            </button>
+              <div className="text-center">
+                <span className="text-sm font-medium text-gray-900">Contact Management</span>
+                <p className="text-xs text-gray-600 mt-1">Manage your contact messages and inquiries</p>
+              </div>
+            </a>
           </div>
+        </div>
+
+        {/* Recent Messages */}
+        <div className="bg-white shadow rounded-xl p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Contact Messages (Last 30 Days)</h3>
+          {recentMessages.length === 0 ? (
+            <p className="text-gray-500">No messages in the last 30 days.</p>
+          ) : (
+            <div className="space-y-2">
+              {recentMessages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                    readMessages.has(msg.id) ? 'bg-gray-50 border-gray-200' : 'bg-blue-50 border-blue-200'
+                  }`}
+                  onClick={() => toggleMessage(msg.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3 flex-1">
+                      <span className={`w-3 h-3 rounded-full ${readMessages.has(msg.id) ? 'bg-gray-400' : 'bg-blue-500'}`}></span>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">{msg.fullName}</h4>
+                        <p className="text-sm text-gray-500">{msg.email}</p>
+                        {msg.message && (
+                          <p className="text-sm text-gray-700 mt-1 truncate">
+                            {msg.message.length > 50 ? `${msg.message.substring(0, 50)}...` : msg.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center text-xs text-gray-500">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      {formatDate(msg.createdAt)}
+                    </div>
+                  </div>
+                  {expandedMessage === msg.id && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      {msg.phoneNumber && (
+                        <p className="text-sm text-gray-600 mb-1">Phone: {msg.phoneNumber}</p>
+                      )}
+                      {msg.companyName && (
+                        <p className="text-sm text-gray-600 mb-1">Company: {msg.companyName}</p>
+                      )}
+                      {msg.interestedIn && (
+                        <p className="text-sm text-gray-600 mb-2">Interested in: {msg.interestedIn}</p>
+                      )}
+                      {msg.message && (
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <p className="text-sm text-gray-700 leading-relaxed">{msg.message}</p>
+                        </div>
+                      )}
+                      {!readMessages.has(msg.id) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markAsRead(msg.id);
+                          }}
+                          className="mt-2 text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          Mark as Read
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         </div>
       </main>
     </div>
+  </div>
   );
 }

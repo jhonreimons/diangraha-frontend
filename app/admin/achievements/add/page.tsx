@@ -4,30 +4,30 @@ import { useEffect, useState, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import AdminSidebar from "@/app/components/AdminSidebar";
 import AdminHeader from "@/app/components/AdminHeader";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft, Upload, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import SuccessModal from "@/app/components/SuccessModal";
-import { API_BASE_URL, SERVER_BASE_URL } from "@/lib/config";
+import { API_BASE_URL, SERVER_BASE_URL, safeImageUrl } from "@/lib/config";
 
 interface User {
   name?: string;
   role?: string;
 }
 
-interface Brand {
+interface Achievement {
   id: number;
-  name: string;
-  logoUrl?: string | null;
+  title: string;
+  imageUrl: string;
 }
 
-function BrandForm({ user, sidebarOpen, handleLogout }: {
+function AchievementForm({ user, sidebarOpen, handleLogout }: {
   user: User;
   sidebarOpen: boolean;
   handleLogout: () => void;
 }) {
   const [formData, setFormData] = useState({
-    name: "",
+    title: "",
     image: null as File | null,
   });
   const [previewUrl, setPreviewUrl] = useState<string>("");
@@ -39,28 +39,22 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
 
   useEffect(() => {
     if (isEditMode && editId) {
-      fetchBrandData(editId);
+      fetchAchievementData(editId);
     }
   }, [isEditMode, editId]);
 
-  const fetchBrandData = async (id: string) => {
+  const fetchAchievementData = async (id: string) => {
     try {
-      const response = await fetch(`${SERVER_BASE_URL}/api/brands`);
-      const brands: Brand[] = await response.json();
-      const brand = brands.find((b) => b.id === parseInt(id));
+      const response = await fetch(`${SERVER_BASE_URL}/api/achievements`);
+      const achievements: Achievement[] = await response.json();
+      const achievement = achievements.find((a) => a.id === parseInt(id));
 
-      if (brand) {
-        setFormData({ name: brand.name, image: null });
-        if (brand.logoUrl) {
-          setPreviewUrl(
-            brand.logoUrl.startsWith("http")
-              ? brand.logoUrl
-              : `${SERVER_BASE_URL}${brand.logoUrl}`
-          );
-        }
+      if (achievement) {
+        setFormData({ title: achievement.title, image: null });
+        setPreviewUrl(safeImageUrl(achievement.imageUrl));
       }
     } catch (error) {
-      console.error("Error fetching brand:", error);
+      console.error("Error fetching achievement:", error);
     }
   };
 
@@ -82,14 +76,14 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append("name", formData.name);
+      formDataToSend.append("title", formData.title);
       if (formData.image) {
-        formDataToSend.append("logoFile", formData.image);
+        formDataToSend.append("imageFile", formData.image);
       }
 
       let response: Response;
       if (isEditMode && editId) {
-        response = await fetch(`${SERVER_BASE_URL}/api/brands/${editId}`, {
+        response = await fetch(`${SERVER_BASE_URL}/api/achievements/${editId}`, {
           method: "PUT",
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem("token"),
@@ -97,7 +91,7 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
           body: formDataToSend,
         });
       } else {
-        response = await fetch(`${SERVER_BASE_URL}/api/brands`, {
+        response = await fetch(`${SERVER_BASE_URL}/api/achievements`, {
           method: "POST",
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem("token"),
@@ -109,16 +103,16 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
       if (response.ok) {
         setShowSuccess(true);
       } else {
-        console.error("Failed to save brand");
+        console.error("Failed to save achievement");
       }
     } catch (error) {
-      console.error("Error saving brand:", error);
+      console.error("Error saving achievement:", error);
     }
   };
 
   const handleSuccessClose = () => {
     setShowSuccess(false);
-    window.location.href = "/admin/brands";
+    window.location.href = "/admin/achievements";
   };
 
   return (
@@ -127,42 +121,43 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
         {/* Back button */}
         <div className="mb-6">
           <Link
-            href="/admin/brands"
+            href="/admin/achievements"
             className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Brand Management
+            Back to Achievement Management
           </Link>
         </div>
 
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            {isEditMode ? "Edit Brand" : "Add New Brand"}
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <Trophy className="w-6 h-6 mr-2 text-yellow-500" />
+            {isEditMode ? "Edit Achievement" : "Add New Achievement"}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Brand Name */}
+            {/* Achievement Title */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Brand Name
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                Achievement Title
               </label>
               <input
                 type="text"
-                id="name"
-                name="name"
-                value={formData.name}
+                id="title"
+                name="title"
+                value={formData.title}
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
-                placeholder="Enter brand name"
+                placeholder="Enter achievement title"
               />
             </div>
 
-            {/* Brand Logo */}
+            {/* Achievement Image */}
             <div>
               <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
-                Brand Logo
+                Achievement Image
               </label>
               <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl hover:border-blue-400 bg-gray-50 transition-all">
                 <div className="space-y-2 text-center">
@@ -176,7 +171,7 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
                     <Upload className="mx-auto h-12 w-12 text-gray-400" />
                   )}
                   <label htmlFor="image" className="cursor-pointer block mx-auto text-center text-sm text-gray-500 hover:text-blue-600 mt-2">
-                    Choose Logo File
+                    Choose Achievement Image
                   </label>
                   <input
                     id="image"
@@ -193,7 +188,7 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
             {/* Actions */}
             <div className="flex justify-end space-x-3 pt-6">
               <Link
-                href="/admin/brands"
+                href="/admin/achievements"
                 className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all"
               >
                 Cancel
@@ -202,7 +197,7 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
                 type="submit"
                 className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition-all"
               >
-                {isEditMode ? "Update Brand" : "Add Brand"}
+                {isEditMode ? "Update Achievement" : "Add Achievement"}
               </button>
             </div>
           </form>
@@ -213,8 +208,8 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
         isOpen={showSuccess}
         message={
           isEditMode
-            ? `Brand "${formData.name}" updated successfully!`
-            : `Brand "${formData.name}" added successfully!`
+            ? `Achievement "${formData.title}" updated successfully!`
+            : `Achievement "${formData.title}" added successfully!`
         }
         onClose={handleSuccessClose}
       />
@@ -222,7 +217,7 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
   );
 }
 
-export default function AddBrandPage() {
+export default function AddAchievementPage() {
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { logout } = useAuth();
@@ -248,12 +243,12 @@ export default function AddBrandPage() {
       <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
 
       <div className="flex-1 flex flex-col">
-        <AdminHeader title="Brand Form" user={user} onLogout={handleLogout} sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
+        <AdminHeader title="Achievement Form" user={user} onLogout={handleLogout} sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
 
         <main className="flex-1">
           <div className="pt-20 md:pt-0 p-2 md:p-6 bg-gray-50/50 min-h-screen">
-            <Suspense fallback={<div>Loading brand form...</div>}>
-              <BrandForm user={user} sidebarOpen={sidebarOpen} handleLogout={handleLogout} />
+            <Suspense fallback={<div>Loading achievement form...</div>}>
+              <AchievementForm user={user} sidebarOpen={sidebarOpen} handleLogout={handleLogout} />
             </Suspense>
           </div>
         </main>

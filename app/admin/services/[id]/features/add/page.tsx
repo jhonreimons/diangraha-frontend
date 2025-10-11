@@ -78,7 +78,10 @@ export default function AddFeaturePage() {
 
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': 'Bearer ' + localStorage.getItem("token"),
+        },
         body: JSON.stringify(formData),
       });
 
@@ -109,16 +112,16 @@ export default function AddFeaturePage() {
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <AdminSidebar onToggle={setSidebarOpen} />
+      <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
+      <AdminHeader
+        title={isEditMode ? "Edit Service Feature" : "Add Service Feature"}
+        user={user}
+        onLogout={handleLogout}
+        sidebarOpen={sidebarOpen}
+        onToggle={setSidebarOpen}
+      />
 
-      <main className={`transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-20"}`}>
-        <AdminHeader
-          title={isEditMode ? "Edit Service Feature" : "Add Service Feature"}
-          user={user}
-          onLogout={handleLogout}
-          sidebarOpen={sidebarOpen}
-        />
-
+      <main className={`pt-20 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-20"}`}>
         <div className="p-6 bg-gray-50/50 min-h-screen flex justify-center">
           <div className="w-full max-w-2xl">
             <div className="mb-6">

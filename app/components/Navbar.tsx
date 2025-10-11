@@ -1,14 +1,22 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [openService, setOpenService] = useState(false);
+  const [services, setServices] = useState<any[]>([]);
   const pathname = usePathname();
+
+  useEffect(() => {
+    fetch("http://103.103.20.23:8080/api/services")
+      .then(res => res.json())
+      .then(data => setServices(data))
+      .catch(err => console.error("Error fetching services:", err));
+  }, []);
 
   const menuItems = [
     { href: "/", label: "Home" },
@@ -18,10 +26,10 @@ export default function Navbar() {
     { href: "/contact", label: "Contact Us" },
   ];
 
-  const serviceItems = [
-    { href: "/service", label: "Outsourcing" },
-    { href: "/service/hr-management", label: "HR Management" },
-  ];
+  const serviceItems = services.map(service => ({
+    href: `/service/${service.id}`,
+    label: service.name
+  }));
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
