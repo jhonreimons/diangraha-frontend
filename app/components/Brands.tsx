@@ -41,8 +41,8 @@ const defaultBrands: Brand[] = [
 export default function Brands({ brands: propBrands }: BrandsProps) {
     const [brands, setBrands] = useState<Brand[]>(defaultBrands);
     const [loading, setLoading] = useState(true);
-    const [index, setIndex] = useState(0);
-    const [itemsPerPage, setItemsPerPage] = useState(4);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [itemsPerView, setItemsPerView] = useState(4);
     const [originalBrands, setOriginalBrands] = useState<Brand[]>([]);
 
     useEffect(() => {
@@ -68,37 +68,36 @@ export default function Brands({ brands: propBrands }: BrandsProps) {
         fetchBrands();
     }, []);
 
-    // Calculate extended brands based on itemsPerPage
+    // Set brands to original
     useEffect(() => {
-        if (originalBrands.length === 0) return;
+        setBrands(originalBrands);
+    }, [originalBrands]);
 
-        const remainder = originalBrands.length % itemsPerPage;
-        const toAdd = remainder === 0 ? itemsPerPage : itemsPerPage - remainder;
-        const extended = [...originalBrands, ...originalBrands.slice(0, toAdd)];
-        setBrands(extended);
-    }, [originalBrands, itemsPerPage]);
-
-    // Responsive items per page
+    // Responsive items per view
     useEffect(() => {
-        const updateItemsPerPage = () => {
-            if (window.innerWidth < 640) {
-                setItemsPerPage(1);
-            } else if (window.innerWidth < 1024) {
-                setItemsPerPage(2);
+        const updateItemsPerView = () => {
+            if (originalBrands.length === 1) {
+                setItemsPerView(1);
             } else {
-                setItemsPerPage(4);
+                if (window.innerWidth < 640) {
+                    setItemsPerView(1);
+                } else if (window.innerWidth < 1024) {
+                    setItemsPerView(2);
+                } else {
+                    setItemsPerView(4);
+                }
             }
         };
 
-        updateItemsPerPage();
-        window.addEventListener("resize", updateItemsPerPage);
-        return () => window.removeEventListener("resize", updateItemsPerPage);
-    }, []);
+        updateItemsPerView();
+        window.addEventListener("resize", updateItemsPerView);
+        return () => window.removeEventListener("resize", updateItemsPerView);
+    }, [originalBrands.length]);
 
-    const maxIndex = Math.ceil(brands.length / itemsPerPage) - 1;
+    const maxIndex = Math.ceil(brands.length / itemsPerView) - 1;
 
-    const next = () => setIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
-    const prev = () => setIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
+    const next = () => setCurrentIndex((prev) => prev < maxIndex ? prev + 1 : 0);
+    const prev = () => setCurrentIndex((prev) => prev > 0 ? prev - 1 : maxIndex);
 
     return (
         <section className="py-20 md:py-24 bg-gray-50">
@@ -119,27 +118,22 @@ export default function Brands({ brands: propBrands }: BrandsProps) {
 
                     {/* Carousel wrapper */}
                     <div className="overflow-hidden rounded-lg mx-16">
-                        <div 
-                            className="flex transition-all duration-700 ease-in-out"
-                            style={{ transform: `translateX(-${index * 100}%)` }}
+                        <div
+                            className={`flex transition-transform duration-700 ease-in-out ${originalBrands.length < 4 ? 'justify-center' : ''}`}
+                            style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
                         >
-                            {Array.from({ length: Math.ceil(brands.length / itemsPerPage) }).map((_, pageIndex) => (
-                                <div key={pageIndex} className={`grid gap-4 md:gap-6 min-w-full px-2 ${itemsPerPage === 1 ? 'grid-cols-1' : itemsPerPage === 2 ? 'grid-cols-2' : 'grid-cols-4'}`}>
-                                    {brands
-                                        .slice(pageIndex * itemsPerPage, (pageIndex + 1) * itemsPerPage)
-                                        .map((brand, idx) => (
-                                            <div key={`${brand.id}-${pageIndex}-${idx}`} className="bg-white p-6 rounded-lg shadow-md hover:shadow-2xl transition-all duration-500 transform hover:scale-110 hover:-translate-y-3 border border-gray-200 hover:border-blue-300 group">
-                                                <Image
-                                                    src={brand.img}
-                                                    alt={brand.name}
-                                                    width={120}
-                                                    height={120}
-                                                    className="mx-auto mb-4"
-                                                />
-                                                <p className="font-semibold text-sm">{brand.name}</p>
-                                            </div>
-                                        ))
-                                    }
+                            {brands.map((brand, index) => (
+                                <div key={brand.id} className="flex-shrink-0 px-3" style={{ width: itemsPerView === 1 ? '256px' : `${100 / itemsPerView}%` }}>
+                                    <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-2xl transition-all duration-500 transform hover:scale-110 hover:-translate-y-3 border border-gray-200 hover:border-blue-300 group">
+                                        <Image
+                                            src={brand.img}
+                                            alt={brand.name}
+                                            width={120}
+                                            height={120}
+                                            className="mx-auto mb-4"
+                                        />
+                                        <p className="font-semibold text-sm">{brand.name}</p>
+                                    </div>
                                 </div>
                             ))}
                         </div>

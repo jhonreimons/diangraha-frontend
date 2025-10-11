@@ -48,25 +48,31 @@ export default function Achievement({ awards = defaultAwards }: AchievementProps
         fetchData();
     }, []);
 
+
+
+    const effectiveAwards = fetchedAwards.length > 0 ? fetchedAwards : awards;
+
     // Responsive items per view
     useEffect(() => {
         const updateItemsPerView = () => {
-            if (window.innerWidth < 640) {
+            if (effectiveAwards.length === 1) {
                 setItemsPerView(1);
-            } else if (window.innerWidth < 1024) {
-                setItemsPerView(2);
             } else {
-                setItemsPerView(4);
+                if (window.innerWidth < 640) {
+                    setItemsPerView(1);
+                } else if (window.innerWidth < 1024) {
+                    setItemsPerView(2);
+                } else {
+                    setItemsPerView(4);
+                }
             }
         };
 
         updateItemsPerView();
         window.addEventListener("resize", updateItemsPerView);
         return () => window.removeEventListener("resize", updateItemsPerView);
-    }, []);
+    }, [effectiveAwards.length]);
 
-    const effectiveAwards = fetchedAwards.length > 0 ? fetchedAwards : awards;
-    
     const handleTransition = (newIndex: number) => {
         if (isTransitioning) return;
         setIsTransitioning(true);
@@ -112,22 +118,22 @@ export default function Achievement({ awards = defaultAwards }: AchievementProps
                             <div className="overflow-hidden">
                                 <div className="overflow-hidden">
                                     <div
-                                        className="flex transition-transform duration-700 ease-in-out"
+                                        className={`flex transition-transform duration-700 ease-in-out ${effectiveAwards.length < 4 ? 'justify-center' : ''}`}
                                         style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
                                     >
                                         {/* Duplicate awards untuk smooth infinite scroll */}
-                                        {[...effectiveAwards, ...effectiveAwards].map((award, index) => (
+                                        {effectiveAwards.map((award, index) => (
                                                 <div
                                                 key={`${award.id}-${Math.floor(index / effectiveAwards.length)}`}
                                                 className="flex-shrink-0 px-3"
-                                                style={{ width: `${100 / itemsPerView}%` }}
+                                                style={{ width: itemsPerView === 1 ? '256px' : `${100 / itemsPerView}%` }}
                                                 >
-                                                <div className="border border-gray-200 rounded-xl shadow-md p-6 flex flex-col items-center bg-white hover:shadow-2xl transition-all duration-500 transform hover:scale-110 hover:-translate-y-3 hover:border-blue-300 group">
+                                                <div className="border border-gray-200 rounded-xl shadow-md p-6 flex flex-col items-center bg-white hover:shadow-2xl transition-all duration-500 hover:border-blue-300 transform hover:-translate-y-2 hover:scale-105 group">
                                                     <Image
-                                                        src={award.image || "https://dummyimage.com/80x80/ffd700/ffffff.png&text=🏅"}
+                                                        src={award.image || "https://dummyimage.com/64x64/ffd700/ffffff.png&text=🏅"}
                                                         alt={award.title}
-                                                        width={80}
-                                                        height={80}
+                                                        width={64}
+                                                        height={64}
                                                         className="mb-4"
                                                     />
                                                     <p className="font-medium text-center">{award.title}</p>
