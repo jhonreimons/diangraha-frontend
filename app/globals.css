@@ -40,3 +40,24 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+/* tambahkan di globals.css */
+
+html,
+body {
+  background-color: #f1f5f9; /* sama seperti bg-slate-100 */
+  min-height: 100%;
+}
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}

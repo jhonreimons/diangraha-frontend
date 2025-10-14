@@ -16,17 +16,34 @@ export default function Footer() {
           <p className="text-sm">Email: company@email.com</p>
           <div className="flex gap-4 mt-4">
             <a href="#" className="hover:opacity-80">
-              <Image src="https://cdn-icons-png.flaticon.com/512/3670/3670147.png" alt="YouTube" width={24} height={24} />
+              <Image
+                src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg"
+                alt="YouTube"
+                width={24}
+                height={24}
+                className="invert"
+              />
             </a>
             <a href="#" className="hover:opacity-80">
-              <Image src="https://cdn-icons-png.flaticon.com/512/3670/3670274.png" alt="Instagram" width={24} height={24} />
+              <Image
+                src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg"
+                alt="Instagram"
+                width={24}
+                height={24}
+                className="invert"
+              />
             </a>
             <a href="#" className="hover:opacity-80">
-              <Image src="https://cdn-icons-png.flaticon.com/512/3670/3670129.png" alt="LinkedIn" width={24} height={24} />
+              <Image
+                src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg"
+                alt="LinkedIn"
+                width={24}
+                height={24}
+                className="invert"
+              />
             </a>
           </div>
         </div>
-
         {/* Jam Operasional */}
         <div>
           <h4 className="font-semibold mb-4">Jam Operasional</h4>
@@ -41,7 +58,6 @@ export default function Footer() {
           <ul className="space-y-2 text-sm">
             <li><a href="#" className="hover:underline">About Us</a></li>
             <li><a href="#" className="hover:underline">Career</a></li>
-            <li><a href="#" className="hover:underline">Our Team</a></li>
           </ul>
         </div>
 

@@ -1,7 +1,9 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getImageUrl } from "@/lib/config";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Service {
   id: number;
@@ -12,18 +14,18 @@ interface Service {
 }
 
 function generateSummary(text: string, maxLength = 100) {
+  if (!text) return "";
   if (text.length <= maxLength) return text;
   const truncated = text.slice(0, maxLength);
   const lastSpace = truncated.lastIndexOf(" ");
   return truncated.slice(0, lastSpace) + "...";
 }
 
-const ServiceSection = () => {
+export default function ServiceSection() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [itemsPerView, setItemsPerView] = useState(4);
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -31,12 +33,7 @@ const ServiceSection = () => {
         const response = await fetch("http://103.103.20.23:8080/api/services");
         if (!response.ok) throw new Error("Failed to fetch services");
         const data = await response.json();
-        // If only one service, don't duplicate; else duplicate for infinite scroll
-        if (data.length === 1) {
-          setServices(data);
-        } else {
-          setServices([...data, ...data]);
-        }
+        setServices(data);
       } catch (error) {
         console.error("Error fetching services:", error);
         setServices([]);
@@ -44,101 +41,134 @@ const ServiceSection = () => {
         setLoading(false);
       }
     };
-
     fetchServices();
   }, []);
 
-  // Auto scroll effect (only if multiple services)
+  // Responsiveness
   useEffect(() => {
-    if (services.length <= 1) return;
+    const updateItemsPerView = () => {
+      if (window.innerWidth < 640) setItemsPerView(1);
+      else if (window.innerWidth < 1024) setItemsPerView(2);
+      else setItemsPerView(4);
+    };
 
-    const interval = setInterval(() => {
-      const container = document.querySelector('.services-scroll') as HTMLElement;
-      if (container) {
-        container.scrollLeft += 2; // Smooth scroll by 2px
-        // Reset when halfway through duplicated list
-        if (container.scrollLeft >= container.scrollWidth / 2) {
-          container.scrollLeft = 0;
-        }
-      }
-    }, 50); // Every 50ms for smooth animation
+    updateItemsPerView();
+    window.addEventListener("resize", updateItemsPerView);
+    return () => window.removeEventListener("resize", updateItemsPerView);
+  }, []);
 
-    return () => clearInterval(interval);
-  }, [services.length]);
+  const maxIndex = Math.ceil(services.length / itemsPerView) - 1;
+
+  const next = () => setCurrentIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
+  const prev = () => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
 
   if (loading) {
     return (
       <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="font-bold text-gray-800 mb-4" style={{fontSize: '25px'}}>Our Services</h2>
-            <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Comprehensive business solutions tailored to your needs.
-            </p>
-          </div>
-          <div className="text-center">Loading services...</div>
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <h2 className="font-bold text-gray-800 mb-4 text-[25px]">Our Services</h2>
+          <p className="text-gray-600 text-lg max-w-3xl mx-auto mb-8">
+            Comprehensive business solutions tailored to your needs.
+          </p>
+          <div className="text-gray-500">Loading services...</div>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="py-16 bg-gray-50 relative">
+      <div className="max-w-7xl mx-auto px-6 relative">
+        {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="font-bold text-gray-800 mb-4" style={{fontSize: '25px'}}>Our Services</h2>
+          <h2 className="font-bold text-gray-800 mb-4 text-[25px]">Our Services</h2>
           <p className="text-gray-600 text-lg max-w-3xl mx-auto">
             Comprehensive business solutions tailored to your needs.
           </p>
         </div>
 
-        <div
-          className={`flex gap-8 overflow-x-auto pb-4 services-scroll cursor-grab active:cursor-grabbing ${services.length <= 4 ? 'justify-center' : ''}`}
-          onMouseDown={(e) => {
-            setIsDragging(true);
-            setStartX(e.clientX);
-            const container = e.currentTarget;
-            setScrollLeft(container.scrollLeft);
-          }}
-          onMouseMove={(e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            const container = e.currentTarget;
-            const x = e.clientX;
-            const walk = (x - startX) * 2; // Scroll speed multiplier
-            container.scrollLeft = scrollLeft - walk;
-          }}
-          onMouseUp={() => setIsDragging(false)}
-          onMouseLeave={() => setIsDragging(false)}
-        >
-          <style jsx>{`
-            .services-scroll::-webkit-scrollbar {
-              display: none;
-            }
-            .services-scroll {
-              -ms-overflow-style: none;
-              scrollbar-width: none;
-            }
-          `}</style>
-          {services.map((service, index) => (
-            <div key={`${service.id}_${index}`} className="bg-white p-6 rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 text-center border border-gray-200 hover:border-blue-300 transform hover:-translate-y-2 hover:scale-105 group flex-shrink-0 w-64">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                <img src={getImageUrl(service.imageUrl)} alt={service.name} className="w-full h-full object-cover" />
-              </div>
-              <h3 className="font-semibold text-gray-800 text-lg mb-3">{service.name}</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">{generateSummary(service.longDesc)}</p>
+        {/* Carousel */}
+        <div className="relative flex items-center justify-center">
+          {/* Left Arrow */}
+          {services.length > itemsPerView && (
+            <button
+              onClick={prev}
+              className="absolute -left-6 sm:-left-8 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-200 rounded-full p-3 shadow-xl hover:bg-blue-50 hover:scale-105 transition-all duration-300"
+            >
+              <ChevronLeft className="w-6 h-6 text-gray-800" />
+            </button>
+          )}
+
+          {/* Scroll Container */}
+          <div className="overflow-hidden mx-8 sm:mx-16">
+            <div
+              className={`flex transition-transform duration-700 ease-in-out ${services.length < itemsPerView ? "justify-center" : ""
+                }`}
+              style={{
+                transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
+              }}
+            >
+              {services.map((service) => (
+                <div
+                  key={service.id}
+                  className="flex-shrink-0 px-3 flex"
+                  style={{
+                    width: `${100 / itemsPerView}%`,
+                    maxWidth: itemsPerView === 1 ? "280px" : "100%",
+                  }}
+                >
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-md p-6 flex flex-col justify-between h-full min-h-[340px] hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 hover:border-blue-300 group">
+                    <div>
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                        {service.imageUrl ? (
+                          <img
+                            src={getImageUrl(service.imageUrl)}
+                            alt={service.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="bg-blue-600 text-white font-bold text-lg w-full h-full flex items-center justify-center">
+                            {service.name?.[0] || "S"}
+                          </div>
+                        )}
+                      </div>
+                      <h3 className="font-semibold text-gray-800 text-lg mb-3">
+                        {service.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        {generateSummary(service.longDesc)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          {/* Right Arrow */}
+          {services.length > itemsPerView && (
+            <button
+              onClick={next}
+              className="absolute -right-6 sm:-right-8 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-200 rounded-full p-3 shadow-xl hover:bg-blue-50 hover:scale-105 transition-all duration-300"
+            >
+              <ChevronRight className="w-6 h-6 text-gray-800" />
+            </button>
+          )}
         </div>
 
+        {/* CTA Button */}
         <div className="text-center mt-12">
-          <Link href="/services" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-300">
+          <Link
+            href="/services"
+            className="inline-block bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold 
+               hover:bg-blue-900 transition-all duration-300 transform hover:scale-105 
+               hover:shadow-lg min-w-[200px]"
+          >
             View All Services
           </Link>
         </div>
+
       </div>
     </section>
   );
-};
-
-export default ServiceSection;
+}

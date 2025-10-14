@@ -7,14 +7,14 @@ export default function AboutUs() {
       <div className="max-w-7xl mx-auto px-6">
         {/* Centered Header */}
         <div className="text-center mb-16">
-          <h2 className="font-bold text-gray-900 mb-6" style={{fontSize: '25px'}}>
+          <h2 className="font-bold text-gray-900 mb-6" style={{ fontSize: '25px' }}>
             About Us
           </h2>
-          <h3 className="font-bold text-gray-800 mb-8" style={{fontSize: '30px'}}>
+          <h3 className="font-bold text-gray-800 mb-8" style={{ fontSize: '30px' }}>
             PT. Dian Graha Elektrika
           </h3>
         </div>
-        
+
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left Content */}
           <div className="space-y-6">
@@ -23,7 +23,7 @@ export default function AboutUs() {
               companies until now, by utilizing our expertise and resources to prioritize
               high-quality services and foster existing customer relationships.
             </p>
-            
+
             <p className="text-lg text-gray-700 leading-relaxed">
               Our human resource management services business began in 2001 in response to
               market demand for human resource service. Our commitment to excellence,
@@ -49,16 +49,19 @@ export default function AboutUs() {
             <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-blue-50 rounded-full opacity-30 z-0"></div>
           </div>
         </div>
-        
+
         {/* Centered Button */}
         <div className="text-center mt-20">
-          <Link 
-            href="/about" 
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          <Link
+            href="/about"
+            className="inline-block bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold 
+               hover:bg-blue-900 transition-all duration-300 transform hover:scale-105 
+               hover:shadow-lg min-w-[200px]"
           >
             Learn More
           </Link>
         </div>
+
       </div>
     </section>
   );

@@ -36,11 +36,15 @@ export default function Hero() {
         Empowering Your Business to Grow
       </span>
     </h2>
-    <Link href="/about">
-      <button className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg shadow-lg">
-        Learn more
-      </button>
-    </Link>
+      <Link href="/about">
+        <button
+          className="bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold text-lg
+                    hover:bg-blue-900 transition-all duration-300 transform hover:scale-105
+                    hover:shadow-lg min-w-[200px] shadow-md"
+        >
+          Learn More
+        </button>
+      </Link>
   </div>
 </section>
 

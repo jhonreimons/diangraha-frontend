@@ -24,7 +24,7 @@ export default function CareerPage() {
   {/* Centered Text */}
   <div className="relative z-20 flex justify-center">
     <span className="inline-block px-6 py-3 rounded-md text-white text-3xl md:text-4xl font-extrabold 
-                     bg-gradient-to-r from-indigo-600 to-violet-600/90 backdrop-blur-sm shadow-lg">
+                     bg-gradient-to-r from-indigo-29 to-violet-60 backdrop-blur-sm shadow-lg">
       Join Us
     </span>
   </div>

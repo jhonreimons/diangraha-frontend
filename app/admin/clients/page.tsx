@@ -15,13 +15,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import DeleteConfirmModal from "@/app/components/DeleteConfirmModal";
-import { SERVER_BASE_URL, safeImageUrl } from "@/lib/config";
-import { brandsAPI } from "@/lib/api";
+import { SERVER_BASE_URL } from "@/lib/config";
 
-interface Brand {
+interface Client {
   id: number;
   name: string;
-  logoUrl?: string | null;
+  imageUrl?: string | null;
 }
 
 interface User {
@@ -29,34 +28,44 @@ interface User {
   role?: string;
 }
 
-export default function BrandManagementPage() {
+export default function ClientManagementPage() {
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [brandToDelete, setBrandToDelete] = useState<Brand | null>(null);
-  const [brands, setBrands] = useState<Brand[]>([]);
+  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showLogoModal, setShowLogoModal] = useState(false);
-  const [selectedLogo, setSelectedLogo] = useState<{ url: string; name: string } | null>(null);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  // ✅ Modal untuk preview logo
+  const [showLogoModal, setShowLogoModal] = useState(false);
+  const [selectedLogo, setSelectedLogo] = useState<{ url: string; name: string } | null>(
+    null
+  );
+
   const { logout } = useAuth();
 
-  const fetchBrands = async () => {
+  const fetchClients = async () => {
     try {
-      const response = await fetch(`${SERVER_BASE_URL}/api/brands`, { cache: "no-store" });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      setBrands(Array.isArray(data) ? data : []);
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Missing token");
+
+      const res = await fetch(`${SERVER_BASE_URL}/api/clients`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      setClients(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Error fetching brands:", error);
-      setBrands([
-        { id: 1, name: "PT Dian Graha Elektrika", logoUrl: "/uploads/brands/sample1.png" },
-        { id: 2, name: "Schneider Electric", logoUrl: "/uploads/brands/sample2.png" },
-        { id: 3, name: "ABB", logoUrl: null },
-      ]);
+      console.error("Error fetching clients:", error);
+      setClients([]);
     } finally {
       setLoading(false);
     }
@@ -65,12 +74,15 @@ export default function BrandManagementPage() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
+
     if (!token) {
       window.location.href = "/login";
       return;
     }
+
     if (userData) setUser(JSON.parse(userData));
-    fetchBrands();
+
+    fetchClients();
 
     const handleResize = () => {
       setSidebarOpen(window.innerWidth >= 768);
@@ -84,47 +96,61 @@ export default function BrandManagementPage() {
 
   const handleLogout = () => logout();
 
-  const handleDeleteClick = (brand: Brand) => {
-    setBrandToDelete(brand);
+  const handleDeleteClick = (client: Client) => {
+    setClientToDelete(client);
     setShowDeleteModal(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!brandToDelete) return;
+    if (!clientToDelete) return;
     try {
-      await brandsAPI.deleteBrand(brandToDelete.id);
-      setBrands(brands.filter((b) => b.id !== brandToDelete.id));
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Missing token");
+
+      const res = await fetch(`${SERVER_BASE_URL}/api/clients/${clientToDelete.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      setClients((prev) => prev.filter((c) => c.id !== clientToDelete.id));
     } catch (err) {
-      console.error("Error deleting brand:", err);
+      console.error("Error deleting client:", err);
+      alert("Failed to delete client. Please try again.");
     } finally {
       setShowDeleteModal(false);
-      setBrandToDelete(null);
+      setClientToDelete(null);
     }
   };
 
   const handleDeleteCancel = () => {
     setShowDeleteModal(false);
-    setBrandToDelete(null);
+    setClientToDelete(null);
   };
 
-  const filteredBrands = brands.filter((b) =>
-    b.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredClients = clients.filter((c) =>
+    c.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const sortedBrands = [...filteredBrands].sort((a, b) =>
+  const sortedClients = [...filteredClients].sort((a, b) =>
     sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
   );
 
-  const totalPages = Math.ceil(sortedBrands.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedClients.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentBrands = sortedBrands.slice(startIndex, startIndex + itemsPerPage);
+  const currentClients = sortedClients.slice(startIndex, startIndex + itemsPerPage);
 
   if (!user || loading) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Loading Brand Management</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            Loading Client Management
+          </h2>
           <p className="text-gray-600">Please wait while we fetch your data...</p>
         </div>
       </div>
@@ -139,34 +165,35 @@ export default function BrandManagementPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         <AdminHeader
-          title="Brand Management"
+          title="Client Management"
           user={user}
           onLogout={handleLogout}
           sidebarOpen={sidebarOpen}
           onToggle={setSidebarOpen}
         />
 
-        {/* Main Area */}
         <main
           className={`flex-1 transition-all duration-300 mt-[80px] md:mt-[88px] px-4 md:px-6 ${
             sidebarOpen ? "md:ml-72" : "md:ml-24"
           }`}
         >
           <div className="bg-gray-50/50">
-            {/* Header Section */}
+            {/* Header */}
             <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
               <div>
-                <h2 className="text-base md:text-2xl font-bold text-gray-900">Brand Management</h2>
+                <h2 className="text-base md:text-2xl font-bold text-gray-900">
+                  Client Management
+                </h2>
                 <p className="text-xs md:text-base text-gray-600">
-                  Manage your brand partners and logos
+                  Manage your clients and their logos
                 </p>
               </div>
               <Link
-                href="/admin/brands/add"
+                href="/admin/clients/add"
                 className="bg-blue-600 text-white px-3 py-1 md:px-4 md:py-2 rounded-lg shadow hover:shadow-md hover:bg-blue-700 transition-all flex items-center space-x-2 text-sm md:text-base"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add New Brand</span>
+                <span>Add New Client</span>
               </Link>
             </div>
 
@@ -177,12 +204,13 @@ export default function BrandManagementPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Search brands"
+                    placeholder="Search clients"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm text-gray-600 placeholder-gray-500"
                   />
                 </div>
+
                 <button
                   onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
                   className="flex items-center space-x-2 px-3 py-1 md:px-4 md:py-2 border rounded-lg text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
@@ -190,25 +218,6 @@ export default function BrandManagementPage() {
                   <ArrowUpDown className="w-4 h-4" />
                   <span>Sort ({sortOrder === "asc" ? "A-Z" : "Z-A"})</span>
                 </button>
-              </div>
-
-              {/* Items per Page */}
-              <div className="flex items-center space-x-2">
-                <span className="text-xs md:text-sm text-gray-700">Show:</span>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="border border-gray-300 rounded-lg px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-gray-900 bg-white"
-                >
-                  <option value={3}>3</option>
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                </select>
-                <span className="text-xs md:text-sm text-gray-700">per page</span>
               </div>
             </div>
 
@@ -218,7 +227,7 @@ export default function BrandManagementPage() {
                 <thead className="bg-blue-50">
                   <tr>
                     <th className="px-2 md:px-6 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider">
-                      Brand Name
+                      Client Name
                     </th>
                     <th className="px-2 md:px-6 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider">
                       Logo
@@ -229,36 +238,40 @@ export default function BrandManagementPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
-                  {currentBrands.length > 0 ? (
-                    currentBrands.map((brand) => (
-                      <tr key={brand.id} className="hover:bg-blue-50/50">
+                  {currentClients.length > 0 ? (
+                    currentClients.map((client) => (
+                      <tr key={client.id} className="hover:bg-blue-50/50">
                         <td className="px-2 md:px-6 py-3 text-sm font-medium text-gray-900">
-                          {brand.name}
+                          {client.name}
                         </td>
                         <td className="px-2 md:px-6 py-3">
-                          <img
-                            src={safeImageUrl(brand.logoUrl)}
-                            alt={brand.name}
-                            className="w-10 h-10 md:w-12 md:h-12 rounded-lg object-cover shadow-sm cursor-pointer hover:opacity-80 transition"
-                            onClick={() => {
-                              setSelectedLogo({
-                                url: safeImageUrl(brand.logoUrl),
-                                name: brand.name,
-                              });
-                              setShowLogoModal(true);
-                            }}
-                          />
+                          {client.imageUrl ? (
+                            <img
+                              src={client.imageUrl}
+                              alt={client.name}
+                              className="w-10 h-10 md:w-12 md:h-12 rounded-lg object-cover shadow-sm cursor-pointer hover:opacity-80 transition"
+                              onClick={() => {
+                                setSelectedLogo({
+                                  url: client.imageUrl || "",
+                                  name: client.name,
+                                });
+                                setShowLogoModal(true);
+                              }}
+                            />
+                          ) : (
+                            <span className="text-gray-400 italic text-sm">No Logo</span>
+                          )}
                         </td>
                         <td className="px-2 md:px-6 py-3 text-sm font-medium">
                           <div className="flex space-x-2">
                             <Link
-                              href={`/admin/brands/add?edit=${brand.id}`}
+                              href={`/admin/clients/add?edit=${client.id}`}
                               className="text-blue-500 hover:text-blue-700 p-1 md:p-2 hover:bg-blue-50 rounded-lg"
                             >
                               <Edit className="w-4 h-4" />
                             </Link>
                             <button
-                              onClick={() => handleDeleteClick(brand)}
+                              onClick={() => handleDeleteClick(client)}
                               className="text-red-500 hover:text-red-700 p-1 md:p-2 hover:bg-red-50 rounded-lg"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -273,7 +286,7 @@ export default function BrandManagementPage() {
                         colSpan={3}
                         className="px-2 md:px-6 py-3 text-center text-gray-500 text-sm"
                       >
-                        No brands found.
+                        No clients found.
                       </td>
                     </tr>
                   )}
@@ -284,15 +297,15 @@ export default function BrandManagementPage() {
             {/* Delete Modal */}
             <DeleteConfirmModal
               isOpen={showDeleteModal}
-              itemName={brandToDelete?.name || ""}
+              itemName={clientToDelete?.name || ""}
               onConfirm={handleDeleteConfirm}
               onCancel={handleDeleteCancel}
             />
 
-            {/* ✅ Logo Preview Modal (Fixed Layer) */}
+            {/* 🟦 Logo Preview Modal (Fixed Layer) */}
             {showLogoModal && selectedLogo && (
               <>
-                {/* Overlay */}
+                {/* Background overlay di atas segalanya */}
                 <div
                   className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998]"
                   onClick={() => setShowLogoModal(false)}

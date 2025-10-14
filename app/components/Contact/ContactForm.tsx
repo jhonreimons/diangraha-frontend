@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { CheckCircle, X } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 export default function ContactForm() {
     const [formData, setFormData] = useState({
@@ -8,36 +8,61 @@ export default function ContactForm() {
         email: "",
         company: "",
         phone: "",
-        message: ""
+        message: "",
     });
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [phoneError, setPhoneError] = useState("");
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    //  Global phone regex (E.164 standard)
+    // Format: +[country code][subscriber number], 7–15 digits total
+    const phoneRegex = /^\+?[1-9]\d{6,14}$/;
+
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
+        const { name, value } = e.target;
+
+        if (name === "phone") {
+            if (value && !phoneRegex.test(value)) {
+                setPhoneError(
+                    "Please enter a valid phone number (7–15 digits, may start with +)."
+                );
+            } else {
+                setPhoneError("");
+            }
+        }
+
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [name]: value,
         });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
 
+        if (!phoneRegex.test(formData.phone)) {
+            setPhoneError("Please enter a valid phone number before submitting.");
+            return;
+        }
+
+        setLoading(true);
         try {
-            const response = await fetch('http://103.103.20.23:8080/api/contact-messages', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    fullName: formData.name,
-                    email: formData.email,
-                    phoneNumber: formData.phone,
-                    companyName: formData.company,
-                    message: formData.message,
-                }),
-            });
+            const response = await fetch(
+                "http://103.103.20.23:8080/api/contact-messages",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        fullName: formData.name,
+                        email: formData.email,
+                        phoneNumber: formData.phone,
+                        companyName: formData.company,
+                        message: formData.message,
+                    }),
+                }
+            );
 
             if (response.ok) {
                 setShowModal(true);
@@ -46,7 +71,7 @@ export default function ContactForm() {
                     email: "",
                     company: "",
                     phone: "",
-                    message: ""
+                    message: "",
                 });
             } else {
                 alert("Failed to send message. Please try again.");
@@ -63,76 +88,114 @@ export default function ContactForm() {
         <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
             <div className="max-w-6xl mx-auto px-6">
                 <div className="text-center mb-12">
-                    <h2 className="font-bold text-gray-800 mb-4" style={{fontSize: '25px'}}>Get In Touch</h2>
+                    <h2
+                        className="font-bold text-gray-800 mb-4"
+                        style={{ fontSize: "25px" }}
+                    >
+                        Get In Touch
+                    </h2>
                     <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                        Ready to start your project? Contact us today and let's discuss how we can help your business grow.
+                        Ready to start your project? Contact us today and let's discuss how
+                        we can help your business grow.
                     </p>
                 </div>
-                
+
                 <div className="bg-white shadow-2xl rounded-2xl p-8 md:p-12 border border-gray-200 hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-1">
                     <form onSubmit={handleSubmit} className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Name */}
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Full Name
+                                </label>
                                 <input
                                     type="text"
                                     name="name"
                                     value={formData.name}
                                     onChange={handleChange}
                                     placeholder="Enter your full name"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300 hover:border-blue-300"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300 hover:border-blue-400"
                                     required
                                 />
                             </div>
+
+                            {/* Email */}
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">Company Email</label>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Company Email
+                                </label>
                                 <input
                                     type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
                                     placeholder="company@example.com"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300 hover:border-blue-300"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300 hover:border-blue-400"
                                     required
                                 />
                             </div>
+
+                            {/* Company */}
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">Company Name</label>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Company Name
+                                </label>
                                 <input
                                     type="text"
                                     name="company"
                                     value={formData.company}
                                     onChange={handleChange}
                                     placeholder="Your company name"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300 hover:border-blue-300"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300 hover:border-blue-400"
                                     required
                                 />
                             </div>
+
+                            {/*  Phone Number (Global Validation) */}
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Phone Number
+                                </label>
                                 <input
                                     type="tel"
                                     name="phone"
                                     value={formData.phone}
                                     onChange={handleChange}
-                                    placeholder="+62 xxx xxxx xxxx"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300 hover:border-blue-300"
+                                    placeholder="+62-xxx-xxxx-xxxx"
+                                    className={`w-full px-4 py-3 border ${phoneError ? "border-red-400" : "border-gray-300"
+                                        } rounded-lg text-gray-800 placeholder-gray-500 bg-gray-50 focus:ring-2 ${phoneError
+                                            ? "focus:ring-red-400"
+                                            : "focus:ring-blue-500 focus:border-transparent"
+                                        } outline-none transition-all duration-300 hover:border-blue-400`}
                                     required
                                 />
+                                {phoneError && (
+                                    <p className="text-red-500 text-xs mt-1">{phoneError}</p>
+                                )}
+                                {/*  Example formats */}
+                                <p className="text-gray-500 text-xs mt-1 italic">
+                                    Example: +6281234567890, +12025550123, +447700900123
+                                </p>
                             </div>
                         </div>
+
+                        {/* Message */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-700">Message</label>
+                            <label className="block text-sm font-medium text-gray-700">
+                                Message
+                            </label>
                             <textarea
                                 name="message"
                                 value={formData.message}
                                 onChange={handleChange}
                                 placeholder="Tell us about your project or requirements..."
                                 rows={5}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300 hover:border-blue-300 resize-none"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300 hover:border-blue-400 resize-none"
                                 required
                             ></textarea>
                         </div>
+
+                        {/* Submit */}
                         <div className="text-center">
                             <button
                                 type="submit"
@@ -146,13 +209,18 @@ export default function ContactForm() {
                 </div>
             </div>
 
-            {/* Success Modal */}
+            {/*  Success Modal */}
             {showModal && (
-                <div className="fixed inset-0 flex items-center justify-center z-50">
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 backdrop-blur-sm">
                     <div className="bg-white rounded-lg p-8 text-center max-w-md mx-4 shadow-2xl border">
                         <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4 animate-bounce" />
-                        <h3 className="text-xl font-bold mb-2">Thank You!</h3>
-                        <p className="text-gray-600 mb-6">Your message has been sent successfully. We will get back to you soon.</p>
+                        <h3 className="text-xl font-bold mb-2 text-gray-800">
+                            Thank You!
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                            Your message has been sent successfully. We will get back to you
+                            soon.
+                        </p>
                         <button
                             onClick={() => setShowModal(false)}
                             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"

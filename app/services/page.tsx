@@ -65,11 +65,14 @@ export default function ServicesPage() {
               <p className="text-gray-600 text-xl mb-8 leading-relaxed">
                 We provide comprehensive solutions to help your business grow and succeed in today's competitive market. Our experienced team delivers quality services tailored to meet your specific needs and requirements with excellence and reliability.
               </p>
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-300">
+              <button
+                className="bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold 
+                          hover:bg-blue-900 transition-all duration-300 transform hover:scale-105 
+                          hover:shadow-lg min-w-[20px] shadow-md"
+              >
                 Our Client
               </button>
-            </div>
-            
+              </div>
             {/* Right Image */}
             <div className="flex-shrink-0">
               <img 
@@ -118,8 +121,8 @@ export default function ServicesPage() {
         {/* Services Sections */}
         {services.map((service, index) => {
           const isEven = index % 2 === 0;
-          const bgClass = isEven ? "from-blue-50 to-indigo-100" : "from-green-50 to-emerald-100";
-          const buttonClass = isEven ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700";
+          const bgClass = isEven ? "from-blue-50 to-indigo-100" : "from-white to-indigo-100";
+          const buttonClass = isEven ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-600 hover:bg-blue-700";
 
           return (
             <section key={service.id} id={service.name.toLowerCase().replace(/\s+/g, '-')} className={`py-16 px-6 md:px-12 lg:px-20 bg-gradient-to-br ${bgClass}`}>
@@ -134,12 +137,26 @@ export default function ServicesPage() {
                       {generateSummary(service.longDesc, 255)}
                     </p>
                     <Link href={`/service/${encodeURIComponent(service.name.toLowerCase().replace(/\s+/g, '-'))}`}>
-                      <button className={`${buttonClass} text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center gap-2`}>
-                        View More
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
+                    <button
+                      className={`${buttonClass} bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold text-lg 
+                                  transition-all duration-300 transform hover:scale-105 hover:shadow-lg shadow-md 
+                                  hover:bg-blue-900 min-w-[20px] inline-flex items-center justify-center gap-2`}
+                    >
+                      View More
+                      <svg
+                        className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
                     </Link>
                   </div>
 

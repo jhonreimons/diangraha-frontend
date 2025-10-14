@@ -28,24 +28,27 @@ export default function ServiceDetailPage() {
   useEffect(() => {
     if (slug) {
       const decodedSlug = decodeURIComponent(slug);
-      fetch('/api/services')
-        .then(res => {
+      fetch("/api/services")
+        .then((res) => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return res.json();
         })
-        .then(services => {
-          const found = services.find((s: Service) => s.name.toLowerCase().replace(/\s+/g, '-') === decodedSlug);
+        .then((services) => {
+          const found = services.find(
+            (s: Service) =>
+              s.name.toLowerCase().replace(/\s+/g, "-") === decodedSlug
+          );
           if (found) {
             setService({
               ...found,
-              features: Array.isArray(found.features) ? found.features : []
+              features: Array.isArray(found.features) ? found.features : [],
             });
           } else {
             setService(null);
           }
           setLoading(false);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Error fetching service:", err);
           setLoading(false);
         });
@@ -54,9 +57,9 @@ export default function ServiceDetailPage() {
 
   if (loading) {
     return (
-      <main className="bg-gray-50">
+      <main className="bg-gray-50 min-h-screen flex flex-col">
         <Navbar />
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="flex-grow flex items-center justify-center">
           <div>Loading service...</div>
         </div>
         <Footer />
@@ -66,9 +69,9 @@ export default function ServiceDetailPage() {
 
   if (!service) {
     return (
-      <main className="bg-gray-50">
+      <main className="bg-gray-50 min-h-screen flex flex-col">
         <Navbar />
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="flex-grow flex items-center justify-center">
           <div>Service not found</div>
         </div>
         <Footer />
@@ -77,62 +80,82 @@ export default function ServiceDetailPage() {
   }
 
   return (
-    <main className="bg-gray-50">
+    <main className="bg-gray-50 min-h-screen flex flex-col">
+      {/* Header */}
       <Navbar />
 
-      {/* ===== Hero Section ===== */}
-      <section className="py-10 px-6 md:px-12 lg:px-20 bg-gradient-to-r from-gray-100 to-gray-200">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
-          {/* Left Content */}
-          <div className="max-w-xl md:flex-1 text-left">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-              {service.name}
-            </h1>
-            <p className="text-gray-700 leading-relaxed mb-6" style={{ whiteSpace: 'pre-wrap' }}>
-              {service.longDesc}
-            </p>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md text-sm font-medium shadow-md hover:shadow-lg transition">
-              Contact Us
-            </button>
+      {/* Konten Utama */}
+      <div className="flex-grow">
+        {/* ===== Hero Section ===== */}
+        <section className="py-10 px-6 md:px-12 lg:px-20 bg-gradient-to-r from-gray-100 to-gray-200">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
+            {/* Left Content */}
+            <div className="max-w-xl md:flex-1 text-left">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                {service.name}
+              </h1>
+              <p
+                className="text-gray-700 leading-relaxed mb-6"
+                style={{ whiteSpace: "pre-wrap" }}
+              >
+                {service.longDesc}
+              </p>
+              <button
+                className="bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold text-base 
+                           hover:bg-blue-900 transition-all duration-300 transform hover:scale-105 
+                           shadow-md hover:shadow-lg min-w-[200px] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Contact Us
+              </button>
+            </div>
+
+            {/* Right Image */}
+            <div className="md:flex-1 flex justify-end">
+              <img
+                src={getImageUrl(service.imageUrl)}
+                alt={service.name}
+                className="w-full md:w-4/5 h-64 md:h-72 object-cover rounded-lg shadow-lg"
+              />
+            </div>
           </div>
+        </section>
 
-          {/* Right Image */}
-          <div className="md:flex-1 flex justify-end">
-            <img
-              src={getImageUrl(service.imageUrl)}
-              alt={service.name}
-              className="w-full md:w-4/5 h-64 md:h-72 object-cover rounded-lg shadow-lg"
-            />
-          </div>
-        </div>
-      </section>
+        {/* ===== Features Section (conditional) ===== */}
+        {service.features && service.features.length > 0 && (
+          <section className="py-20 bg-white">
+            <div className="max-w-5xl mx-auto px-6">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-16">
+                The Features of Manpower {service.name}
+              </h2>
 
-      {/* ===== Features Section ===== */}
-      <section className="py-20 bg-white">
-        <div className="max-w-5xl mx-auto px-6">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-16">
-            The Features of Manpower {service.name}
-          </h2>
-
-          <div className="space-y-10">
-            {service.features.map((feature) => (
-              <div key={feature.id} className="rounded-lg border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300">
-                <div className="bg-blue-700 px-6 py-4 rounded-t-lg">
-                  <h3 className="text-xl font-semibold text-white">
-                    {feature.featureName}
-                  </h3>
-                </div>
-                <div className="px-6 py-8">
-                  <p className="text-base text-gray-700 leading-relaxed" style={{ whiteSpace: 'pre-wrap' }}>
-                    {feature.featureDesc}
-                  </p>
-                </div>
+              <div className="space-y-10">
+                {service.features.map((feature) => (
+                  <div
+                    key={feature.id}
+                    className="rounded-lg border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300"
+                  >
+                    <div className="bg-blue-700 px-6 py-4 rounded-t-lg">
+                      <h3 className="text-xl font-semibold text-white">
+                        {feature.featureName}
+                      </h3>
+                    </div>
+                    <div className="px-6 py-8">
+                      <p
+                        className="text-base text-gray-700 leading-relaxed"
+                        style={{ whiteSpace: "pre-wrap" }}
+                      >
+                        {feature.featureDesc}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            </div>
+          </section>
+        )}
+      </div>
 
+      {/* Footer selalu di bawah */}
       <Footer />
     </main>
   );

@@ -4,10 +4,9 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import AdminSidebar from "@/app/components/AdminSidebar";
 import AdminHeader from "@/app/components/AdminHeader";
-import { ArrowLeft, Upload, X } from "lucide-react";
+import { ArrowLeft, Upload, X, AlertTriangle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import SuccessModal from "@/app/components/SuccessModal";
 import { SERVER_BASE_URL, getImageUrl } from "@/lib/config";
 
 export default function AddServiceForm() {
@@ -18,6 +17,7 @@ export default function AddServiceForm() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showImageError, setShowImageError] = useState(false);
   const [loading, setLoading] = useState(false);
   const { logout } = useAuth();
 
@@ -89,190 +89,274 @@ export default function AddServiceForm() {
     setImagePreview(null);
     if (isEditMode) setExistingImageUrl(null);
   };
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
 
-  try {
-    let response;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    if (isEditMode) {
-      // URL sesuai API backend kamu
-      const url = `${SERVER_BASE_URL}/api/services/${editId}?name=${encodeURIComponent(
-        formData.name
-      )}&shortDesc=${encodeURIComponent(formData.description)}&longDesc=${encodeURIComponent(formData.description)}`;
-
-      // Selalu kirim FormData, meski tanpa gambar
-      const formDataToSend = new FormData();
-
-      // hanya tambahkan file jika ada gambar baru
-      if (selectedImage) {
-        formDataToSend.append("imageFile", selectedImage);
-      }
-
-      response = await fetch(url, {
-        method: "PUT",
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-          // ❌ jangan set Content-Type manual biarkan browser generate boundary otomatis
-        },
-        body: formDataToSend,
-      });
-    } else {
-      // Mode tambah baru (POST)
-      const formDataToSend = new FormData();
-      formDataToSend.append("name", formData.name);
-      formDataToSend.append("shortDesc", formData.description);
-      formDataToSend.append("longDesc", formData.description);
-      if (selectedImage) formDataToSend.append("imageFile", selectedImage);
-
-      response = await fetch(`${SERVER_BASE_URL}/api/services`, {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        body: formDataToSend,
-      });
+    // ✅ Validasi gambar hanya untuk Add
+    if (!isEditMode && !selectedImage) {
+      setShowImageError(true);
+      return;
     }
 
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    setLoading(true);
+    try {
+      let response;
 
-    setShowSuccess(true);
-  } catch (error) {
-    console.error("Error saving service:", error);
-    alert("Failed to save service. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+      if (isEditMode) {
+        const url = `${SERVER_BASE_URL}/api/services/${editId}?name=${encodeURIComponent(
+          formData.name
+        )}&shortDesc=${encodeURIComponent(
+          formData.description
+        )}&longDesc=${encodeURIComponent(formData.description)}`;
 
+        const formDataToSend = new FormData();
+        if (selectedImage) formDataToSend.append("imageFile", selectedImage);
+
+        response = await fetch(url, {
+          method: "PUT",
+          headers: { Authorization: "Bearer " + localStorage.getItem("token") },
+          body: formDataToSend,
+        });
+      } else {
+        const formDataToSend = new FormData();
+        formDataToSend.append("name", formData.name);
+        formDataToSend.append("shortDesc", formData.description);
+        formDataToSend.append("longDesc", formData.description);
+        if (selectedImage) formDataToSend.append("imageFile", selectedImage);
+
+        response = await fetch(`${SERVER_BASE_URL}/api/services`, {
+          method: "POST",
+          headers: { Authorization: "Bearer " + localStorage.getItem("token") },
+          body: formDataToSend,
+        });
+      }
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setShowSuccess(true);
+    } catch (error) {
+      console.error("Error saving service:", error);
+      alert("Failed to save service. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSuccessClose = () => {
     setShowSuccess(false);
     window.location.href = "/admin/services";
   };
 
+  const handleImageErrorClose = () => setShowImageError(false);
+
   if (!user) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row">
       <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
-      <AdminHeader
-        title={isEditMode ? "Edit Service" : "Add New Service"}
-        user={user}
-        onLogout={handleLogout}
-        sidebarOpen={sidebarOpen}
-        onToggle={setSidebarOpen}
-      />
 
-      <main className={`pt-20 transition-all duration-300 ${sidebarOpen ? "md:ml-64" : "md:ml-20"}`}>
-        <div className="p-4 md:p-6 bg-gray-50/50 min-h-screen flex justify-center">
-          <div className="w-full">
+      <div className="flex-1 flex flex-col ml-0 md:ml-[260px] transition-all duration-300">
+        <AdminHeader
+          title={isEditMode ? "Edit Service" : "Add New Service"}
+          user={user}
+          onLogout={handleLogout}
+          sidebarOpen={sidebarOpen}
+          onToggle={setSidebarOpen}
+        />
+
+        <main className="relative z-10 flex-1 bg-gray-50/50 min-h-screen pt-[100px] px-4 md:px-8">
+          <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-md p-6 md:p-8 mt-4">
             <div className="mb-6">
-              <Link href="/admin/services" className="inline-flex items-center text-blue-600 hover:text-blue-800">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Service Management
+              <Link
+                href="/admin/services"
+                className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Service Management
               </Link>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-md p-4 md:p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                {isEditMode ? "Edit Service" : "Add New Service"}
-              </h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              {isEditMode ? "Edit Service" : "Add New Service"}
+            </h2>
 
-              <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-                {/* Name */}
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Service Name
-                  </label>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Service Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Enter service name"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-400 
+                             focus:ring-2 focus:ring-blue-400 focus:border-transparent outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  required
+                  rows={5}
+                  placeholder="Detailed description for service pages"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none text-gray-800 placeholder-gray-400 
+                             focus:ring-2 focus:ring-blue-400 focus:border-transparent outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Service Image{" "}
+                  {!isEditMode && (
+                    <span className="text-red-500 text-xs">(required)</span>
+                  )}
+                </label>
+                <div
+                  className={`relative border-2 border-dashed p-6 text-center rounded-lg hover:border-blue-400 transition-all bg-gray-50 ${
+                    !isEditMode && !selectedImage ? "border-red-400" : ""
+                  }`}
+                >
+                  {(imagePreview || existingImageUrl) ? (
+                    <div className="relative">
+                      <img
+                        src={imagePreview || existingImageUrl || ""}
+                        alt="Preview"
+                        className="mx-auto max-h-48 rounded-lg shadow-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <p className="text-gray-600">Click to upload service image</p>
+                    </div>
+                  )}
                   <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
                   />
                 </div>
+              </div>
 
-                {/* Description */}
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    required
-                    rows={5}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-                    placeholder="Detailed description for service pages"
-                  />
-                </div>
-
-                {/* Image */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Service Image</label>
-                  <div className="relative border-2 border-dashed p-6 text-center rounded-lg">
-                    {(imagePreview || existingImageUrl) ? (
-                      <div className="relative">
-                        <img
-                          src={imagePreview || existingImageUrl || ""}
-                          alt="Preview"
-                          className="mx-auto max-h-48 rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={removeImage}
-                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div>
-                        <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                        <p className="text-gray-600">Click to upload service image</p>
-                      </div>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex justify-end space-x-3 pt-6">
-                  <Link href="/admin/services" className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg">
-                    Cancel
-                  </Link>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-5 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
-                  >
-                    {loading ? (isEditMode ? "Updating..." : "Adding...") : (isEditMode ? "Update Service" : "Add Service")}
-                  </button>
-                </div>
-              </form>
-            </div>
+              <div className="flex justify-end space-x-3 pt-6">
+                <Link
+                  href="/admin/services"
+                  className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all"
+                >
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 disabled:opacity-50 transition-all"
+                >
+                  {loading
+                    ? isEditMode
+                      ? "Updating..."
+                      : "Adding..."
+                    : isEditMode
+                    ? "Update Service"
+                    : "Add Service"}
+                </button>
+              </div>
+            </form>
           </div>
 
-          <SuccessModal
-            isOpen={showSuccess}
-            message={isEditMode ? `Service "${formData.name}" updated successfully!` : `Service "${formData.name}" added successfully!`}
-            onClose={handleSuccessClose}
-          />
-        </div>
-      </main>
+          {/* ✅ Success Modal */}
+          {showSuccess && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
+              <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform animate-scaleIn">
+                <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  {isEditMode ? "Service Updated!" : "Service Added!"}
+                </h3>
+                <p className="text-gray-600 text-sm mb-5">
+                  {isEditMode
+                    ? `Service "${formData.name}" updated successfully.`
+                    : `Service "${formData.name}" added successfully.`}
+                </p>
+                <button
+                  onClick={handleSuccessClose}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 🔴 Image Error Modal */}
+          {showImageError && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
+              <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform animate-scaleIn">
+                <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Image is required
+                </h3>
+                <p className="text-gray-600 text-sm mb-5">
+                  Please upload an image before submitting this form.
+                </p>
+                <button
+                  onClick={handleImageErrorClose}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
+}
+
+/* ✅ Animations */
+const style = `
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out;
+}
+.animate-scaleIn {
+  animation: scaleIn 0.25s ease-out;
+}
+`;
+if (typeof document !== "undefined") {
+  const styleEl = document.createElement("style");
+  styleEl.textContent = style;
+  document.head.appendChild(styleEl);
 }

@@ -112,37 +112,45 @@ export default function Achievement({ awards = defaultAwards }: AchievementProps
                 {loading ? (
                     <p className="text-lg text-gray-600">Loading achievements...</p>
                 ) : (
-                    <>
-                        <div className="relative">
-                            {/* Carousel wrapper */}
-                            <div className="overflow-hidden">
-                                <div className="overflow-hidden">
-                                    <div
-                                        className={`flex transition-transform duration-700 ease-in-out ${effectiveAwards.length < 4 ? 'justify-center' : ''}`}
-                                        style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
-                                    >
-                                        {/* Duplicate awards untuk smooth infinite scroll */}
-                                        {effectiveAwards.map((award, index) => (
-                                                <div
-                                                key={`${award.id}-${Math.floor(index / effectiveAwards.length)}`}
-                                                className="flex-shrink-0 px-3"
-                                                style={{ width: itemsPerView === 1 ? '256px' : `${100 / itemsPerView}%` }}
-                                                >
-                                                <div className="border border-gray-200 rounded-xl shadow-md p-6 flex flex-col items-center bg-white hover:shadow-2xl transition-all duration-500 hover:border-blue-300 transform hover:-translate-y-2 hover:scale-105 group">
-                                                    <Image
-                                                        src={award.image || "https://dummyimage.com/64x64/ffd700/ffffff.png&text=🏅"}
-                                                        alt={award.title}
-                                                        width={64}
-                                                        height={64}
-                                                        className="mb-4"
-                                                    />
-                                                    <p className="font-medium text-center">{award.title}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                <>
+                <div className="relative">
+                {/* Carousel wrapper */}
+                <div className="overflow-hidden">
+                    <div className="overflow-hidden">
+                    <div
+                        className={`flex transition-transform duration-700 ease-in-out ${
+                        effectiveAwards.length < 4 ? 'justify-center' : ''
+                        }`}
+                        style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
+                    >
+                        {effectiveAwards.map((award, index) => (
+                        <div
+                            key={`${award.id}-${Math.floor(index / effectiveAwards.length)}`}
+                            className="flex-shrink-0 px-3"
+                            style={{
+                            width: itemsPerView === 1 ? '256px' : `${100 / itemsPerView}%`,
+                            }}
+                        >
+                            <div className="border border-gray-200 rounded-xl shadow-md p-6 flex flex-col items-center bg-white hover:shadow-2xl transition-all duration-500 hover:border-blue-300 transform hover:-translate-y-2 hover:scale-105 group">
+                            <Image
+                                src={
+                                award.image ||
+                                'https://dummyimage.com/64x64/ffd700/ffffff.png&text=🏅'
+                                }
+                                alt={award.title}
+                                width={64}
+                                height={64}
+                                className="mb-4"
+                            />
+                            <p className="font-medium text-center text-black">
+                                {award.title}
+                            </p>
                             </div>
+                        </div>
+                        ))}
+                    </div>
+                    </div>
+                </div>
 
                             {/* Left Button */}
                             <button

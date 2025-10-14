@@ -4,11 +4,10 @@ import { useEffect, useState, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import AdminSidebar from "@/app/components/AdminSidebar";
 import AdminHeader from "@/app/components/AdminHeader";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft, Upload, AlertTriangle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import SuccessModal from "@/app/components/SuccessModal";
-import { API_BASE_URL, SERVER_BASE_URL } from "@/lib/config";
+import { SERVER_BASE_URL } from "@/lib/config";
 
 interface User {
   name?: string;
@@ -21,7 +20,11 @@ interface Brand {
   logoUrl?: string | null;
 }
 
-function BrandForm({ user, sidebarOpen, handleLogout }: {
+function BrandForm({
+  user,
+  sidebarOpen,
+  handleLogout,
+}: {
   user: User;
   sidebarOpen: boolean;
   handleLogout: () => void;
@@ -32,7 +35,7 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
   });
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [showSuccess, setShowSuccess] = useState(false);
-
+  const [showImageError, setShowImageError] = useState(false);
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
   const isEditMode = !!editId;
@@ -48,7 +51,6 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
       const response = await fetch(`${SERVER_BASE_URL}/api/brands`);
       const brands: Brand[] = await response.json();
       const brand = brands.find((b) => b.id === parseInt(id));
-
       if (brand) {
         setFormData({ name: brand.name, image: null });
         if (brand.logoUrl) {
@@ -80,6 +82,12 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // ✅ Validasi gambar hanya untuk Add
+    if (!isEditMode && !formData.image) {
+      setShowImageError(true);
+      return;
+    }
+
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
@@ -87,24 +95,16 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
         formDataToSend.append("logoFile", formData.image);
       }
 
-      let response: Response;
-      if (isEditMode && editId) {
-        response = await fetch(`${SERVER_BASE_URL}/api/brands/${editId}`, {
-          method: "PUT",
-          headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem("token"),
-          },
-          body: formDataToSend,
-        });
-      } else {
-        response = await fetch(`${SERVER_BASE_URL}/api/brands`, {
-          method: "POST",
-          headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem("token"),
-          },
-          body: formDataToSend,
-        });
-      }
+      const token = localStorage.getItem("token");
+      const url = isEditMode
+        ? `${SERVER_BASE_URL}/api/brands/${editId}`
+        : `${SERVER_BASE_URL}/api/brands`;
+
+      const response = await fetch(url, {
+        method: isEditMode ? "PUT" : "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formDataToSend,
+      });
 
       if (response.ok) {
         setShowSuccess(true);
@@ -121,9 +121,11 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
     window.location.href = "/admin/brands";
   };
 
+  const handleImageErrorClose = () => setShowImageError(false);
+
   return (
-    <div className="flex justify-center">
-      <div className="w-full max-w-2xl p-6">
+    <div className="relative z-10 flex justify-center w-full">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-md hover:shadow-lg transition-all p-6 md:p-8 mt-4">
         {/* Back button */}
         <div className="mb-6">
           <Link
@@ -135,89 +137,144 @@ function BrandForm({ user, sidebarOpen, handleLogout }: {
           </Link>
         </div>
 
-        {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            {isEditMode ? "Edit Brand" : "Add New Brand"}
-          </h2>
+        {/* Title */}
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          {isEditMode ? "Edit Brand" : "Add New Brand"}
+        </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Brand Name */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Brand Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
-                placeholder="Enter brand name"
-              />
-            </div>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Brand Name */}
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Brand Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+              placeholder="Enter brand name"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm 
+                         text-gray-800 placeholder-gray-400 
+                         focus:ring-2 focus:ring-blue-400 focus:border-transparent 
+                         outline-none transition-all"
+            />
+          </div>
 
-            {/* Brand Logo */}
-            <div>
-              <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
-                Brand Logo
-              </label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl hover:border-blue-400 bg-gray-50 transition-all">
-                <div className="space-y-2 text-center">
-                  {previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt="Preview"
-                      className="mx-auto h-32 w-32 object-cover rounded-lg shadow-md border"
-                    />
-                  ) : (
-                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                  )}
-                  <label htmlFor="image" className="cursor-pointer block mx-auto text-center text-sm text-gray-500 hover:text-blue-600 mt-2">
-                    Choose Logo File
-                  </label>
-                  <input
-                    id="image"
-                    name="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
+          {/* Brand Logo */}
+          <div>
+            <label
+              htmlFor="image"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Brand Logo{" "}
+              {!isEditMode && (
+                <span className="text-red-500 text-xs">(required)</span>
+              )}
+            </label>
+            <div
+              className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl 
+                          hover:border-blue-400 bg-gray-50 transition-all ${
+                            !isEditMode && !formData.image
+                              ? "border-red-400"
+                              : "border-gray-300"
+                          }`}
+            >
+              <div className="space-y-2 text-center">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="mx-auto h-32 w-32 object-cover rounded-lg shadow-md border"
                   />
-                </div>
+                ) : (
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                )}
+                <label
+                  htmlFor="image"
+                  className="cursor-pointer block mx-auto text-center text-sm text-gray-500 hover:text-blue-600 mt-2"
+                >
+                  Choose Logo File
+                </label>
+                <input
+                  id="image"
+                  name="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
               </div>
             </div>
+          </div>
 
-            {/* Actions */}
-            <div className="flex justify-end space-x-3 pt-6">
-              <Link
-                href="/admin/brands"
-                className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all"
-              >
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition-all"
-              >
-                {isEditMode ? "Update Brand" : "Add Brand"}
-              </button>
-            </div>
-          </form>
-        </div>
+          {/* Actions */}
+          <div className="flex justify-end space-x-3 pt-6">
+            <Link
+              href="/admin/brands"
+              className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all"
+            >
+              Cancel
+            </Link>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition-all"
+            >
+              {isEditMode ? "Update Brand" : "Add Brand"}
+            </button>
+          </div>
+        </form>
       </div>
 
-      <SuccessModal
-        isOpen={showSuccess}
-        message={
-          isEditMode
-            ? `Brand "${formData.name}" updated successfully!`
-            : `Brand "${formData.name}" added successfully!`
-        }
-        onClose={handleSuccessClose}
-      />
+      {/* ✅ Success Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform scale-100 animate-scaleIn">
+            <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {isEditMode ? "Brand Updated!" : "Brand Added!"}
+            </h3>
+            <p className="text-gray-600 text-sm mb-5">
+              {isEditMode
+                ? `Brand "${formData.name}" updated successfully.`
+                : `Brand "${formData.name}" added successfully.`}
+            </p>
+            <button
+              onClick={handleSuccessClose}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 🔴 Image Error Modal */}
+      {showImageError && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform scale-100 animate-scaleIn">
+            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Logo is required
+            </h3>
+            <p className="text-gray-600 text-sm mb-5">
+              Please upload a logo image before submitting the form.
+            </p>
+            <button
+              onClick={handleImageErrorClose}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -240,24 +297,59 @@ export default function AddBrandPage() {
   const handleLogout = () => logout();
 
   if (!user) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row">
+      {/* Sidebar */}
       <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
-
-      <div className="flex-1 flex flex-col">
-        <AdminHeader title="Brand Form" user={user} onLogout={handleLogout} sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
-
-        <main className="flex-1">
-          <div className="pt-20 md:pt-0 p-2 md:p-6 bg-gray-50/50 min-h-screen">
-            <Suspense fallback={<div>Loading brand form...</div>}>
-              <BrandForm user={user} sidebarOpen={sidebarOpen} handleLogout={handleLogout} />
-            </Suspense>
-          </div>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col ml-0 md:ml-[260px] transition-all duration-300">
+        <AdminHeader
+          title="Brand Form"
+          user={user}
+          onLogout={handleLogout}
+          sidebarOpen={sidebarOpen}
+          onToggle={setSidebarOpen}
+        />
+        <main className="relative z-10 flex-1 bg-gray-50/50 min-h-screen pt-[100px] px-4 md:px-8">
+          <Suspense fallback={<div>Loading brand form...</div>}>
+            <BrandForm
+              user={user}
+              sidebarOpen={sidebarOpen}
+              handleLogout={handleLogout}
+            />
+          </Suspense>
         </main>
       </div>
     </div>
   );
+}
+
+/* ✅ Animations */
+const style = `
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out;
+}
+.animate-scaleIn {
+  animation: scaleIn 0.25s ease-out;
+}
+`;
+if (typeof document !== "undefined") {
+  const styleEl = document.createElement("style");
+  styleEl.textContent = style;
+  document.head.appendChild(styleEl);
 }
