@@ -7,28 +7,28 @@ export default function CareerPage() {
   return (
     <main className="bg-white">
       <Navbar />
-<section className="relative w-full h-[420px] md:h-[520px] flex items-center justify-center overflow-hidden">
-    <video
-      autoPlay
-      muted
-      loop
-      playsInline
-      className="absolute inset-0 w-full h-full object-cover z-0"
-    >
-      <source src="/background.mp4" type="video/mp4" />
-      Your browser does not support the video tag.
-    </video>
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/40 z-10" />
+      <section className="relative w-full h-[420px] md:h-[520px] flex items-center justify-center overflow-hidden">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        >
+          <source src="/background.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/40 z-10" />
 
-  {/* Centered Text */}
-  <div className="relative z-20 flex justify-center">
-    <span className="inline-block px-6 py-3 rounded-md text-white text-3xl md:text-4xl font-extrabold 
+        {/* Centered Text */}
+        <div className="relative z-20 flex justify-center">
+          <span className="inline-block px-6 py-3 rounded-md text-white text-3xl md:text-4xl font-extrabold 
                      bg-gradient-to-r from-indigo-29 to-violet-60 backdrop-blur-sm shadow-lg">
-      Join Us
-    </span>
-  </div>
-</section>
+            Join Us
+          </span>
+        </div>
+      </section>
 
 
       {/* ===== WHY JOIN ===== */}

@@ -101,8 +101,8 @@ export default function Contact() {
 
         {/* Transparent Title */}
         <div className="relative z-20 flex justify-center">
-          <span className="inline-block px-8 py-4 rounded-xl text-white text-3xl md:text-4xl font-extrabold 
-                          backdrop-blur-md bg-white/10 border border-white/20 shadow-lg">
+          <span className="iinline-block px-6 py-3 rounded-md text-white text-3xl md:text-4xl font-extrabold 
+                     bg-gradient-to-r from-indigo-29 to-violet-60 backdrop-blur-sm shadow-lg">
             Contact Us
           </span>
         </div>
@@ -153,13 +153,11 @@ export default function Contact() {
                     value={formData.phoneNumber}
                     onChange={handleChange}
                     placeholder="+62-xxx-xxxx-xxxx"
-                    className={`w-full px-4 py-3 border ${
-                      phoneError ? "border-red-400" : "border-gray-300"
-                    } rounded-lg text-gray-800 placeholder-gray-500 bg-gray-50 focus:ring-2 ${
-                      phoneError
+                    className={`w-full px-4 py-3 border ${phoneError ? "border-red-400" : "border-gray-300"
+                      } rounded-lg text-gray-800 placeholder-gray-500 bg-gray-50 focus:ring-2 ${phoneError
                         ? "focus:ring-red-400"
                         : "focus:ring-blue-500 focus:border-transparent"
-                    } outline-none transition-all duration-300 hover:border-blue-400`}
+                      } outline-none transition-all duration-300 hover:border-blue-400`}
                     required
                   />
                   {phoneError && (
