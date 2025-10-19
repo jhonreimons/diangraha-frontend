@@ -80,11 +80,11 @@ export default function AboutPage() {
             </div>
 
             <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-xl shadow-lg border border-blue-200">
-              <h3 className="text-2xl font-bold text-blue-800 mb-4">Visi</h3>
+              <h3 className="text-2xl font-bold text-blue-800 mb-4">Vission</h3>
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
                 Becoming a leading partner and providing efficient, reliable, and sustainable business solutions.
               </p>
-              <h3 className="text-2xl font-bold text-blue-800 mb-4">Misi</h3>
+              <h3 className="text-2xl font-bold text-blue-800 mb-4">Mission</h3>
               <ul className="text-gray-700 text-lg leading-relaxed list-disc ml-5 space-y-3">
                 <li>
                   Providing high-quality, skilled, committed services in various industries, including HR, finance, and IT.
@@ -103,7 +103,7 @@ export default function AboutPage() {
             <div className="text-center mb-12">
               <h2 className="font-bold text-gray-800 mb-4 text-2xl">Our Clients</h2>
               <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-                We are proud to work with companies of all sizes — from startups to enterprises — helping them achieve their goals with trust and excellence.
+               Trusted by companies of all sizes to achieve growth and digital transformation
               </p>
             </div>
 

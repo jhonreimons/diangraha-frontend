@@ -17,15 +17,6 @@ export default function Footer() {
           <div className="flex gap-4 mt-4">
             <a href="#" className="hover:opacity-80">
               <Image
-                src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg"
-                alt="YouTube"
-                width={24}
-                height={24}
-                className="invert"
-              />
-            </a>
-            <a href="#" className="hover:opacity-80">
-              <Image
                 src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg"
                 alt="Instagram"
                 width={24}
@@ -42,14 +33,23 @@ export default function Footer() {
                 className="invert"
               />
             </a>
+            <a href="#" className="hover:opacity-80">
+              <Image
+                src="/jobstreet.png"
+                alt="Jobstreet"
+                width={24}
+                height={24}
+                className="invert"
+              />
+            </a>
           </div>
         </div>
         {/* Jam Operasional */}
         <div>
           <h4 className="font-semibold mb-4">Jam Operasional</h4>
-          <p className="text-sm">Senin - Jumat: 08.00 – 17.00 WIB</p>
-          <p className="text-sm">Sabtu: 08.00 – 12.00 WIB</p>
-          <p className="text-sm">Minggu: Libur</p>
+          <p className="text-sm">Monday - Friday: 08.00 – 17.00 WIB</p>
+          <p className="text-sm">Saturday - Sunday: Closed</p>
+
         </div>
 
         {/* Company */}

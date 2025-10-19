@@ -22,7 +22,7 @@ export default function AdminSidebar({ sidebarOpen, onToggle }: AdminSidebarProp
 
   const menuItems = [
     { href: "/dashboard", label: "Dashboard", icon: <Home className="w-5 h-5" /> },
-    { href: "/admin/brands", label: "Brand Management", icon: <Building2 className="w-5 h-5" /> },
+    // { href: "/admin/brands", label: "Brand Management", icon: <Building2 className="w-5 h-5" /> },
     { href: "/admin/services", label: "Service Management", icon: <Cog className="w-5 h-5" /> },
     { href: "/admin/clients", label: "Client Management", icon: <Handshake className="w-5 h-5" /> },
     { href: "/admin/achievements", label: "Achievement Management", icon: <Trophy className="w-5 h-5" /> },

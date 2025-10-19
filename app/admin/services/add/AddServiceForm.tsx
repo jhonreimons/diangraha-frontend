@@ -12,7 +12,11 @@ import { SERVER_BASE_URL, getImageUrl } from "@/lib/config";
 export default function AddServiceForm() {
   const [user, setUser] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [formData, setFormData] = useState({ name: "", description: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    shortDesc: "",
+    longDesc: "",
+  });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
@@ -25,7 +29,6 @@ export default function AddServiceForm() {
   const editId = searchParams.get("edit");
   const isEditMode = !!editId;
 
-  // 🔹 Ambil data lama untuk mode edit
   const fetchServiceData = async (id: string) => {
     try {
       const response = await fetch(`${SERVER_BASE_URL}/api/services`);
@@ -36,10 +39,13 @@ export default function AddServiceForm() {
       if (service) {
         setFormData({
           name: service.name || "",
-          description: service.longDesc || "",
+          shortDesc: service.shortDesc || "",
+          longDesc: service.longDesc || "",
         });
         if (service.imageUrl) {
           setExistingImageUrl(getImageUrl(service.imageUrl));
+        } else {
+          setExistingImageUrl(null);
         }
       }
     } catch (error) {
@@ -47,7 +53,6 @@ export default function AddServiceForm() {
     }
   };
 
-  // 🔹 Auth check dan fetch data edit
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
@@ -68,6 +73,7 @@ export default function AddServiceForm() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    if (name === "shortDesc" && value.length > 255) return;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -93,7 +99,6 @@ export default function AddServiceForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ Validasi gambar hanya untuk Add
     if (!isEditMode && !selectedImage) {
       setShowImageError(true);
       return;
@@ -101,38 +106,30 @@ export default function AddServiceForm() {
 
     setLoading(true);
     try {
-      let response;
+      const token = localStorage.getItem("token");
+      const formDataToSend = new FormData();
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("shortDesc", formData.shortDesc);
+      formDataToSend.append("longDesc", formData.longDesc);
+      if (selectedImage) formDataToSend.append("imageFile", selectedImage);
+      else formDataToSend.append("imageFile", "");
 
-      if (isEditMode) {
-        const url = `${SERVER_BASE_URL}/api/services/${editId}?name=${encodeURIComponent(
-          formData.name
-        )}&shortDesc=${encodeURIComponent(
-          formData.description
-        )}&longDesc=${encodeURIComponent(formData.description)}`;
+      const url = isEditMode
+        ? `${SERVER_BASE_URL}/api/services/${editId}`
+        : `${SERVER_BASE_URL}/api/services`;
 
-        const formDataToSend = new FormData();
-        if (selectedImage) formDataToSend.append("imageFile", selectedImage);
+      const method = isEditMode ? "PUT" : "POST";
 
-        response = await fetch(url, {
-          method: "PUT",
-          headers: { Authorization: "Bearer " + localStorage.getItem("token") },
-          body: formDataToSend,
-        });
-      } else {
-        const formDataToSend = new FormData();
-        formDataToSend.append("name", formData.name);
-        formDataToSend.append("shortDesc", formData.description);
-        formDataToSend.append("longDesc", formData.description);
-        if (selectedImage) formDataToSend.append("imageFile", selectedImage);
-
-        response = await fetch(`${SERVER_BASE_URL}/api/services`, {
-          method: "POST",
-          headers: { Authorization: "Bearer " + localStorage.getItem("token") },
-          body: formDataToSend,
-        });
-      }
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Authorization: "Bearer " + token,
+        },
+        body: formDataToSend,
+      });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
       setShowSuccess(true);
     } catch (error) {
       console.error("Error saving service:", error);
@@ -150,13 +147,16 @@ export default function AddServiceForm() {
   const handleImageErrorClose = () => setShowImageError(false);
 
   if (!user) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row">
       <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
-
       <div className="flex-1 flex flex-col ml-0 md:ml-[260px] transition-all duration-300">
         <AdminHeader
           title={isEditMode ? "Edit Service" : "Add New Service"}
@@ -165,7 +165,6 @@ export default function AddServiceForm() {
           sidebarOpen={sidebarOpen}
           onToggle={setSidebarOpen}
         />
-
         <main className="relative z-10 flex-1 bg-gray-50/50 min-h-screen pt-[100px] px-4 md:px-8">
           <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-md p-6 md:p-8 mt-4">
             <div className="mb-6">
@@ -184,10 +183,7 @@ export default function AddServiceForm() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                   Service Name
                 </label>
                 <input
@@ -198,44 +194,61 @@ export default function AddServiceForm() {
                   onChange={handleInputChange}
                   required
                   placeholder="Enter service name"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-400 
-                             focus:ring-2 focus:ring-blue-400 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-400 focus:border-transparent outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="description"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Description
+                <label htmlFor="shortDesc" className="block text-sm font-medium text-gray-700 mb-2">
+                  Short Description (max 255 characters)
                 </label>
                 <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
+                  id="shortDesc"
+                  name="shortDesc"
+                  value={formData.shortDesc}
                   onChange={handleInputChange}
                   required
-                  rows={5}
-                  placeholder="Detailed description for service pages"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none text-gray-800 placeholder-gray-400 
-                             focus:ring-2 focus:ring-blue-400 focus:border-transparent outline-none transition-all"
+                  rows={3}
+                  maxLength={255}
+                  placeholder="Brief summary displayed on service cards"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-400 focus:border-transparent outline-none transition-all"
+                />
+                <p
+                  className={`text-xs mt-1 text-right ${
+                    formData.shortDesc.length > 240 ? "text-red-500" : "text-gray-500"
+                  }`}
+                >
+                  {formData.shortDesc.length}/255 characters
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="longDesc" className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Description
+                </label>
+                <textarea
+                  id="longDesc"
+                  name="longDesc"
+                  value={formData.longDesc}
+                  onChange={handleInputChange}
+                  required
+                  rows={6}
+                  placeholder="Detailed description for service detail page"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-400 focus:border-transparent outline-none transition-all"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Service Image{" "}
-                  {!isEditMode && (
-                    <span className="text-red-500 text-xs">(required)</span>
-                  )}
+                  {!isEditMode && <span className="text-red-500 text-xs">(required)</span>}
                 </label>
                 <div
                   className={`relative border-2 border-dashed p-6 text-center rounded-lg hover:border-blue-400 transition-all bg-gray-50 ${
                     !isEditMode && !selectedImage ? "border-red-400" : ""
                   }`}
                 >
-                  {(imagePreview || existingImageUrl) ? (
+                  {imagePreview || existingImageUrl ? (
                     <div className="relative">
                       <img
                         src={imagePreview || existingImageUrl || ""}
@@ -289,7 +302,6 @@ export default function AddServiceForm() {
             </form>
           </div>
 
-          {/* ✅ Success Modal */}
           {showSuccess && (
             <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
               <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform animate-scaleIn">
@@ -312,7 +324,6 @@ export default function AddServiceForm() {
             </div>
           )}
 
-          {/* 🔴 Image Error Modal */}
           {showImageError && (
             <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
               <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform animate-scaleIn">
@@ -338,7 +349,6 @@ export default function AddServiceForm() {
   );
 }
 
-/* ✅ Animations */
 const style = `
 @keyframes fadeIn {
   from { opacity: 0; }

@@ -9,10 +9,10 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { SERVER_BASE_URL } from "@/lib/config";
 
-export default function AddFeaturePage() {
+export default function AddSubServicePage() {
   const [user, setUser] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [formData, setFormData] = useState({ featureName: "", featureDesc: "" });
+  const [formData, setFormData] = useState({ name: "", description: "" });
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const { logout } = useAuth();
@@ -20,48 +20,44 @@ export default function AddFeaturePage() {
   const params = useParams();
   const searchParams = useSearchParams();
 
-  const serviceId = params?.id as string;
-  const editFeatureId = searchParams.get("edit");
-  const isEditMode = !!editFeatureId;
+  const serviceId = params?.id as string; // service id dari URL
+  const editSubServiceId = searchParams.get("edit"); // id sub-service (mode edit)
+  const isEditMode = !!editSubServiceId;
 
-  //  Fetch data dari array API, cari service & feature sesuai ID
-  const fetchFeatureData = async () => {
-    if (!serviceId || !editFeatureId) return;
+  // === Fetch existing sub-service by ID ===
+  const fetchSubServiceData = async () => {
+    if (!editSubServiceId) return;
 
     try {
-      const res = await fetch(`${SERVER_BASE_URL}/api/services`, {
-        headers: { "Accept": "application/json" },
-        cache: "no-store",
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const services = await res.json();
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Missing token");
 
-      // Cari service berdasarkan ID
-      const service = services.find((s: any) => Number(s.id) === Number(serviceId));
-      if (!service) {
-        console.warn(`Service with ID ${serviceId} not found`);
-        return;
-      }
-
-      // Cari feature berdasarkan ID
-      const feature = service.features?.find(
-        (f: any) => Number(f.id) === Number(editFeatureId)
+      const res = await fetch(
+        `${SERVER_BASE_URL}/api/services/sub-services/${editSubServiceId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+          cache: "no-store",
+        }
       );
 
-      if (feature) {
-        setFormData({
-          featureName: feature.featureName ?? "",
-          featureDesc: feature.featureDesc ?? "",
-        });
-      } else {
-        console.warn(`Feature with ID ${editFeatureId} not found in service ${serviceId}`);
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      // Set data dari API ke form
+      setFormData({
+        name: data.name ?? "",
+        description: data.description ?? "",
+      });
     } catch (err) {
-      console.error("Error fetching feature data:", err);
+      console.error("Error fetching sub-service:", err);
+      alert("Failed to load existing sub-service data.");
     }
   };
 
-  //  Load saat pertama kali dan ketika mode edit aktif
+  // === Initialize on load ===
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
@@ -70,10 +66,10 @@ export default function AddFeaturePage() {
       window.location.href = "/login";
       return;
     }
-    if (userData) setUser(JSON.parse(userData));
 
-    if (isEditMode) fetchFeatureData();
-  }, [isEditMode, editFeatureId, serviceId]);
+    if (userData) setUser(JSON.parse(userData));
+    if (isEditMode) fetchSubServiceData();
+  }, [isEditMode, editSubServiceId]);
 
   const handleLogout = () => logout();
 
@@ -84,15 +80,18 @@ export default function AddFeaturePage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  //  Submit Add / Edit Feature
+  // === Submit Add / Edit Sub-Service ===
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Missing token");
+
       const url = isEditMode
-        ? `${SERVER_BASE_URL}/api/services/${serviceId}/features/${editFeatureId}`
-        : `${SERVER_BASE_URL}/api/services/${serviceId}/features`;
+        ? `${SERVER_BASE_URL}/api/services/${serviceId}/sub-services/${editSubServiceId}`
+        : `${SERVER_BASE_URL}/api/services/${serviceId}/sub-services`;
 
       const method = isEditMode ? "PUT" : "POST";
 
@@ -100,17 +99,22 @@ export default function AddFeaturePage() {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + localStorage.getItem("token"),
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+        }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
       setShowSuccess(true);
     } catch (err) {
-      console.error(`Error ${isEditMode ? "updating" : "adding"} feature:`, err);
-      alert(`Failed to ${isEditMode ? "update" : "add"} feature`);
+      console.error(
+        `Error ${isEditMode ? "updating" : "adding"} sub-service:`,
+        err
+      );
+      alert(`Failed to ${isEditMode ? "update" : "add"} sub-service.`);
     } finally {
       setLoading(false);
     }
@@ -137,7 +141,7 @@ export default function AddFeaturePage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col ml-0 md:ml-[260px] transition-all duration-300">
         <AdminHeader
-          title={isEditMode ? "Edit Service Feature" : "Add Service Feature"}
+          title={isEditMode ? "Edit Sub Service" : "Add Sub Service"}
           user={user}
           onLogout={handleLogout}
           sidebarOpen={sidebarOpen}
@@ -149,7 +153,7 @@ export default function AddFeaturePage() {
             {/* Back Button */}
             <div className="mb-6">
               <Link
-                href="/admin/services"
+                href={`/admin/services`}
                 className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -159,49 +163,49 @@ export default function AddFeaturePage() {
 
             {/* Title */}
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              {isEditMode ? "Edit Feature" : "Add New Feature"}
+              {isEditMode ? "Edit Sub Service" : "Add New Sub Service"}
             </h2>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Feature Name */}
+              {/* Name */}
               <div>
                 <label
-                  htmlFor="featureName"
+                  htmlFor="name"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Feature Name
+                  Sub Service Name
                 </label>
                 <input
                   type="text"
-                  id="featureName"
-                  name="featureName"
-                  value={formData.featureName}
+                  id="name"
+                  name="name"
+                  value={formData.name}
                   onChange={handleInputChange}
                   required
-                  placeholder="Enter feature name"
+                  placeholder="Enter sub service name"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm 
                              text-gray-900 placeholder-gray-400 bg-white
                              focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all"
                 />
               </div>
 
-              {/* Feature Description */}
+              {/* Description */}
               <div>
                 <label
-                  htmlFor="featureDesc"
+                  htmlFor="description"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Feature Description
+                  Description
                 </label>
                 <textarea
-                  id="featureDesc"
-                  name="featureDesc"
-                  value={formData.featureDesc}
+                  id="description"
+                  name="description"
+                  value={formData.description}
                   onChange={handleInputChange}
                   rows={4}
                   required
-                  placeholder="Enter feature description"
+                  placeholder="Enter sub service description"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm 
                              text-gray-900 placeholder-gray-400 bg-white resize-none
                              focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all"
@@ -226,23 +230,23 @@ export default function AddFeaturePage() {
                       ? "Updating..."
                       : "Adding..."
                     : isEditMode
-                      ? "Update Feature"
-                      : "Add Feature"}
+                    ? "Update Sub Service"
+                    : "Add Sub Service"}
                 </button>
               </div>
             </form>
           </div>
 
-          {/*  Success Modal */}
+          {/* Success Modal */}
           {showSuccess && (
             <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
               <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform animate-scaleIn">
                 <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {isEditMode ? "Feature Updated!" : "Feature Added!"}
+                  {isEditMode ? "Sub Service Updated!" : "Sub Service Added!"}
                 </h3>
                 <p className="text-gray-600 text-sm mb-5">
-                  Feature "{formData.featureName}"{" "}
+                  Sub Service "{formData.name}"{" "}
                   {isEditMode ? "updated successfully." : "added successfully."}
                 </p>
                 <button
@@ -260,7 +264,7 @@ export default function AddFeaturePage() {
   );
 }
 
-/*  Animations */
+/* === Animations === */
 const style = `
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }

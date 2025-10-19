@@ -1,193 +1,254 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useEffect, useRef, useState, useLayoutEffect } from "react";
 import Image from "next/image";
-import { achievementsAPI } from "../../lib/api";
-import type { Achievement as AchievementData } from "../../lib/api";
-import { getImageUrl } from "../../lib/config";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { achievementsAPI } from "@/lib/api";
+import { getImageUrl } from "@/lib/config";
+
 interface Award {
-    id: number;
-    title: string;
-    image?: string;
-    description?: string;
+  id: number;
+  title: string;
+  imageUrl?: string;
 }
 
-interface AchievementProps {
-    awards?: Award[];
-}
+export default function AchievementSection() {
+  const [achievements, setAchievements] = useState<Award[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [itemsPerView, setItemsPerView] = useState(4);
 
-// Default data sebagai fallback
-const defaultAwards: Award[] = [
-    { id: 1, title: "Award Best Partner 1", image: "https://dummyimage.com/80x80/ffd700/ffffff.png&text=🏅" },
-    { id: 2, title: "Award Best Partner 2", image: "https://dummyimage.com/80x80/ff6b35/ffffff.png&text=🏆" },
-    { id: 3, title: "Award Best Partner 3", image: "https://dummyimage.com/80x80/4ecdc4/ffffff.png&text=🥇" },
-    { id: 4, title: "Award Best Partner 4", image: "https://dummyimage.com/80x80/45b7d1/ffffff.png&text=⭐" },
-    { id: 5, title: "Award Best Partner 5", image: "https://dummyimage.com/80x80/f39c12/ffffff.png&text=🎖️" },
-    { id: 6, title: "Award Best Partner 6", image: "https://dummyimage.com/80x80/27ae60/ffffff.png&text=🏵️" },
-];
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
-export default function Achievement({ awards = defaultAwards }: AchievementProps) {
-    const [fetchedAwards, setFetchedAwards] = useState<Award[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [isTransitioning, setIsTransitioning] = useState(false);
-    const [itemsPerView, setItemsPerView] = useState(4);
+  const [viewportWidth, setViewportWidth] = useState(0);
+  const [itemWidth, setItemWidth] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const data: AchievementData[] = await achievementsAPI.fetchAchievements();
-                const mapped: Award[] = data.map(a => ({ id: a.id, title: a.title, image: getImageUrl(a.imageUrl) }));
-                setFetchedAwards(mapped);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to fetch achievements');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
+  // equal height for cards
+  const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const [cardMinHeight, setCardMinHeight] = useState<number | null>(null);
 
+  // Fetch data
+  useEffect(() => {
+    const fetchAchievements = async () => {
+      try {
+        const data = await achievementsAPI.fetchAchievements();
+        const mapped: Award[] = data.map((a) => ({
+          id: a.id,
+          title: a.title ?? "",
+          imageUrl: a.imageUrl ? getImageUrl(a.imageUrl) : "",
+        }));
+        setAchievements(mapped);
+      } catch (err) {
+        console.error("Error fetching achievements:", err);
+        setAchievements([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAchievements();
+  }, []);
 
-
-    const effectiveAwards = fetchedAwards.length > 0 ? fetchedAwards : awards;
-
-    // Responsive items per view
-    useEffect(() => {
-        const updateItemsPerView = () => {
-            if (effectiveAwards.length === 1) {
-                setItemsPerView(1);
-            } else {
-                if (window.innerWidth < 640) {
-                    setItemsPerView(1);
-                } else if (window.innerWidth < 1024) {
-                    setItemsPerView(2);
-                } else {
-                    setItemsPerView(4);
-                }
-            }
-        };
-
-        updateItemsPerView();
-        window.addEventListener("resize", updateItemsPerView);
-        return () => window.removeEventListener("resize", updateItemsPerView);
-    }, [effectiveAwards.length]);
-
-    const handleTransition = (newIndex: number) => {
-        if (isTransitioning) return;
-        setIsTransitioning(true);
-        setCurrentIndex(newIndex);
-
-        // Reset transitioning state after animation
-        setTimeout(() => {
-            setIsTransitioning(false);
-
-            // Handle infinite loop reset
-            if (newIndex >= effectiveAwards.length) {
-                setCurrentIndex(0);
-            } else if (newIndex < 0) {
-                setCurrentIndex(effectiveAwards.length - 1);
-            }
-        }, 700); // Match transition duration
+  // Responsive breakpoints
+  useEffect(() => {
+    const updateItemsPerView = () => {
+      if (window.innerWidth < 640) setItemsPerView(1);
+      else if (window.innerWidth < 1024) setItemsPerView(2);
+      else setItemsPerView(4);
     };
 
-    const prev = () => {
-        const newIndex = currentIndex === 0 ? effectiveAwards.length - 1 : currentIndex - 1;
-        handleTransition(newIndex);
+    updateItemsPerView();
+    window.addEventListener("resize", updateItemsPerView);
+    return () => window.removeEventListener("resize", updateItemsPerView);
+  }, []);
+
+  // Measure widths
+  useLayoutEffect(() => {
+    const measure = () => {
+      const vw = viewportRef.current?.clientWidth || 0;
+      setViewportWidth(vw);
+      const iw = vw / itemsPerView;
+      setItemWidth(iw);
+      setContainerWidth(iw * achievements.length);
     };
 
-    const next = () => {
-        const newIndex = currentIndex === effectiveAwards.length - 1 ? 0 : currentIndex + 1;
-        handleTransition(newIndex);
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (viewportRef.current) ro.observe(viewportRef.current);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [itemsPerView, achievements.length]);
+
+  // clamp index if necessary
+  useEffect(() => {
+    const maxIndex = Math.max(0, Math.ceil(achievements.length / itemsPerView) - 1);
+    setCurrentIndex((prev) => Math.min(prev, maxIndex));
+  }, [achievements.length, itemsPerView]);
+
+  const maxIndex = Math.max(0, Math.ceil(achievements.length / itemsPerView) - 1);
+  const next = () => setCurrentIndex((prev) => (prev < maxIndex ? prev + 1 : maxIndex));
+  const prev = () => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : 0));
+
+  // Equalize heights across cards
+  useLayoutEffect(() => {
+    if (!cardRefs.current.length) return;
+
+    const measureHeights = () => {
+      let maxH = 0;
+      for (const el of cardRefs.current) {
+        if (el) {
+          const h = el.offsetHeight;
+          if (h > maxH) maxH = h;
+        }
+      }
+      setCardMinHeight(maxH > 0 ? maxH : null);
     };
 
+    measureHeights();
+
+    const imgs: HTMLImageElement[] = [];
+    cardRefs.current.forEach((el) => {
+      if (!el) return;
+      const found = Array.from(el.querySelectorAll("img"));
+      found.forEach((img) => {
+        if (!img.complete) imgs.push(img);
+      });
+    });
+
+    if (imgs.length > 0) {
+      let loaded = 0;
+      const onLoad = () => {
+        loaded++;
+        if (loaded === imgs.length) measureHeights();
+      };
+      imgs.forEach((img) => {
+        img.addEventListener("load", onLoad);
+        img.addEventListener("error", onLoad);
+      });
+      return () => {
+        imgs.forEach((img) => {
+          img.removeEventListener("load", onLoad);
+          img.removeEventListener("error", onLoad);
+        });
+      };
+    }
+  }, [achievements, viewportWidth, itemsPerView]);
+
+  if (loading) {
     return (
-        <section className="px-6 md:px-12 lg:px-20 py-20 md:py-24 text-center bg-white">
-            <div className="max-w-7xl mx-auto">
-                <h2 className="font-bold mb-6 text-gray-800" style={{fontSize: '25px'}}>Achievement</h2>
-                <p className="text-lg md:text-xl text-gray-600 mb-16 max-w-3xl mx-auto leading-relaxed">
-                    A proud testament to our unwavering dedication, innovation and consistent growth throughout the years.
-                </p>
-
-                {loading ? (
-                    <p className="text-lg text-gray-600">Loading achievements...</p>
-                ) : (
-                <>
-                <div className="relative">
-                {/* Carousel wrapper */}
-                <div className="overflow-hidden">
-                    <div className="overflow-hidden">
-                    <div
-                        className={`flex transition-transform duration-700 ease-in-out ${
-                        effectiveAwards.length < 4 ? 'justify-center' : ''
-                        }`}
-                        style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
-                    >
-                        {effectiveAwards.map((award, index) => (
-                        <div
-                            key={`${award.id}-${Math.floor(index / effectiveAwards.length)}`}
-                            className="flex-shrink-0 px-3"
-                            style={{
-                            width: itemsPerView === 1 ? '256px' : `${100 / itemsPerView}%`,
-                            }}
-                        >
-                            <div className="border border-gray-200 rounded-xl shadow-md p-6 flex flex-col items-center bg-white hover:shadow-2xl transition-all duration-500 hover:border-blue-300 transform hover:-translate-y-2 hover:scale-105 group">
-                            <Image
-                                src={
-                                award.image ||
-                                'https://dummyimage.com/64x64/ffd700/ffffff.png&text=🏅'
-                                }
-                                alt={award.title}
-                                width={64}
-                                height={64}
-                                className="mb-4"
-                            />
-                            <p className="font-medium text-center text-black">
-                                {award.title}
-                            </p>
-                            </div>
-                        </div>
-                        ))}
-                    </div>
-                    </div>
-                </div>
-
-                            {/* Left Button */}
-                            <button
-                                onClick={prev}
-                                className="absolute top-1/2 -left-8 transform -translate-y-1/2 bg-white border-2 border-gray-200 rounded-full p-4 shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all duration-300 z-10"
-                            >
-                                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
-                            </button>
-
-                            {/* Right Button */}
-                            <button
-                                onClick={next}
-                                className="absolute top-1/2 -right-8 transform -translate-y-1/2 bg-white border-2 border-gray-200 rounded-full p-4 shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all duration-300 z-10"
-                            >
-                                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        {/* Pagination Dots */}
-                        <div className="flex justify-center mt-6 space-x-2">
-                            {effectiveAwards.map((_, i) => (
-                                <span
-                                    key={i}
-                                    onClick={() => !isTransitioning && handleTransition(i)}
-                                    className={`h-3 w-3 rounded-full cursor-pointer transition-all duration-300 ${
-                                        i === (currentIndex % effectiveAwards.length) ? "bg-blue-600 scale-125" : "bg-gray-300 hover:bg-gray-400 hover:scale-110"
-                                    }`}
-                                />
-                            ))}
-                        </div>
-                    </>
-                )}
-            </div>
-        </section>
+      <section className="py-20 bg-white text-center">
+        <h2 className="font-bold text-gray-800 mb-4 text-[25px]">Achievement</h2>
+        <p className="text-gray-600 text-lg">Loading achievements...</p>
+      </section>
     );
+  }
+
+  // Compute translateX in px
+  const rawTranslate = -currentIndex * viewportWidth;
+  const maxTranslate = Math.min(0, viewportWidth - containerWidth);
+  const translatePx = containerWidth
+    ? Math.max(maxTranslate, Math.min(0, rawTranslate))
+    : 0;
+
+  return (
+    <section className="py-20 bg-white relative">
+      <div className="max-w-7xl mx-auto px-6 relative">
+        <div className="text-center mb-12">
+          <h2 className="font-bold text-gray-800 mb-4 text-[25px]">Achievement</h2>
+          <p className="text-gray-600 text-lg max-w-3xl mx-auto">
+            A proud testament to our unwavering dedication, innovation and consistent growth throughout the years.
+          </p>
+        </div>
+
+        <div className="relative flex items-center justify-center">
+          {achievements.length > itemsPerView && (
+            <button
+              onClick={prev}
+              aria-label="Previous"
+              className="absolute -left-6 sm:-left-8 top-1/2 -translate-y-1/2 z-10 
+                         bg-white border border-gray-200 rounded-full p-3 shadow-xl 
+                         hover:bg-blue-50 hover:scale-105 transition-all duration-300"
+            >
+              <ChevronLeft className="w-6 h-6 text-gray-800" />
+            </button>
+          )}
+
+          {/* Viewport */}
+          <div ref={viewportRef} className="overflow-hidden mx-6 sm:mx-12 w-full" style={{ minHeight: 300 }}>
+            {/* Container */}
+            <div
+              ref={containerRef}
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{
+                width: containerWidth || "auto",
+                transform: `translateX(${translatePx}px)`,
+              }}
+            >
+              {achievements.map((award, idx) => (
+                <div
+                  key={award.id}
+                  className="flex-shrink-0 px-3"
+                  style={{
+                    width: itemWidth || "100%",
+                  }}
+                >
+                  <div
+            ref={(el) => { cardRefs.current[idx] = el; }}
+                    className="w-full"
+                  >
+                    <div
+                      className="bg-white border border-gray-200 rounded-xl shadow-md p-6 flex flex-col justify-between h-full 
+                                 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 
+                                 hover:border-blue-300 group"
+                      style={{
+                        minHeight: cardMinHeight ? `${cardMinHeight}px` : undefined,
+                      }}
+                    >
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 overflow-hidden">
+                          {award.imageUrl ? (
+                            <Image
+                              src={award.imageUrl}
+                              alt={award.title}
+                              width={64}
+                              height={64}
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="bg-blue-600 text-white text-xl font-bold w-full h-full flex items-center justify-center">
+                              🏅
+                            </div>
+                          )}
+                        </div>
+
+                        <p className="text-gray-800 font-medium text-center text-sm leading-relaxed">
+                          {award.title}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {achievements.length > itemsPerView && (
+            <button
+              onClick={next}
+              aria-label="Next"
+              className="absolute -right-6 sm:-right-8 top-1/2 -translate-y-1/2 z-10 
+                         bg-white border border-gray-200 rounded-full p-3 shadow-xl 
+                         hover:bg-blue-50 hover:scale-105 transition-all duration-300"
+            >
+              <ChevronRight className="w-6 h-6 text-gray-800" />
+            </button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
 }

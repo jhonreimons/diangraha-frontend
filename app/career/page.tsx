@@ -38,8 +38,8 @@ export default function CareerPage() {
             Why Join DGE?
           </h2>
           <p className="text-gray-600 leading-relaxed">
-            At PT DGE, we foster innovation, growth, and a collaborative
-            environment. Be part of a team that’s driving real impact.
+            At DGE, we strengthen innovation, professional growth, and collaboration. 
+            Be part of a team that takes pride in excellence and driving positive impact through every project
           </p>
         </div>
       </section>
@@ -62,7 +62,7 @@ export default function CareerPage() {
 
             <h3 className="mt-6 text-lg font-semibold text-gray-800">Linkedin</h3>
             <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-              Explore our latest job openings and connect with our team on LinkedIn
+              Explore job openings and connect with our team on Linkedln.
             </p>
 
             <span className="mt-6 text-indigo-600 group-hover:text-indigo-700 inline-flex items-center gap-1 text-sm font-medium">
@@ -90,7 +90,7 @@ export default function CareerPage() {
 
             <h3 className="mt-6 text-lg font-semibold text-gray-800">DGE Career Hub</h3>
             <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-              Apply directly through our dedicated portal for a seamless experience
+              Apply directly through our dedicated career portal.
             </p>
 
             <span className="mt-6 text-indigo-600 group-hover:text-indigo-700 inline-flex items-center gap-1 text-sm font-medium">
@@ -118,7 +118,7 @@ export default function CareerPage() {
 
             <h3 className="mt-6 text-lg font-semibold text-gray-800">JobStreet</h3>
             <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-              Browse and apply for roles on Indonesia’s leading job platform
+            Explore available positions on JobStreet.
             </p>
 
             <span className="mt-6 text-indigo-600 group-hover:text-indigo-700 inline-flex items-center gap-1 text-sm font-medium">
