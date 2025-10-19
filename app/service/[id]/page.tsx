@@ -244,7 +244,7 @@ export default function ServiceDetailPage() {
           </section>
         )}
       </div>
-
+      {/* Reupload to server */}
       {/* Footer tetap di bawah */}
       <Footer />
     </main>
