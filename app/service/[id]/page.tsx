@@ -145,12 +145,13 @@ export default function ServiceDetailPage() {
               <h1 className="text-4xl font-bold text-gray-900 mb-6">
                 {service.name}
               </h1>
-              <p
-                className="text-gray-700 leading-relaxed mb-6"
-                style={{ whiteSpace: "pre-wrap" }}
-              >
-                {service.longDesc}
-              </p>
+                <p
+                  className="text-gray-700 leading-relaxed mb-6 text-center"
+                  style={{ whiteSpace: "pre-wrap" }}
+                >
+                  {service.longDesc}
+                </p>
+
               <button
                 className="bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold text-base 
                             hover:bg-blue-900 transition-all duration-300 transform hover:scale-105 
