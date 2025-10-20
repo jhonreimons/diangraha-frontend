@@ -28,7 +28,7 @@ export default function Navbar() {
 
   const serviceItems = services.map(service => ({
     href: `/service/${encodeURIComponent(service.name.toLowerCase().replace(/\s+/g, '-'))}`,
-    label: service.name
+    label: service.name,
   }));
 
   const isActive = (href: string) => {
@@ -56,7 +56,6 @@ export default function Navbar() {
           {menuItems.map((item) =>
             item.label === "Services" ? (
               <li key={item.href} className="relative group">
-                {/* Services now clickable */}
                 <Link
                   href={item.href}
                   className={`flex items-center transition-all duration-200 ${
@@ -123,25 +122,44 @@ export default function Navbar() {
           {menuItems.map((item) =>
             item.label === "Services" ? (
               <div key={item.href} className="w-full flex flex-col items-center">
-                {/* Toggle untuk Services */}
-                <button
-                  onClick={() => setOpenService(!openService)}
-                  className={`flex items-center space-x-1 transition-all duration-200 ${
-                    isActive(item.href)
-                      ? "text-white font-semibold"
-                      : "text-gray-200 hover:text-white"
-                  }`}
-                >
-                  <span>{item.label}</span>
-                  {openService ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                </button>
-                {/* Submenu Mobile */}
+                {/* Baris "Services" dibagi dua: kiri (link) dan kanan (ikon panah) */}
+                <div className="flex items-center space-x-2">
+                  {/* Klik teks => redirect ke /services */}
+                  <Link
+                    href={item.href}
+                    onClick={() => {
+                      setOpen(false);
+                      setOpenService(false);
+                    }}
+                    className={`transition-all duration-200 ${
+                      isActive(item.href)
+                        ? "text-white font-semibold"
+                        : "text-gray-200 hover:text-white"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+
+                  {/* Klik ikon => toggle dropdown */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenService(!openService);
+                    }}
+                    className="text-gray-200 hover:text-white focus:outline-none"
+                  >
+                    {openService ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Dropdown Services (mobile) */}
                 {openService && (
-                  <div className="flex flex-col space-y-2 mt-2">
+                  <div className="flex flex-col space-y-2 mt-2 items-center">
                     {serviceItems.map((service) => (
                       <Link
                         key={service.href}
