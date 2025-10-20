@@ -7,7 +7,7 @@ export default function CareerPage() {
   return (
     <main className="bg-white">
       <Navbar />
-      <section className="relative w-full h-[420px] md:h-[520px] flex items-center justify-center overflow-hidden">
+      <section className="relative w-full h-[420px] md:h-[620px] flex items-center justify-center overflow-hidden">
         <video
           autoPlay
           muted
@@ -15,9 +15,9 @@ export default function CareerPage() {
           playsInline
           className="absolute inset-0 w-full h-full object-cover z-0"
         >
-          <source src="/background.mp4" type="video/mp4" />
+          <source src="/career.mp4" type="video/mp4" />
           Your browser does not support the video tag.
-        </video>
+      </video>
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/40 z-10" />
 

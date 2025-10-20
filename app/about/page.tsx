@@ -36,7 +36,7 @@ export default function AboutPage() {
       <Navbar />
       <div className="min-h-screen">
         {/* Hero Section */}
-        <section className="relative w-full h-[420px] md:h-[520px] flex items-center justify-center overflow-hidden">
+        <section className="relative w-full h-[420px] md:h-[620px] flex items-center justify-center overflow-hidden">
           <video
             autoPlay
             muted
@@ -44,7 +44,7 @@ export default function AboutPage() {
             playsInline
             className="absolute inset-0 w-full h-full object-cover z-0"
           >
-            <source src="/background.mp4" type="video/mp4" />
+            <source src="/about.mp4" type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-black/40 z-10" />
           <div className="relative z-20 flex justify-center">

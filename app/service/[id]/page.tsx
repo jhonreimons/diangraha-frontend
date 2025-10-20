@@ -129,7 +129,7 @@ export default function ServiceDetailPage() {
     );
   }
 
-  // ✅ Main Content
+  //  Main Content
   return (
     <main className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
@@ -139,14 +139,14 @@ export default function ServiceDetailPage() {
 
         {/* ===== Hero Section ===== */}
         <section className="py-12 px-6 md:px-12 lg:px-20 bg-gradient-to-r from-gray-100 to-gray-200 flex-shrink-0">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row item justify-between gap-12">
             {/* Left Content */}
             <div className="max-w-xl md:flex-1 text-left">
               <h1 className="text-4xl font-bold text-gray-900 mb-6">
-                {service.name}
+                {service.name} Service
               </h1>
                 <p
-                  className="text-gray-700 leading-relaxed mb-6 text-center"
+                  className="text-gray-700 leading-relaxed mb-6"
                   style={{ whiteSpace: "pre-wrap" }}
                 >
                   {service.longDesc}
@@ -180,7 +180,7 @@ export default function ServiceDetailPage() {
                 Our Services
               </h2>
 
-              <div className="space-y-16">
+              <div className="space-y-5">
                 {service.subServices.map((sub, index) => (
                   <div
                     key={index}
@@ -215,7 +215,7 @@ export default function ServiceDetailPage() {
           <section className="py-20 bg-blue-50 flex-shrink-0">
             <div className="max-w-4xl mx-auto px-6">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-16">
-                Features of {service.name}
+                Features of {service.name} Service
               </h2>
 
               <div className="flex flex-col gap-10">

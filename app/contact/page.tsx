@@ -85,7 +85,7 @@ export default function Contact() {
       <Navbar />
 
       {/*  Hero Section */}
-      <section className="relative w-full h-[420px] md:h-[520px] flex items-center justify-center overflow-hidden">
+      <section className="relative w-full h-[420px] md:h-[620px] flex items-center justify-center overflow-hidden">
         <video
           autoPlay
           muted
