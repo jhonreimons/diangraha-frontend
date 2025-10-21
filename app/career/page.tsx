@@ -49,7 +49,7 @@ export default function CareerPage() {
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-10">
           {/* LinkedIn */}
           <a
-            href="https://www.linkedin.com/company/pt-dian-graha-elektrika/jobs/?viewAsMember=truecle"
+            href="https://www.linkedin.com/company/pt-dian-graha-elektrika/"
             className="group bg-white border border-gray-200 rounded-xl p-8 text-center flex flex-col items-center
                        shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300"
           >

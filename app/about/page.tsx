@@ -80,7 +80,7 @@ export default function AboutPage() {
             </div>
 
             <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-xl shadow-lg border border-blue-200">
-              <h3 className="text-2xl font-bold text-blue-800 mb-4">Vission</h3>
+              <h3 className="text-2xl font-bold text-blue-800 mb-4">Vision</h3>
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
                 Becoming a leading partner and providing efficient, reliable, and sustainable business solutions.
               </p>

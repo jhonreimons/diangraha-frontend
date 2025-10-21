@@ -187,26 +187,7 @@ export default function ServicesPage() {
         </section>
 
         {/* ===== Consultation Section ===== */}
-        <section
-          className="py-24 px-4"
-          style={{
-            background: "linear-gradient(90deg, #2563EB 0%, #7C3AED 100%)",
-          }}
-        >
-          <div className="max-w-4xl mx-auto text-center text-white">
-            <h2 className="text-[35px] font-bold mb-8">
-              Need Expert Advice? It's Free!
-            </h2>
-            <p className="text-[25px] mb-8 leading-relaxed">
-              We'll help you find the right strategy to achieve better results—simple, effective, and personalized.
-            </p>
-            <Link href="/contact">
-              <button className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-3 rounded-lg font-semibold hover:from-yellow-500 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl">
-                Consult Now
-              </button>
-            </Link>
-          </div>
-        </section>
+
 
         {/* ===== Dynamic Services List ===== */}
         {services.map((service, index) => {

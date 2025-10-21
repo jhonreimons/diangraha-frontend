@@ -2,7 +2,7 @@ import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import Achievement from "./components/Achievment";
 import AboutUs from "./components/AboutUs";
-import Brands from "./components/Brands";
+import Brands from "./components/Clients";
 import ServicesSection from "./components/Services/ServiceSection";
 import ContactForm from "./components/Contact/ContactForm";
 import Footer from "./components/Footer/Footer";
