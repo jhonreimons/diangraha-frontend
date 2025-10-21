@@ -49,7 +49,7 @@ export default function CareerPage() {
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-10">
           {/* LinkedIn */}
           <a
-            href="#"
+            href="https://www.linkedin.com/company/pt-dian-graha-elektrika/jobs/?viewAsMember=truecle"
             className="group bg-white border border-gray-200 rounded-xl p-8 text-center flex flex-col items-center
                        shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300"
           >
@@ -80,7 +80,7 @@ export default function CareerPage() {
 
           {/* DGE Career Hub */}
           <a
-            href="#"
+            href="https://recruitment.diangraha.com/"
             className="group bg-white border border-gray-200 rounded-xl p-8 text-center flex flex-col items-center
                       shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300"
           >
@@ -108,7 +108,7 @@ export default function CareerPage() {
 
           {/* JobStreet */}
           <a
-            href="#"
+            href="https://id.jobstreet.com/id/companies/dian-graha-elektrika-168555371921443/jobs"
             className="group bg-white border border-gray-200 rounded-xl p-8 text-center flex flex-col items-center
                        shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300"
           >
