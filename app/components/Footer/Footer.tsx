@@ -57,11 +57,12 @@ export default function Footer() {
           <div className="flex justify-center md:justify-start">
             <div className="transform scale-150 origin-top md:scale-175 md:origin-left">
               <Image
-                src="/logoiso.png"
+                src="/logoIso.png"
                 alt="Certification Logos"
                 width={150}
                 height={100}
                 className="object-contain opacity-95 hover:opacity-100 transition-opacity duration-300"
+                unoptimized
               />
             </div>
           </div>
@@ -122,6 +123,7 @@ export default function Footer() {
             width={140}
             height={40}
             className="h-10 w-auto"
+            
           />
         </div>
 
