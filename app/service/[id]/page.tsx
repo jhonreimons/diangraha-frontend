@@ -143,7 +143,7 @@ export default function ServiceDetailPage() {
             {/* Left Content */}
             <div className="max-w-xl md:flex-1 text-left">
               <h1 className="text-4xl font-bold text-gray-900 mb-6">
-                {service.name} Service
+                {service.name}
               </h1>
                 <p
                   className="text-gray-700 leading-relaxed mb-6"

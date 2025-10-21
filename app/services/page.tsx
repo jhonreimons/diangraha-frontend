@@ -238,7 +238,7 @@ export default function ServicesPage() {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`${buttonClass} text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 shadow-md inline-flex items-center justify-center gap-2`}
+                        className={`${buttonClass} text-white px-8 py-4 bg-blue-900 hover:bg-blue-900 rounded-lg font-semibold text-lg transition-all duration-300 shadow-md inline-flex items-center justify-center gap-2`}
                       >
                         View More
                         <svg
