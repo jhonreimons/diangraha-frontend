@@ -12,8 +12,8 @@ export default function Footer() {
             Sawit, Kota Jakarta Timur, Daerah Khusus Ibukota Jakarta 13430
             Indonesia
           </p>
-          <p className="mt-3 text-sm">Phone: (021) 29195165</p>
-          <p className="text-sm">Email: company@email.com</p>
+          <p className="mt-3 text-sm">Phone: (021)-29195270</p>
+          <p className="text-sm">Email: info@diangraha.com</p>
 
           {/* Social Media */}
           <div className="flex gap-4 mt-4">

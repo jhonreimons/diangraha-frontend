@@ -126,24 +126,25 @@ export default function ServicesPage() {
             <h1 className="font-bold text-gray-800 mb-6 leading-tight text-[36px] md:text-[42px]">
               Our Services
             </h1>
-            <p className="text-gray-600 text-xl mb-8 leading-relaxed">
+            <p className="text-gray-600 text-xl mb-8 leading-relaxed justify-center text-justify">
               We provide comprehensive solutions to help your business grow and succeed in today's competitive market. 
               Our experienced team delivers quality services tailored to meet your specific needs and requirements with excellence and reliability.
             </p>
-            <motion.button
-              whileHover={{
-                scale: 1.05,
-                backgroundColor: "#1E3A8A",
-                boxShadow: "0px 0px 25px rgba(30, 64, 175, 0.4)",
-              }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold 
-                        hover:bg-blue-900 transition-all duration-300 shadow-md"
-            >
-              Our Client
-            </motion.button>
+            <Link href="/about#clients" scroll={true}>
+              <motion.button
+                whileHover={{
+                  scale: 1.05,
+                  backgroundColor: "#1E3A8A",
+                  boxShadow: "0px 0px 25px rgba(30, 64, 175, 0.4)",
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold 
+                          hover:bg-blue-900 transition-all duration-300 shadow-md"
+              >
+                Our Clients
+              </motion.button>
+              </Link>
           </motion.div>
-
           {/* Right Image */}
           <motion.div
             initial={{ opacity: 0, x: 80 }}
@@ -227,7 +228,7 @@ export default function ServicesPage() {
                     <h2 className="text-[30px] font-bold text-gray-800 mb-6">
                       {service.name}
                     </h2>
-                    <p className="text-[20px] text-gray-600 leading-relaxed mb-8">
+                    <p className="text-[20px] text-gray-600 leading-relaxed mb-8 justify-center text-justify">
                       {generateSummary(service.longDesc, 255)}
                     </p>
                     <Link

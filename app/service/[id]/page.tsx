@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer/Footer";
 import { getImageUrl, SERVER_BASE_URL } from "@/lib/config";
+import Link from "next/link";
 
 interface Work {
   id: number;
@@ -116,7 +117,7 @@ export default function ServiceDetailPage() {
     );
   }
 
-  // ❌ Service not found
+  //  Service not found
   if (!service) {
     return (
       <main className="flex flex-col min-h-screen bg-gray-50">
@@ -146,19 +147,21 @@ export default function ServiceDetailPage() {
                 {service.name}
               </h1>
                 <p
-                  className="text-gray-700 leading-relaxed mb-6"
+                  className="text-gray-700 leading-relaxed mb-6 justify-center text-justify"
                   style={{ whiteSpace: "pre-wrap" }}
                 >
                   {service.longDesc}
                 </p>
-
-              <button
+              <Link href="/contact">
+                          <button
                 className="bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold text-base 
                             hover:bg-blue-900 transition-all duration-300 transform hover:scale-105 
                             shadow-md hover:shadow-lg min-w-[200px]"
               >
                 Contact Us
-              </button>
+              </button>  
+              </Link>
+
             </div>
 
             {/* Right Image */}
@@ -189,14 +192,14 @@ export default function ServiceDetailPage() {
                     <h3 className="text-2xl font-semibold text-blue-900 mb-3">
                       {sub.name}
                     </h3>
-                    <p className="text-gray-700 mb-6">{sub.description}</p>
+                    <p className="text-gray-700 mb-6 justify-center text-justify">{sub.description}</p>
 
                     {sub.works && sub.works.length > 0 && (
                       <>
                         <h4 className="text-xl font-semibold text-gray-800 mb-3">
                           Our Work
                         </h4>
-                        <ol className="list-decimal list-inside space-y-2 text-gray-700">
+                        <ol className="list-decimal list-inside space-y-2 text-gray-700 justify-center text-justify">
                           {sub.works.map((work, idx) => (
                             <li key={idx}>{work.description}</li>
                           ))}
@@ -231,7 +234,7 @@ export default function ServiceDetailPage() {
                     </div>
                     <div className="px-6 py-6">
                       <p
-                        className="text-gray-700 leading-relaxed"
+                        className="text-gray-700 leading-relaxed justify-center text-justify"
                         style={{ whiteSpace: "pre-wrap" }}
                       >
                         {feature.featureDesc}

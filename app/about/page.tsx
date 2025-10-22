@@ -62,7 +62,7 @@ export default function AboutPage() {
               <h2 className="font-bold text-gray-800 mb-8 text-3xl">
                 PT. Dian Graha Elektrika
               </h2>
-              <div className="space-y-6 text-gray-700 text-lg leading-relaxed">
+              <div className="space-y-6 text-gray-700 text-lg justify-center text-justify leading-relaxed">
                 <p>
                   Established in 1977, PT. Dian Graha Elektrika became one of the most
                   solid national companies until now, by utilizing our expertise and
@@ -81,11 +81,11 @@ export default function AboutPage() {
 
             <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-xl shadow-lg border border-blue-200">
               <h3 className="text-2xl font-bold text-blue-800 mb-4">Vision</h3>
-              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+              <p className="text-gray-700 text-lg leading-relaxed mb-8 justify-center text-justify">
                 Becoming a leading partner and providing efficient, reliable, and sustainable business solutions.
               </p>
               <h3 className="text-2xl font-bold text-blue-800 mb-4">Mission</h3>
-              <ul className="text-gray-700 text-lg leading-relaxed list-disc ml-5 space-y-3">
+              <ul className="text-gray-700 text-lg leading-relaxed list-disc ml-5 space-y-3 justify-center text-justify">
                 <li>
                   Providing high-quality, skilled, committed services in various industries, including HR, finance, and IT.
                 </li>
@@ -98,7 +98,7 @@ export default function AboutPage() {
         </section>
 
         {/* Our Clients Section */}
-        <section className="py-16 bg-gray-50 overflow-hidden">
+        <section id="clients" className="py-16 bg-gray-50 overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 relative">
             <div className="text-center mb-12">
               <h2 className="font-bold text-gray-800 mb-4 text-2xl">Our Clients</h2>

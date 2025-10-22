@@ -40,11 +40,8 @@ export default function ClientManagementPage() {
   const [loading, setLoading] = useState(true);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
-  // ✅ Modal untuk preview logo
   const [showLogoModal, setShowLogoModal] = useState(false);
-  const [selectedLogo, setSelectedLogo] = useState<{ url: string; name: string } | null>(
-    null
-  );
+  const [selectedLogo, setSelectedLogo] = useState<{ url: string; name: string } | null>(null);
 
   const { logout } = useAuth();
 
@@ -54,13 +51,10 @@ export default function ClientManagementPage() {
       if (!token) throw new Error("Missing token");
 
       const res = await fetch(`${SERVER_BASE_URL}/api/clients`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
       const data = await res.json();
       setClients(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -81,14 +75,12 @@ export default function ClientManagementPage() {
     }
 
     if (userData) setUser(JSON.parse(userData));
-
     fetchClients();
 
     const handleResize = () => {
       setSidebarOpen(window.innerWidth >= 768);
       setItemsPerPage(window.innerWidth < 768 ? 3 : 5);
     };
-
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -109,13 +101,10 @@ export default function ClientManagementPage() {
 
       const res = await fetch(`${SERVER_BASE_URL}/api/clients/${clientToDelete.id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
       setClients((prev) => prev.filter((c) => c.id !== clientToDelete.id));
     } catch (err) {
       console.error("Error deleting client:", err);
@@ -143,6 +132,8 @@ export default function ClientManagementPage() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentClients = sortedClients.slice(startIndex, startIndex + itemsPerPage);
 
+  const handlePageClick = (page: number) => setCurrentPage(page);
+
   if (!user || loading) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center">
@@ -159,10 +150,8 @@ export default function ClientManagementPage() {
 
   return (
     <div className="bg-slate-100 flex flex-col md:flex-row min-h-screen">
-      {/* Sidebar */}
       <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
         <AdminHeader
           title="Client Management"
@@ -199,21 +188,23 @@ export default function ClientManagementPage() {
 
             {/* Search + Sort */}
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-              <div className="flex items-center gap-3">
-                <div className="relative w-full md:w-80">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="relative flex-1 sm:w-72">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
                     placeholder="Search clients"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm text-gray-600 placeholder-gray-500"
                   />
                 </div>
-
                 <button
                   onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                  className="flex items-center space-x-2 px-3 py-1 md:px-4 md:py-2 border rounded-lg text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                  className="flex items-center space-x-2 px-3 py-2 border rounded-lg text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
                 >
                   <ArrowUpDown className="w-4 h-4" />
                   <span>Sort ({sortOrder === "asc" ? "A-Z" : "Z-A"})</span>
@@ -221,35 +212,35 @@ export default function ClientManagementPage() {
               </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-blue-50">
+            {/* Table Responsive */}
+            <div className="bg-white rounded-xl shadow-md overflow-x-auto">
+              <table className="min-w-full border-collapse text-sm md:text-base">
+                <thead className="bg-blue-50 border-b">
                   <tr>
-                    <th className="px-2 md:px-6 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                    <th className="w-[55%] px-4 py-3 text-left font-semibold text-blue-700 uppercase tracking-wider">
                       Client Name
                     </th>
-                    <th className="px-2 md:px-6 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                    <th className="w-[25%] px-4 py-3 text-left font-semibold text-blue-700 uppercase tracking-wider">
                       Logo
                     </th>
-                    <th className="px-2 md:px-6 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                    <th className="w-[20%] px-4 py-3 text-center font-semibold text-blue-700 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100">
                   {currentClients.length > 0 ? (
                     currentClients.map((client) => (
-                      <tr key={client.id} className="hover:bg-blue-50/50">
-                        <td className="px-2 md:px-6 py-3 text-sm font-medium text-gray-900">
+                      <tr key={client.id} className="hover:bg-blue-50 transition-colors">
+                        <td className="px-4 py-3 font-medium text-gray-900 break-words">
                           {client.name}
                         </td>
-                        <td className="px-2 md:px-6 py-3">
+                        <td className="px-4 py-3">
                           {client.imageUrl ? (
                             <img
                               src={client.imageUrl}
                               alt={client.name}
-                              className="w-10 h-10 md:w-12 md:h-12 rounded-lg object-cover shadow-sm cursor-pointer hover:opacity-80 transition"
+                              className="w-12 h-12 rounded-lg object-contain border shadow-sm cursor-pointer hover:opacity-80 transition"
                               onClick={() => {
                                 setSelectedLogo({
                                   url: client.imageUrl || "",
@@ -262,17 +253,17 @@ export default function ClientManagementPage() {
                             <span className="text-gray-400 italic text-sm">No Logo</span>
                           )}
                         </td>
-                        <td className="px-2 md:px-6 py-3 text-sm font-medium">
-                          <div className="flex space-x-2">
+                        <td className="px-4 py-3 text-center">
+                          <div className="flex justify-center gap-2">
                             <Link
                               href={`/admin/clients/add?edit=${client.id}`}
-                              className="text-blue-500 hover:text-blue-700 p-1 md:p-2 hover:bg-blue-50 rounded-lg"
+                              className="text-blue-500 hover:text-blue-700 p-1 hover:bg-blue-50 rounded-lg"
                             >
                               <Edit className="w-4 h-4" />
                             </Link>
                             <button
                               onClick={() => handleDeleteClick(client)}
-                              className="text-red-500 hover:text-red-700 p-1 md:p-2 hover:bg-red-50 rounded-lg"
+                              className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded-lg"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -284,7 +275,7 @@ export default function ClientManagementPage() {
                     <tr>
                       <td
                         colSpan={3}
-                        className="px-2 md:px-6 py-3 text-center text-gray-500 text-sm"
+                        className="px-4 py-6 text-center text-gray-500 text-sm"
                       >
                         No clients found.
                       </td>
@@ -292,6 +283,65 @@ export default function ClientManagementPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex flex-col md:flex-row justify-between items-center mt-6 border-t pt-4 text-sm text-gray-700 gap-4">
+              <div>
+                Showing{" "}
+                <span className="font-semibold">
+                  {clients.length > 0 ? startIndex + 1 : 0}–
+                  {Math.min(startIndex + currentClients.length, clients.length)}
+                </span>{" "}
+                of <span className="font-semibold">{clients.length}</span> clients
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap justify-center">
+                <button
+                  onClick={() => handlePageClick(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded-lg disabled:opacity-50 hover:bg-gray-100 flex items-center gap-1"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Prev
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => handlePageClick(i + 1)}
+                    className={`px-3 py-1 rounded-lg border ${
+                      currentPage === i + 1
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "hover:bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handlePageClick(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border rounded-lg disabled:opacity-50 hover:bg-gray-100 flex items-center gap-1"
+                >
+                  Next <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              <label className="flex items-center text-sm text-gray-600">
+                Show
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(parseInt(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="ml-2 px-2 py-1 border rounded-md text-gray-700 focus:ring-blue-400"
+                >
+                  <option value={3}>3</option>
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                </select>
+                <span className="ml-1">per page</span>
+              </label>
             </div>
 
             {/* Delete Modal */}
@@ -302,38 +352,36 @@ export default function ClientManagementPage() {
               onCancel={handleDeleteCancel}
             />
 
-            {/* 🟦 Logo Preview Modal (Fixed Layer) */}
+            {/* Logo Preview Modal */}
             {showLogoModal && selectedLogo && (
-              <>
-                {/* Background overlay di atas segalanya */}
+              <div
+                className="fixed inset-0 flex items-center justify-center bg-black/50 z-[9999] p-4"
+                onClick={() => setShowLogoModal(false)}
+              >
                 <div
-                  className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998]"
-                  onClick={() => setShowLogoModal(false)}
-                />
-                {/* Modal container */}
-                <div className="fixed inset-0 flex items-center justify-center z-[9999] p-6 overflow-auto">
-                  <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-4xl w-full overflow-hidden">
-                    <div className="p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {selectedLogo.name} Logo
-                      </h3>
-                      <button
-                        onClick={() => setShowLogoModal(false)}
-                        className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
-                      >
-                        ×
-                      </button>
-                    </div>
-                    <div className="p-6 flex justify-center bg-gray-50">
-                      <img
-                        src={selectedLogo.url}
-                        alt={selectedLogo.name}
-                        className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-lg"
-                      />
-                    </div>
+                  className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-3xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="p-4 flex justify-between items-center border-b">
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      {selectedLogo.name}
+                    </h3>
+                    <button
+                      onClick={() => setShowLogoModal(false)}
+                      className="text-gray-500 hover:text-red-600 text-2xl"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="p-6 flex justify-center bg-gray-50">
+                    <img
+                      src={selectedLogo.url}
+                      alt={selectedLogo.name}
+                      className="max-w-full max-h-[80vh] object-contain rounded-md shadow-lg"
+                    />
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </main>

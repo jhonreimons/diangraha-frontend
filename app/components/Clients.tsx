@@ -92,8 +92,8 @@ export default function ClientsSection() {
           Trusted by companies of all sizes to achieve growth and digital transformation
         </p>
 
-        {/* Jika data < 4 → tampilkan statis di tengah */}
         {clients.length < 4 ? (
+          // Static view
           <div className="flex justify-center flex-wrap gap-6">
             {clients.map((client) => (
               <div
@@ -115,21 +115,23 @@ export default function ClientsSection() {
                     </div>
                   )}
                 </div>
-                <p className="font-semibold text-gray-800 text-sm mt-2 text-center">{client.name}</p>
+                <p className="font-semibold text-gray-800 text-sm mt-2 text-center">
+                  {client.name}
+                </p>
               </div>
             ))}
           </div>
         ) : (
-          // Infinite scroll jika data >= 4
+          // Smooth infinite carousel
           <div className="relative w-full overflow-hidden">
             {/* Fade kiri-kanan */}
-            <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-gray-50 to-transparent z-10"></div>
-            <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-gray-50 to-transparent z-10"></div>
+            <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none"></div>
 
             <div
-              className="flex gap-6 animate-carousel will-change-transform"
+              className="flex gap-6 animate-smoothCarousel will-change-transform"
               style={{
-                animationDuration: `${clients.length * 3}s`,
+                animationDuration: `${clients.length * 2.5}s`, // Lebih cepat dari versi sebelumnya (5s)
               }}
             >
               {repeatedClients.map((client, index) => (
@@ -137,7 +139,7 @@ export default function ClientsSection() {
                   key={`${client.id}-${index}`}
                   className="flex-shrink-0 w-[22%] min-w-[180px] max-w-[220px]"
                 >
-                  <div className="bg-white border border-gray-200 rounded-lg shadow-md p-5 h-[220px] flex flex-col justify-between items-center hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-blue-300">
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-md p-5 h-[220px] flex flex-col justify-between items-center hover:shadow-lg transition-all duration-300 hover:scale-105 hover:border-blue-300">
                     <div className="flex justify-center items-center h-[100px] w-full">
                       {client.img ? (
                         <Image
@@ -153,7 +155,9 @@ export default function ClientsSection() {
                         </div>
                       )}
                     </div>
-                    <p className="font-semibold text-gray-800 text-sm mt-2 text-center">{client.name}</p>
+                    <p className="font-semibold text-gray-800 text-sm mt-2 text-center">
+                      {client.name}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -162,24 +166,29 @@ export default function ClientsSection() {
         )}
       </div>
 
-      {/* CSS Animasi */}
+      {/* Smooth Animation Styles */}
       <style jsx>{`
-        @keyframes carousel {
+        @keyframes smoothCarousel {
           0% {
-            transform: translateX(0);
+            transform: translate3d(0, 0, 0);
           }
           100% {
-            transform: translateX(-50%);
+            transform: translate3d(-50%, 0, 0);
           }
         }
 
-        .animate-carousel {
+        .animate-smoothCarousel {
           display: flex;
           width: 200%;
-          animation: carousel linear infinite;
+          animation-name: smoothCarousel;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+          animation-direction: normal;
+          animation-fill-mode: forwards;
+          will-change: transform;
         }
 
-        .animate-carousel:hover {
+        .animate-smoothCarousel:hover {
           animation-play-state: paused;
         }
       `}</style>

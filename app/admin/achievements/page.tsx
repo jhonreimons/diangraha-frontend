@@ -40,9 +40,14 @@ export default function AchievementManagementPage() {
   const [loading, setLoading] = useState(true);
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // Logo preview state
+  const [showLogoModal, setShowLogoModal] = useState(false);
+  const [selectedLogo, setSelectedLogo] = useState<{ url: string; title: string } | null>(null);
+
   const { logout } = useAuth();
 
-  // ✅ Fetch data
+  // Fetch data
   const fetchAchievements = async () => {
     try {
       const response = await fetch(`${SERVER_BASE_URL}/api/achievements`, { cache: "no-store" });
@@ -147,14 +152,14 @@ export default function AchievementManagementPage() {
           onToggle={setSidebarOpen}
         />
 
-        {/* Main Content Area */}
+        {/* Main Content */}
         <main
           className={`flex-1 transition-all duration-300 mt-[80px] md:mt-[90px] px-4 sm:px-6 md:px-10 py-8 ${
             sidebarOpen ? "md:ml-72" : "md:ml-24"
           }`}
         >
           <div className="max-w-screen-2xl mx-auto bg-gray-50/50 rounded-2xl shadow-inner p-6 md:p-10">
-            {/* Header Section */}
+            {/* Header */}
             <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
               <div>
                 <h2 className="text-xl md:text-3xl font-bold text-gray-900">
@@ -173,7 +178,7 @@ export default function AchievementManagementPage() {
               </Link>
             </div>
 
-            {/* Search & Sort Section */}
+            {/* Search + Sort */}
             <div className="flex flex-wrap items-center justify-between mb-6 gap-3">
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <div className="relative w-full md:w-80">
@@ -225,10 +230,18 @@ export default function AchievementManagementPage() {
                       key={achievement.id}
                       className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all p-6 text-center group"
                     >
+                      {/* Click to open logo preview */}
                       <img
                         src={safeImageUrl(achievement.imageUrl)}
                         alt={achievement.title}
-                        className="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover shadow mb-4 mx-auto"
+                        onClick={() => {
+                          setSelectedLogo({
+                            url: safeImageUrl(achievement.imageUrl),
+                            title: achievement.title,
+                          });
+                          setShowLogoModal(true);
+                        }}
+                        className="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover shadow mb-4 mx-auto cursor-pointer hover:opacity-80 transition"
                       />
                       <h3 className="text-base md:text-lg font-semibold text-gray-900 line-clamp-2">
                         {achievement.title}
@@ -267,8 +280,7 @@ export default function AchievementManagementPage() {
               {/* Pagination */}
               <div className="bg-white px-6 py-4 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200">
                 <p className="text-sm text-gray-700 mb-2 sm:mb-0">
-                  Showing{" "}
-                  <span className="font-medium">{startIndex + 1}</span> to{" "}
+                  Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
                   <span className="font-medium">
                     {Math.min(startIndex + currentAchievements.length, sortedAchievements.length)}
                   </span>{" "}
@@ -309,13 +321,45 @@ export default function AchievementManagementPage() {
               </div>
             </div>
 
-            {/* Delete Modal */}
+            {/*  Delete Modal */}
             <DeleteConfirmModal
               isOpen={showDeleteModal}
               itemName={achievementToDelete?.title || ""}
               onConfirm={handleDeleteConfirm}
               onCancel={() => setShowDeleteModal(false)}
             />
+
+            {/*  Logo Preview Modal */}
+            {showLogoModal && selectedLogo && (
+              <>
+                <div
+                  className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998]"
+                  onClick={() => setShowLogoModal(false)}
+                />
+                <div className="fixed inset-0 flex items-center justify-center z-[9999] p-6 overflow-auto">
+                  <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-4xl w-full overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {selectedLogo.title}
+                      </h3>
+                      <button
+                        onClick={() => setShowLogoModal(false)}
+                        className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="p-6 flex justify-center bg-gray-50">
+                      <img
+                        src={selectedLogo.url}
+                        alt={selectedLogo.title}
+                        className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </main>
       </div>

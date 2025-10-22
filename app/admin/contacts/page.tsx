@@ -329,7 +329,7 @@ export default function ContactsPage() {
         </main>
       </div>
 
-      {/* ✅ Fixed Centered Modal */}
+      {/* Fixed Centered Modal */}
       {selectedMessage && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-center items-center px-4 sm:px-0">
           <div

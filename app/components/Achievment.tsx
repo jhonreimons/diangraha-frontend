@@ -25,11 +25,9 @@ export default function AchievementSection() {
   const [itemWidth, setItemWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
 
-  // equal height for cards
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [cardMinHeight, setCardMinHeight] = useState<number | null>(null);
 
-  // Fetch data
   useEffect(() => {
     const fetchAchievements = async () => {
       try {
@@ -50,20 +48,17 @@ export default function AchievementSection() {
     fetchAchievements();
   }, []);
 
-  // Responsive breakpoints
   useEffect(() => {
     const updateItemsPerView = () => {
       if (window.innerWidth < 640) setItemsPerView(1);
       else if (window.innerWidth < 1024) setItemsPerView(2);
       else setItemsPerView(4);
     };
-
     updateItemsPerView();
     window.addEventListener("resize", updateItemsPerView);
     return () => window.removeEventListener("resize", updateItemsPerView);
   }, []);
 
-  // Measure widths
   useLayoutEffect(() => {
     const measure = () => {
       const vw = viewportRef.current?.clientWidth || 0;
@@ -72,7 +67,6 @@ export default function AchievementSection() {
       setItemWidth(iw);
       setContainerWidth(iw * achievements.length);
     };
-
     measure();
     const ro = new ResizeObserver(measure);
     if (viewportRef.current) ro.observe(viewportRef.current);
@@ -83,7 +77,6 @@ export default function AchievementSection() {
     };
   }, [itemsPerView, achievements.length]);
 
-  // clamp index if necessary
   useEffect(() => {
     const maxIndex = Math.max(0, Math.ceil(achievements.length / itemsPerView) - 1);
     setCurrentIndex((prev) => Math.min(prev, maxIndex));
@@ -93,10 +86,8 @@ export default function AchievementSection() {
   const next = () => setCurrentIndex((prev) => (prev < maxIndex ? prev + 1 : maxIndex));
   const prev = () => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : 0));
 
-  // Equalize heights across cards
   useLayoutEffect(() => {
     if (!cardRefs.current.length) return;
-
     const measureHeights = () => {
       let maxH = 0;
       for (const el of cardRefs.current) {
@@ -107,35 +98,7 @@ export default function AchievementSection() {
       }
       setCardMinHeight(maxH > 0 ? maxH : null);
     };
-
     measureHeights();
-
-    const imgs: HTMLImageElement[] = [];
-    cardRefs.current.forEach((el) => {
-      if (!el) return;
-      const found = Array.from(el.querySelectorAll("img"));
-      found.forEach((img) => {
-        if (!img.complete) imgs.push(img);
-      });
-    });
-
-    if (imgs.length > 0) {
-      let loaded = 0;
-      const onLoad = () => {
-        loaded++;
-        if (loaded === imgs.length) measureHeights();
-      };
-      imgs.forEach((img) => {
-        img.addEventListener("load", onLoad);
-        img.addEventListener("error", onLoad);
-      });
-      return () => {
-        imgs.forEach((img) => {
-          img.removeEventListener("load", onLoad);
-          img.removeEventListener("error", onLoad);
-        });
-      };
-    }
   }, [achievements, viewportWidth, itemsPerView]);
 
   if (loading) {
@@ -147,7 +110,6 @@ export default function AchievementSection() {
     );
   }
 
-  // Compute translateX in px
   const rawTranslate = -currentIndex * viewportWidth;
   const maxTranslate = Math.min(0, viewportWidth - containerWidth);
   const translatePx = containerWidth
@@ -160,7 +122,8 @@ export default function AchievementSection() {
         <div className="text-center mb-12">
           <h2 className="font-bold text-gray-800 mb-4 text-[25px]">Achievement</h2>
           <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-            A proud testament to our unwavering dedication, innovation and consistent growth throughout the years.
+            A proud testament to our unwavering dedication, innovation and consistent growth
+            throughout the years.
           </p>
         </div>
 
@@ -177,9 +140,11 @@ export default function AchievementSection() {
             </button>
           )}
 
-          {/* Viewport */}
-          <div ref={viewportRef} className="overflow-hidden mx-6 sm:mx-12 w-full" style={{ minHeight: 300 }}>
-            {/* Container */}
+          <div
+            ref={viewportRef}
+            className="overflow-hidden mx-6 sm:mx-12 w-full"
+            style={{ minHeight: 320 }}
+          >
             <div
               ref={containerRef}
               className="flex transition-transform duration-500 ease-in-out"
@@ -196,10 +161,7 @@ export default function AchievementSection() {
                     width: itemWidth || "100%",
                   }}
                 >
-                  <div
-            ref={(el) => { cardRefs.current[idx] = el; }}
-                    className="w-full"
-                  >
+                  <div ref={(el) => (cardRefs.current[idx] = el)} className="w-full">
                     <div
                       className="bg-white border border-gray-200 rounded-xl shadow-md p-6 flex flex-col justify-between h-full 
                                  hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 
@@ -209,14 +171,15 @@ export default function AchievementSection() {
                       }}
                     >
                       <div className="flex flex-col items-center justify-center">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 overflow-hidden">
+                        {/* Updated Image Container */}
+                        <div className="w-28 h-28 bg-gray-100 rounded-full flex items-center justify-center mb-4 overflow-hidden p-3">
                           {award.imageUrl ? (
                             <Image
                               src={award.imageUrl}
                               alt={award.title}
-                              width={64}
-                              height={64}
-                              className="object-cover"
+                              width={110}
+                              height={110}
+                              className="object-contain"
                             />
                           ) : (
                             <div className="bg-blue-600 text-white text-xl font-bold w-full h-full flex items-center justify-center">

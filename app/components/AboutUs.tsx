@@ -18,7 +18,7 @@ export default function AboutUs() {
         {/* Content Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
           {/* Left Content */}
-          <div className="space-y-6 flex flex-col justify-center text-center lg:text-left">
+          <div className="space-y-6 flex flex-col justify-center text-justify">
             <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
               Established in 1977, PT. Dian Graha Elektrika became one of the most
               solid national companies until now, by utilizing our expertise and
@@ -37,7 +37,6 @@ export default function AboutUs() {
 
           {/* Right Image */}
           <div className="flex justify-center items-center relative">
-            {/* Wrapper for decorative circles */}
             <div className="relative flex justify-center items-center">
               {/* Decorative elements */}
               <div className="absolute -top-6 -right-4 w-20 h-20 sm:w-28 sm:h-28 bg-blue-100 rounded-full opacity-40 z-0"></div>

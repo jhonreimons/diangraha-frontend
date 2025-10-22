@@ -46,6 +46,7 @@ html,
 body {
   background-color: #f1f5f9; /* sama seperti bg-slate-100 */
   min-height: 100%;
+  scroll-behavior: smooth;
 }
 @keyframes marquee {
   0% {

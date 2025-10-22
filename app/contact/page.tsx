@@ -269,12 +269,12 @@ export default function Contact() {
 
                 <div>
                   <p className="font-semibold">Phone</p>
-                  <p>+62 812-3456-7890</p>
+                  <p>(021)-29195270</p>
                 </div>
 
                 <div>
                   <p className="font-semibold">Email</p>
-                  <p>contact@company.com</p>
+                  <p>info@diangraha.com</p>
                 </div>
 
                 <div>
