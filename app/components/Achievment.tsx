@@ -161,7 +161,7 @@ export default function AchievementSection() {
                     width: itemWidth || "100%",
                   }}
                 >
-                  <div ref={(el) => (cardRefs.current[idx] = el)} className="w-full">
+                  <div ref={(el) => { cardRefs.current[idx] = el }} className="w-full">
                     <div
                       className="bg-white border border-gray-200 rounded-xl shadow-md p-6 flex flex-col justify-between h-full 
                                  hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 
