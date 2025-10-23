@@ -171,18 +171,18 @@ export default function AchievementSection() {
                       }}
                     >
                       <div className="flex flex-col items-center justify-center">
-                        {/* Updated Image Container */}
-                        <div className="w-28 h-28 bg-gray-100 rounded-full flex items-center justify-center mb-4 overflow-hidden p-3">
+                        {/* Hilangkan background — logo langsung tampil di dalam card */}
+                        <div className="w-full h-28 flex items-center justify-center mb-4">
                           {award.imageUrl ? (
                             <Image
                               src={award.imageUrl}
                               alt={award.title}
-                              width={110}
-                              height={110}
-                              className="object-contain"
+                              width={120}
+                              height={120}
+                              className="object-contain max-h-28"
                             />
                           ) : (
-                            <div className="bg-blue-600 text-white text-xl font-bold w-full h-full flex items-center justify-center">
+                            <div className="bg-blue-600 text-white text-xl font-bold w-24 h-24 flex items-center justify-center rounded-lg">
                               🏅
                             </div>
                           )}
