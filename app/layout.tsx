@@ -12,9 +12,9 @@ export const metadata: Metadata = {
   title: "PT. Dian Graha Elektrika",
   description: "Professional business solutions and services",
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: '/logoIcon.png',
+    shortcut: '/logoIcon.png',
+    apple: '/logoIcon.png',
   },
 };
 
@@ -28,7 +28,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
         <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/logoIcon.png" type="image/svg+xml" />
       </head>
       <body
         className={`${montserrat.variable} font-sans antialiased`}
