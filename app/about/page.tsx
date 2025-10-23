@@ -18,26 +18,14 @@ export default function AboutPage() {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        // ✅ Gunakan SERVER_BASE_URL agar langsung ambil dari backend
         const res = await fetch(`${SERVER_BASE_URL}/api/clients`, {
-          headers: {
-            Accept: "*/*",
-          },
+          headers: { Accept: "*/*" },
           cache: "no-store",
         });
 
-        if (!res.ok) {
-          throw new Error(`Failed to fetch clients (status ${res.status})`);
-        }
-
+        if (!res.ok) throw new Error(`Failed to fetch clients (status ${res.status})`);
         const data = await res.json();
-
-        // Pastikan data valid array
-        if (!Array.isArray(data)) {
-          console.error("Invalid data format:", data);
-          setClients([]);
-          return;
-        }
+        if (!Array.isArray(data)) return setClients([]);
 
         setClients(data);
       } catch (error) {
@@ -51,7 +39,6 @@ export default function AboutPage() {
     fetchClients();
   }, []);
 
-  // Gandakan klien agar animasi looping seamless
   const duplicatedClients = [...clients, ...clients];
 
   return (
@@ -72,7 +59,7 @@ export default function AboutPage() {
           <div className="absolute inset-0 bg-black/40 z-10" />
           <div className="relative z-20 flex justify-center">
             <span className="inline-block px-6 py-3 rounded-md text-white text-3xl md:text-4xl font-extrabold 
-                     bg-gradient-to-r from-indigo-700 to-violet-600 backdrop-blur-sm shadow-lg">
+                     bg-gradient-to-r from-indigo-500 to-violet-600 backdrop-blur-smm shadow-lg">
               About Us
             </span>
           </div>
@@ -83,11 +70,11 @@ export default function AboutPage() {
           <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12">
             <div>
               <h2 className="font-bold text-gray-800 mb-8 text-3xl">
-                PT. Dian Graha Elektrika
+                PT Dian Graha Elektrika
               </h2>
               <div className="space-y-6 text-gray-700 text-lg leading-relaxed text-justify">
                 <p>
-                  Established in 1977, PT. Dian Graha Elektrika became one of the most
+                  Established in 1977, PT Dian Graha Elektrika became one of the most
                   solid national companies until now, by utilizing our expertise and
                   resources to prioritize high-quality services and foster existing
                   customer relationships.
@@ -102,21 +89,28 @@ export default function AboutPage() {
               </div>
             </div>
 
-            {/* Vision & Mission Card */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-xl shadow-lg border border-blue-200">
-              <h3 className="text-2xl font-bold text-blue-800 mb-4">Vision</h3>
-              <p className="text-gray-700 text-lg leading-relaxed mb-8 text-justify">
-                Becoming a leading partner and providing efficient, reliable, and sustainable business solutions.
-              </p>
-              <h3 className="text-2xl font-bold text-blue-800 mb-4">Mission</h3>
-              <ul className="text-gray-700 text-lg leading-relaxed list-disc ml-5 space-y-3 text-justify">
-                <li>
-                  Providing high-quality, skilled, committed services in various industries, including HR, finance, and IT.
-                </li>
-                <li>
-                  Optimizing operational efficiency and focusing on technological innovation to improve service quality.
-                </li>
-              </ul>
+            {/* ===== Vision & Mission Section (Improved Background) ===== */}
+            <div className="relative rounded-2xl overflow-hidden shadow-xl border border-blue-100">
+              {/* Background layer like image gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-white"></div>
+
+              {/* Content layer */}
+              <div className="relative p-8 z-10">
+                <h3 className="text-2xl font-bold text-blue-900 mb-4">Vision</h3>
+                <p className="text-gray-700 text-lg leading-relaxed mb-8 text-justify">
+                  Becoming a leading partner and providing efficient, reliable, and sustainable business solutions.
+                </p>
+
+                <h3 className="text-2xl font-bold text-blue-900 mb-4">Mission</h3>
+                <ul className="text-gray-700 text-lg leading-relaxed list-disc ml-5 space-y-3 text-justify">
+                  <li>
+                    Providing high-quality, skilled, committed services in various industries, including HR, finance, and IT.
+                  </li>
+                  <li>
+                    Optimizing operational efficiency and focusing on technological innovation to improve service quality.
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </section>
@@ -131,13 +125,11 @@ export default function AboutPage() {
               </p>
             </div>
 
-            {/* Loader */}
             {loading ? (
               <div className="flex justify-center py-8 text-gray-500">Loading clients...</div>
             ) : clients.length === 0 ? (
               <div className="text-center text-gray-500 py-8">No clients found.</div>
             ) : clients.length < 4 ? (
-              // Jika data < 4
               <div className="flex justify-center gap-8 flex-wrap">
                 {clients.map((client) => (
                   <div
@@ -161,7 +153,6 @@ export default function AboutPage() {
                 ))}
               </div>
             ) : (
-              // Jika data banyak (jalankan marquee animasi horizontal)
               <div className="w-full overflow-hidden">
                 <div className="flex gap-8 animate-marquee will-change-transform">
                   {duplicatedClients.map((client, index) => (

@@ -135,42 +135,47 @@ export default function ServiceDetailPage() {
     <main className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
 
-      {/* Wrapper agar konten mendorong footer ke bawah */}
       <div className="flex-grow flex flex-col">
 
-        {/* ===== Hero Section ===== */}
-        <section className="py-12 px-6 md:px-12 lg:px-20 bg-gradient-to-r from-gray-100 to-gray-200 flex-shrink-0">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row item justify-between gap-12">
+        {/* ===== Hero Section (Blue Gradient Background) ===== */}
+        <section className="relative py-16 px-6 md:px-12 lg:px-20 bg-gradient-to-r from-blue-50 via-blue-100 to-indigo-100 overflow-hidden flex-shrink-0">
+          {/* Decorative overlay for subtle lighting */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 opacity-70" />
+          <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 to-transparent" />
+
+          <div className="relative z-10 max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-12">
             {/* Left Content */}
             <div className="max-w-xl md:flex-1 text-left">
               <h1 className="text-4xl font-bold text-gray-900 mb-6">
                 {service.name}
               </h1>
-                <p
-                  className="text-gray-700 leading-relaxed mb-6 justify-center text-justify"
-                  style={{ whiteSpace: "pre-wrap" }}
-                >
-                  {service.longDesc}
-                </p>
+              <p
+                className="text-gray-700 leading-relaxed mb-6 text-justify"
+                style={{ whiteSpace: "pre-wrap" }}
+              >
+                {service.longDesc}
+              </p>
               <Link href="/contact">
-                          <button
-                className="bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold text-base 
+                <button
+                  className="bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold text-base 
                             hover:bg-blue-900 transition-all duration-300 transform hover:scale-105 
                             shadow-md hover:shadow-lg min-w-[200px]"
-              >
-                Contact Us
-              </button>  
+                >
+                  Contact Us
+                </button>
               </Link>
-
             </div>
 
             {/* Right Image */}
             <div className="md:flex-1 flex justify-end">
-              <img
-                src={getImageUrl(service.imageUrl)}
-                alt={service.name}
-                className="w-full md:w-4/5 h-64 md:h-72 object-cover rounded-lg shadow-lg"
-              />
+              <div className="relative">
+                <img
+                  src={getImageUrl(service.imageUrl)}
+                  alt={service.name}
+                  className="w-full md:w-4/5 h-64 md:h-72 object-cover rounded-2xl shadow-2xl"
+                />
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-transparent rounded-2xl" />
+              </div>
             </div>
           </div>
         </section>
@@ -192,14 +197,16 @@ export default function ServiceDetailPage() {
                     <h3 className="text-2xl font-semibold text-blue-900 mb-3">
                       {sub.name}
                     </h3>
-                    <p className="text-gray-700 mb-6 justify-center text-justify">{sub.description}</p>
+                    <p className="text-gray-700 mb-6 text-justify">
+                      {sub.description}
+                    </p>
 
                     {sub.works && sub.works.length > 0 && (
                       <>
                         <h4 className="text-xl font-semibold text-gray-800 mb-3">
                           Our Work
                         </h4>
-                        <ol className="list-decimal list-inside space-y-2 text-gray-700 justify-center text-justify">
+                        <ol className="list-decimal list-inside space-y-2 text-gray-700 text-justify">
                           {sub.works.map((work, idx) => (
                             <li key={idx}>{work.description}</li>
                           ))}
@@ -234,7 +241,7 @@ export default function ServiceDetailPage() {
                     </div>
                     <div className="px-6 py-6">
                       <p
-                        className="text-gray-700 leading-relaxed justify-center text-justify"
+                        className="text-gray-700 leading-relaxed text-justify"
                         style={{ whiteSpace: "pre-wrap" }}
                       >
                         {feature.featureDesc}
@@ -247,8 +254,7 @@ export default function ServiceDetailPage() {
           </section>
         )}
       </div>
-      {/* Reupload to server agin*/}
-      {/* Footer tetap di bawah */}
+
       <Footer />
     </main>
   );

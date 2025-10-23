@@ -11,7 +11,7 @@ export default function AboutUs() {
             About Us
           </h2>
           <h3 className="font-bold text-gray-800 text-[26px] sm:text-[30px]">
-            PT. Dian Graha Elektrika
+            PT Dian Graha Elektrika
           </h3>
         </div>
 
@@ -20,7 +20,7 @@ export default function AboutUs() {
           {/* Left Content */}
           <div className="space-y-6 flex flex-col justify-center text-justify">
             <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
-              Established in 1977, PT. Dian Graha Elektrika became one of the most
+              Established in 1977, PT Dian Graha Elektrika became one of the most
               solid national companies until now, by utilizing our expertise and
               resources to prioritize high-quality services and foster existing
               customer relationships.

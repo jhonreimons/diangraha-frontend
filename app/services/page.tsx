@@ -43,7 +43,6 @@ export default function ServicesPage() {
     fetchServices();
   }, []);
 
-  // Parallax light effect
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
@@ -69,22 +68,22 @@ export default function ServicesPage() {
       <Navbar />
       <div className="min-h-screen">
         {/* ===== Hero Section ===== */}
-        <section className="relative flex flex-col md:flex-row items-center justify-between px-6 md:px-12 lg:px-20 py-20 bg-gradient-to-r from-gray-100 via-white to-gray-100 overflow-hidden">
+        <section className="relative flex flex-col md:flex-row items-center justify-between px-6 md:px-12 lg:px-20 py-20 bg-gradient-to-r from-blue-50 via-blue-100 to-indigo-100 overflow-hidden">
           {/* Animated background */}
           <motion.div
-            className="absolute inset-0 bg-gradient-to-br from-blue-100 via-purple-50 to-white opacity-60"
+            className="absolute inset-0 bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 opacity-70"
             animate={{
               backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
             }}
             transition={{
-              duration: 15,
+              duration: 18,
               ease: "easeInOut",
               repeat: Infinity,
             }}
             style={{ backgroundSize: "200% 200%" }}
           />
 
-          {/* Floating lights */}
+          {/* Floating soft blue lights */}
           {Array.from({ length: 10 }).map((_, i) => (
             <motion.div
               key={i}
@@ -106,7 +105,7 @@ export default function ServicesPage() {
             />
           ))}
 
-          {/* Light following cursor */}
+          {/* Cursor-following light */}
           <motion.div
             className="absolute w-[300px] h-[300px] rounded-full bg-blue-500/10 blur-3xl pointer-events-none"
             style={{
@@ -126,7 +125,7 @@ export default function ServicesPage() {
             <h1 className="font-bold text-gray-800 mb-6 leading-tight text-[36px] md:text-[42px]">
               Our Services
             </h1>
-            <p className="text-gray-600 text-lg md:text-xl mb-8 leading-relaxed text-justify">
+            <p className="text-gray-700 text-lg md:text-xl mb-8 leading-relaxed text-justify">
               We provide comprehensive solutions to help your business grow and
               succeed in today's competitive market. Our experienced team delivers
               quality services tailored to meet your specific needs and requirements
@@ -148,7 +147,7 @@ export default function ServicesPage() {
             </Link>
           </motion.div>
 
-          {/* Right Image (Square & Proportional) */}
+          {/* Right Image */}
           <motion.div
             initial={{ opacity: 0, x: 80 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -190,19 +189,16 @@ export default function ServicesPage() {
           </div>
         </section>
 
-        {/* ===== Dynamic Services ===== */}
+        {/* ===== Dynamic Services (Semua pakai warna biru lembut yang sama) ===== */}
         {services.map((service, index) => {
           const isEven = index % 2 === 0;
-          const bgClass = isEven
-            ? "from-blue-50 to-indigo-100"
-            : "from-white to-indigo-100";
           const buttonClass = "bg-blue-600 hover:bg-blue-700";
 
           return (
             <motion.section
               key={service.id}
               id={service.name.toLowerCase().replace(/\s+/g, "-")}
-              className={`py-16 px-6 md:px-12 lg:px-20 bg-gradient-to-br ${bgClass}`}
+              className="py-16 px-6 md:px-12 lg:px-20 bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100"
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
@@ -234,7 +230,7 @@ export default function ServicesPage() {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`${buttonClass} text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 shadow-md inline-flex items-center gap-2`}
+                        className={`${buttonClass} text-white bg-blue-800 hover:bg-blue-900 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 shadow-md inline-flex items-center gap-2`}
                       >
                         View More
                         <svg

@@ -58,7 +58,7 @@ export default function Footer() {
 
         {/* Jam Operasional + Logo tambahan */}
         <div className="flex flex-col justify-start">
-          <h4 className="font-semibold mb-4">Jam Operasional</h4>
+          <h4 className="font-semibold mb-4">Operating Hours</h4>
           <p className="text-sm">Monday - Friday: 08.00 – 17.00 WIB</p>
           <p className="text-sm mb-6">Saturday - Sunday: Closed</p>
 
@@ -127,7 +127,7 @@ export default function Footer() {
         </div>
 
         <div className="text-sm text-gray-300 text-center md:text-right">
-          © 2024 PT Dian Graha Elektrika. All rights reserved.
+          © 2025 PT Dian Graha Elektrika. All rights reserved.
         </div>
       </div>
     </footer>
