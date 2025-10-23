@@ -59,7 +59,7 @@ export default function AboutPage() {
           <div className="absolute inset-0 bg-black/40 z-10" />
           <div className="relative z-20 flex justify-center">
             <span className="inline-block px-6 py-3 rounded-md text-white text-3xl md:text-4xl font-extrabold 
-                     bg-gradient-to-r from-indigo-500 to-violet-600 backdrop-blur-smm shadow-lg">
+                     bg-gradient-to-r from-indigo-29 to-violet-60 backdrop-blur-sm shadow-lg">
               About Us
             </span>
           </div>
@@ -89,10 +89,13 @@ export default function AboutPage() {
               </div>
             </div>
 
-            {/* ===== Vision & Mission Section (Improved Background) ===== */}
-            <div className="relative rounded-2xl overflow-hidden shadow-xl border border-blue-100">
-              {/* Background layer like image gradient */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-white"></div>
+            {/* ===== Vision & Mission Section (Improved Clearer Background) ===== */}
+            <div className="relative rounded-2xl overflow-hidden shadow-xl border border-blue-200">
+              {/* Brighter background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-200 via-blue-100 to-blue-50 opacity-95"></div>
+
+              {/* Decorative subtle glow */}
+              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.6),_transparent_60%)]"></div>
 
               {/* Content layer */}
               <div className="relative p-8 z-10">
