@@ -13,7 +13,7 @@ export default function Navbar() {
   const [services, setServices] = useState<any[]>([]);
   const pathname = usePathname();
 
-  // Fetch API menggunakan config.ts
+  // ===== Fetch Services from API =====
   useEffect(() => {
     const fetchServices = async () => {
       try {
@@ -32,6 +32,7 @@ export default function Navbar() {
     fetchServices();
   }, []);
 
+  // ===== Menu Items =====
   const menuItems = [
     { href: "/", label: "Home" },
     { href: "/about", label: "About Us" },
@@ -41,7 +42,9 @@ export default function Navbar() {
   ];
 
   const serviceItems = services.map((service) => ({
-    href: `/service/${encodeURIComponent(service.name.toLowerCase().replace(/\s+/g, "-"))}`,
+    href: `/service/${encodeURIComponent(
+      service.name.toLowerCase().replace(/\s+/g, "-")
+    )}`,
     label: service.name,
   }));
 
@@ -70,7 +73,9 @@ export default function Navbar() {
           {menuItems.map((item) =>
             item.label === "Services" ? (
               <li key={item.href} className="relative group">
-                <button
+                {/* === Klik Services Langsung ke /services === */}
+                <Link
+                  href={item.href}
                   className={`flex items-center transition-all duration-200 ${
                     isActive(item.href)
                       ? "text-white font-semibold border-b-2 border-white pb-1"
@@ -79,9 +84,9 @@ export default function Navbar() {
                 >
                   {item.label}
                   <ChevronDown className="ml-1 w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
-                </button>
+                </Link>
 
-                {/* Dropdown (Desktop) */}
+                {/* === Dropdown (Desktop) === */}
                 <ul className="absolute left-0 mt-2 w-52 bg-white shadow-lg rounded-md py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
                   {serviceItems.length > 0 ? (
                     serviceItems.map((service) => (
@@ -139,9 +144,9 @@ export default function Navbar() {
           {menuItems.map((item) =>
             item.label === "Services" ? (
               <div key={item.href} className="w-full flex flex-col items-center">
-                {/* Services Row */}
+                {/* === Services Main Row === */}
                 <div className="flex items-center space-x-2">
-                  {/* Link ke halaman utama Services */}
+                  {/* Klik ke /services */}
                   <Link
                     href={item.href}
                     onClick={() => {
@@ -174,7 +179,7 @@ export default function Navbar() {
                   </button>
                 </div>
 
-                {/* Dropdown (Mobile) */}
+                {/* === Dropdown (Mobile) === */}
                 {openService && (
                   <div className="flex flex-col space-y-2 mt-2 items-center">
                     {serviceItems.length > 0 ? (
@@ -210,7 +215,7 @@ export default function Navbar() {
             )
           )}
 
-          {/* CTA Button (Mobile) */}
+          {/* === CTA Button (Mobile) === */}
           <Link
             href="/contact"
             className="bg-white text-blue-800 px-4 py-2 rounded-md font-medium hover:bg-gray-200 text-sm"
