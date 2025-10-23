@@ -36,21 +36,21 @@ export default function AboutUs() {
           </div>
 
           {/* Right Image */}
-          <div className="flex justify-center items-center relative">
-            <div className="relative flex justify-center items-center">
+          <div className="flex justify-center items-center relative h-full">
+            <div className="relative flex justify-center items-center w-full h-full">
               {/* Decorative elements */}
-              <div className="absolute -top-6 -right-4 w-20 h-20 sm:w-28 sm:h-28 bg-blue-100 rounded-full opacity-40 z-0"></div>
-              <div className="absolute -bottom-6 -left-4 w-24 h-24 sm:w-36 sm:h-36 bg-blue-50 rounded-full opacity-30 z-0"></div>
+              <div className="absolute -top-8 -right-6 w-24 h-24 sm:w-32 sm:h-32 bg-blue-100 rounded-full opacity-40 z-0"></div>
+              <div className="absolute -bottom-8 -left-6 w-28 h-28 sm:w-40 sm:h-40 bg-blue-50 rounded-full opacity-30 z-0"></div>
 
-              {/* Image Container */}
-              <div className="relative z-10 bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 flex items-center justify-center">
+              {/* Image (without white background box) */}
+              <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl w-full h-full flex justify-center items-center">
                 <Image
-                  src="/aboutusHome2.png"
+                  src="/aboutusHome.jpg"
                   alt="About Us Team"
-                  width={400}
-                  height={300}
+                  width={800}
+                  height={600}
                   priority
-                  className="object-contain w-full max-w-[280px] sm:max-w-[350px] md:max-w-[400px] h-auto"
+                  className="object-cover w-full h-full rounded-2xl"
                 />
               </div>
             </div>

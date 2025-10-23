@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { SERVER_BASE_URL, getImageUrl } from "@/lib/config";
 
 interface Client {
   id: number;
@@ -14,7 +15,7 @@ interface Client {
 interface ApiClient {
   id: number;
   name: string;
-  imageUrl: string;
+  imageUrl: string | null;
   description?: string;
   website?: string;
 }
@@ -24,20 +25,26 @@ export default function ClientsSection() {
   const [loading, setLoading] = useState(true);
   const [itemsPerView, setItemsPerView] = useState(4);
 
-  // Fetch data
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const response = await fetch("http://103.103.20.23:8080/api/clients", {
+        // ✅ Ganti ke SERVER_BASE_URL agar pasti ke backend
+        const response = await fetch(`${SERVER_BASE_URL}/api/clients`, {
           headers: { Accept: "*/*" },
+          cache: "no-store",
         });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
 
-        const mappedClients: Client[] = data.map((item: ApiClient) => ({
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: ApiClient[] = await response.json();
+
+        // Map data
+        const mappedClients: Client[] = data.map((item) => ({
           id: item.id,
           name: item.name,
-          img: item.imageUrl,
+          img: getImageUrl(item.imageUrl || "/placeholder.png"),
           description: item.description,
           website: item.website,
         }));
@@ -54,13 +61,14 @@ export default function ClientsSection() {
     fetchClients();
   }, []);
 
-  // Responsif jumlah card per view
+  // Responsif
   useEffect(() => {
     const updateItemsPerView = () => {
       if (window.innerWidth < 640) setItemsPerView(1);
       else if (window.innerWidth < 1024) setItemsPerView(2);
       else setItemsPerView(4);
     };
+
     updateItemsPerView();
     window.addEventListener("resize", updateItemsPerView);
     return () => window.removeEventListener("resize", updateItemsPerView);
@@ -93,7 +101,7 @@ export default function ClientsSection() {
         </p>
 
         {clients.length < 4 ? (
-          // Static view
+          // Static grid
           <div className="flex justify-center flex-wrap gap-6">
             {clients.map((client) => (
               <div
@@ -101,19 +109,14 @@ export default function ClientsSection() {
                 className="bg-white border border-gray-200 rounded-lg shadow-md p-5 w-[200px] h-[220px] flex flex-col justify-between items-center hover:shadow-xl transition-all duration-300"
               >
                 <div className="flex justify-center items-center h-[100px] w-full">
-                  {client.img ? (
-                    <Image
-                      src={client.img}
-                      alt={client.name}
-                      width={100}
-                      height={100}
-                      className="object-contain max-h-[80px]"
-                    />
-                  ) : (
-                    <div className="h-[80px] w-[80px] flex items-center justify-center bg-gray-100 rounded-md text-gray-500 text-sm">
-                      No Image
-                    </div>
-                  )}
+                  <Image
+                    src={client.img}
+                    alt={client.name}
+                    width={100}
+                    height={100}
+                    className="object-contain max-h-[80px]"
+                    unoptimized
+                  />
                 </div>
                 <p className="font-semibold text-gray-800 text-sm mt-2 text-center">
                   {client.name}
@@ -122,17 +125,14 @@ export default function ClientsSection() {
             ))}
           </div>
         ) : (
-          // Smooth infinite carousel
+          // Infinite carousel
           <div className="relative w-full overflow-hidden">
-            {/* Fade kiri-kanan */}
             <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none"></div>
             <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none"></div>
 
             <div
               className="flex gap-6 animate-smoothCarousel will-change-transform"
-              style={{
-                animationDuration: `${clients.length * 2.5}s`, // Lebih cepat dari versi sebelumnya (5s)
-              }}
+              style={{ animationDuration: `${clients.length * 2.5}s` }}
             >
               {repeatedClients.map((client, index) => (
                 <div
@@ -141,19 +141,14 @@ export default function ClientsSection() {
                 >
                   <div className="bg-white border border-gray-200 rounded-lg shadow-md p-5 h-[220px] flex flex-col justify-between items-center hover:shadow-lg transition-all duration-300 hover:scale-105 hover:border-blue-300">
                     <div className="flex justify-center items-center h-[100px] w-full">
-                      {client.img ? (
-                        <Image
-                          src={client.img}
-                          alt={client.name}
-                          width={100}
-                          height={100}
-                          className="object-contain max-h-[80px]"
-                        />
-                      ) : (
-                        <div className="h-[80px] w-[80px] flex items-center justify-center bg-gray-100 rounded-md text-gray-500 text-sm">
-                          No Image
-                        </div>
-                      )}
+                      <Image
+                        src={client.img}
+                        alt={client.name}
+                        width={100}
+                        height={100}
+                        className="object-contain max-h-[80px]"
+                        unoptimized
+                      />
                     </div>
                     <p className="font-semibold text-gray-800 text-sm mt-2 text-center">
                       {client.name}
@@ -166,7 +161,6 @@ export default function ClientsSection() {
         )}
       </div>
 
-      {/* Smooth Animation Styles */}
       <style jsx>{`
         @keyframes smoothCarousel {
           0% {

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import DeleteConfirmModal from "@/app/components/DeleteConfirmModal";
-import { SERVER_BASE_URL, safeImageUrl } from "@/lib/config";
+import { API_BASE_URL, safeImageUrl } from "@/lib/config";
 
 interface Work {
   id: number;
@@ -89,7 +89,7 @@ export default function ServicesPage() {
     workName: "",
   });
 
-  // 🟦 Floating Image Preview
+  // Preview image
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<{ url: string; name: string } | null>(null);
 
@@ -100,7 +100,7 @@ export default function ServicesPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${SERVER_BASE_URL}/api/services`, {
+      const res = await fetch(`${API_BASE_URL}/services`, {
         headers: {
           Accept: "*/*",
           Authorization: `Bearer ${token}`,
@@ -175,7 +175,7 @@ export default function ServicesPage() {
     setExpandedServices(updated);
   };
 
-  // Pagination
+  // Pagination logic
   const filteredServices = services.filter(
     (s) =>
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -306,7 +306,7 @@ export default function ServicesPage() {
                           <p className="text-gray-700 text-sm leading-relaxed">{service.longDesc}</p>
                         )}
 
-                        {/* SubServices */}
+                        {/* Sub Services */}
                         <div>
                           <div className="flex justify-between items-center mb-2">
                             <h4 className="font-semibold text-gray-800">Sub Services</h4>
@@ -317,6 +317,7 @@ export default function ServicesPage() {
                               <Plus className="w-3 h-3 mr-1" /> Add Sub Service
                             </Link>
                           </div>
+
                           {service.subServices.length > 0 ? (
                             service.subServices.map((sub) => (
                               <div key={sub.id} className="bg-blue-50 border rounded-lg p-3 mb-2">
@@ -325,17 +326,67 @@ export default function ServicesPage() {
                                     <p className="font-medium text-blue-800">{sub.name}</p>
                                     <p className="text-sm text-gray-700">{sub.description}</p>
                                   </div>
+                                  <div className="flex items-center gap-2">
+                                    <Link
+                                      href={`/admin/services/${service.id}/subservice/add?edit=${sub.id}`}
+                                      className="text-blue-500 hover:text-blue-700 p-1 hover:bg-blue-100 rounded-full"
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </Link>
+                                    <button
+                                      onClick={() =>
+                                        setDeleteSubModal({
+                                          isOpen: true,
+                                          serviceId: service.id,
+                                          subServiceId: sub.id,
+                                          subServiceName: sub.name,
+                                        })
+                                      }
+                                      className="text-red-500 hover:text-red-700 p-1 hover:bg-red-100 rounded-full"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </div>
 
                                 {/* Works */}
                                 <div className="mt-3 pl-4">
-                                  <h6 className="font-semibold text-gray-700 text-sm mb-1">
-                                    Our Work
-                                  </h6>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <h6 className="font-semibold text-gray-700 text-sm">Our Work</h6>
+                                    <Link
+                                      href={`/admin/services/${service.id}/work/add?subServiceId=${sub.id}`}
+                                      className="bg-green-100 text-green-700 px-2 py-1 rounded-lg flex items-center text-sm hover:bg-green-200"
+                                    >
+                                      <Plus className="w-3 h-3 mr-1" /> Add Work
+                                    </Link>
+                                  </div>
                                   {sub.works.length > 0 ? (
                                     <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
                                       {sub.works.map((w) => (
-                                        <li key={w.id}>{w.description}</li>
+                                        <li key={w.id} className="flex justify-between items-center">
+                                          <span>{w.description}</span>
+                                          <div className="flex gap-2">
+                                            <Link
+                                              href={`/admin/services/${service.id}/work/add?subServiceId=${sub.id}&edit=${w.id}`}
+                                              className="text-blue-500 hover:text-blue-700 p-1 hover:bg-blue-50 rounded-full"
+                                            >
+                                              <Edit className="w-4 h-4" />
+                                            </Link>
+                                            <button
+                                              onClick={() =>
+                                                setDeleteWorkModal({
+                                                  isOpen: true,
+                                                  subServiceId: sub.id,
+                                                  workId: w.id,
+                                                  workName: w.description,
+                                                })
+                                              }
+                                              className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded-full"
+                                            >
+                                              <Trash2 className="w-4 h-4" />
+                                            </button>
+                                          </div>
+                                        </li>
                                       ))}
                                     </ul>
                                   ) : (
@@ -351,16 +402,47 @@ export default function ServicesPage() {
 
                         {/* Features */}
                         <div>
-                          <h4 className="font-semibold text-gray-800 mb-2">Features</h4>
+                          <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-semibold text-gray-800">Features</h4>
+                            <Link
+                              href={`/admin/services/${service.id}/features/add`}
+                              className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg flex items-center text-sm hover:bg-blue-200"
+                            >
+                              <Plus className="w-3 h-3 mr-1" /> Add Feature
+                            </Link>
+                          </div>
                           {service.features.length > 0 ? (
                             <ul className="space-y-2">
                               {service.features.map((f) => (
                                 <li
                                   key={f.id}
-                                  className="bg-gray-50 p-3 rounded-lg border hover:border-blue-300 transition"
+                                  className="bg-gray-50 p-3 rounded-lg border hover:border-blue-300 transition flex justify-between items-start"
                                 >
-                                  <p className="font-medium text-gray-900">{f.featureName}</p>
-                                  <p className="text-xs text-gray-600 mt-1">{f.featureDesc}</p>
+                                  <div>
+                                    <p className="font-medium text-gray-900">{f.featureName}</p>
+                                    <p className="text-xs text-gray-600 mt-1">{f.featureDesc}</p>
+                                  </div>
+                                  <div className="flex gap-2 mt-1">
+                                    <Link
+                                      href={`/admin/services/${service.id}/features/add?edit=${f.id}`}
+                                      className="text-blue-500 hover:text-blue-700 p-1 hover:bg-blue-50 rounded-full"
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </Link>
+                                    <button
+                                      onClick={() =>
+                                        setDeleteFeatureModal({
+                                          isOpen: true,
+                                          serviceId: service.id,
+                                          featureId: f.id,
+                                          featureName: f.featureName,
+                                        })
+                                      }
+                                      className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded-full"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </li>
                               ))}
                             </ul>
@@ -465,6 +547,57 @@ export default function ServicesPage() {
           </div>
         </div>
       )}
+
+      {/* === Delete Service Modal === */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        itemName={deleteModal.serviceName}
+        onConfirm={async () => {
+          try {
+            const token = localStorage.getItem("token");
+            await fetch(`http://103.103.20.23:8080/api/services/${deleteModal.serviceId}`, {
+              method: "DELETE",
+              headers: {
+                Accept: "*/*",
+                Authorization: `Bearer ${token}`,
+              },
+            });
+          } catch (err) {
+            console.error("Failed to delete service:", err);
+          } finally {
+            setDeleteModal({ ...deleteModal, isOpen: false });
+            fetchServices();
+          }
+        }}
+        onCancel={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+      />
+
+      {/* === Delete Work Modal === */}
+      <DeleteConfirmModal
+        isOpen={deleteWorkModal.isOpen}
+        itemName={deleteWorkModal.workName}
+        onConfirm={async () => {
+          try {
+            const token = localStorage.getItem("token");
+            await fetch(
+              `http://103.103.20.23:8080/api/services/sub-services/${deleteWorkModal.subServiceId}/works/${deleteWorkModal.workId}`,
+              {
+                method: "DELETE",
+                headers: {
+                  Accept: "*/*",
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+          } catch (err) {
+            console.error("Failed to delete work:", err);
+          } finally {
+            setDeleteWorkModal({ ...deleteWorkModal, isOpen: false });
+            fetchServices();
+          }
+        }}
+        onCancel={() => setDeleteWorkModal({ ...deleteWorkModal, isOpen: false })}
+      />
     </div>
   );
 }

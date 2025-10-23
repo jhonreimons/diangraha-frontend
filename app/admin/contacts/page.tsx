@@ -16,6 +16,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import DeleteConfirmModal from "@/app/components/DeleteConfirmModal";
+import { SERVER_BASE_URL } from "@/lib/config";
 
 interface ContactMessage {
   id: number;
@@ -49,12 +50,15 @@ export default function ContactsPage() {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const { logout } = useAuth();
 
+  // === FETCH CONTACT MESSAGES ===
   const fetchContactMessages = async () => {
+    setLoading(true);
     try {
-      const response = await fetch("http://103.103.20.23:8080/api/contact-messages", {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${SERVER_BASE_URL}/api/contact-messages`, {
         headers: {
           Accept: "*/*",
-          Authorization: "Bearer " + localStorage.getItem("token"),
+          Authorization: `Bearer ${token}`,
         },
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -74,6 +78,7 @@ export default function ContactsPage() {
     }
   };
 
+  // === INITIAL LOAD ===
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
@@ -96,27 +101,22 @@ export default function ContactsPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleLogout = () => logout();
-
-  const handleDeleteMessage = (messageId: number, messageName: string) =>
-    setDeleteModal({ isOpen: true, messageId, messageName });
-
+  // === DELETE MESSAGE ===
   const confirmDelete = async () => {
     if (!deleteModal.messageId) return;
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://103.103.20.23:8080/api/contact-messages/${deleteModal.messageId}`,
+        `${SERVER_BASE_URL}/api/contact-messages/${deleteModal.messageId}`,
         {
           method: "DELETE",
           headers: {
             Accept: "*/*",
-            Authorization: "Bearer " + localStorage.getItem("token"),
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
       setMessages((prev) => prev.filter((m) => m.id !== deleteModal.messageId));
     } catch (error) {
       console.error("Error deleting contact message:", error);
@@ -125,6 +125,11 @@ export default function ContactsPage() {
       setDeleteModal({ isOpen: false, messageId: null, messageName: "" });
     }
   };
+
+  const handleDeleteMessage = (messageId: number, messageName: string) =>
+    setDeleteModal({ isOpen: true, messageId, messageName });
+
+  const handleLogout = () => logout();
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleString("id-ID", {
@@ -135,6 +140,7 @@ export default function ContactsPage() {
       minute: "2-digit",
     });
 
+  // === SEARCH & PAGINATION ===
   const filteredMessages = messages.filter(
     (message) =>
       message.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -148,6 +154,7 @@ export default function ContactsPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentMessages = filteredMessages.slice(startIndex, endIndex);
 
+  // === LOADING SCREEN ===
   if (!user || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center">
@@ -202,7 +209,7 @@ export default function ContactsPage() {
               </div>
             </div>
 
-            {/* Messages */}
+            {/* === MESSAGE LIST === */}
             <div className="grid gap-6">
               {currentMessages.length > 0 ? (
                 currentMessages.map((message) => (
@@ -291,7 +298,7 @@ export default function ContactsPage() {
               )}
             </div>
 
-            {/* Pagination */}
+            {/* === PAGINATION === */}
             <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="text-sm text-gray-700">
                 Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
@@ -329,13 +336,10 @@ export default function ContactsPage() {
         </main>
       </div>
 
-      {/* Fixed Centered Modal */}
+      {/* === VIEW DETAIL MODAL === */}
       {selectedMessage && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-center items-center px-4 sm:px-0">
-          <div
-            className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-[90%] sm:w-full sm:max-w-[600px] mx-auto animate-fadeIn relative"
-            style={{ animation: "fadeIn 0.25s ease-out" }}
-          >
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-[95%] sm:w-full sm:max-w-[750px] mx-auto animate-fadeIn relative">
             <div className="sticky top-0 px-5 py-4 sm:px-6 sm:py-5 border-b border-gray-200 flex items-center justify-between bg-white z-10 rounded-t-2xl">
               <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
                 Message Details
@@ -348,69 +352,49 @@ export default function ContactsPage() {
               </button>
             </div>
 
-            <div className="px-5 sm:px-6 py-5 space-y-4 max-h-[80vh] overflow-y-auto">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
-                </label>
-                <p className="text-gray-900">{selectedMessage.fullName}</p>
+            <div className="px-6 py-6 space-y-4 max-h-[80vh] overflow-y-auto text-gray-800">
+              <div className="grid grid-cols-3 gap-y-2">
+                <p className="font-semibold text-gray-700 col-span-1">Full Name:</p>
+                <p className="col-span-2">{selectedMessage.fullName}</p>
+
+                <p className="font-semibold text-gray-700 col-span-1">Email:</p>
+                <p className="col-span-2">{selectedMessage.email}</p>
+
+                {selectedMessage.phoneNumber && (
+                  <>
+                    <p className="font-semibold text-gray-700 col-span-1">Phone:</p>
+                    <p className="col-span-2">{selectedMessage.phoneNumber}</p>
+                  </>
+                )}
+
+                {selectedMessage.companyName && (
+                  <>
+                    <p className="font-semibold text-gray-700 col-span-1">Company:</p>
+                    <p className="col-span-2">{selectedMessage.companyName}</p>
+                  </>
+                )}
+
+                {selectedMessage.interestedIn && (
+                  <>
+                    <p className="font-semibold text-gray-700 col-span-1">Interested In:</p>
+                    <p className="col-span-2">{selectedMessage.interestedIn}</p>
+                  </>
+                )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <p className="text-gray-900">{selectedMessage.email}</p>
-              </div>
-
-              {selectedMessage.phoneNumber && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
-                  </label>
-                  <p className="text-gray-900">{selectedMessage.phoneNumber}</p>
-                </div>
-              )}
-
-              {selectedMessage.companyName && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Company Name
-                  </label>
-                  <p className="text-gray-900">{selectedMessage.companyName}</p>
-                </div>
-              )}
-
-              {selectedMessage.interestedIn && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Interested In
-                  </label>
-                  <p className="text-gray-900">{selectedMessage.interestedIn}</p>
-                </div>
-              )}
-
+              {/* Message Section */}
               {selectedMessage.message && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Message
-                  </label>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p
-                      className="text-gray-900 leading-relaxed"
-                      style={{ whiteSpace: "pre-wrap" }}
-                    >
-                      {selectedMessage.message}
-                    </p>
+                <div className="mt-4">
+                  <p className="font-semibold text-gray-700 mb-2">Message:</p>
+                  <div className="bg-gray-50 rounded-lg p-4 text-gray-800 leading-relaxed whitespace-pre-wrap border border-gray-200 max-h-[300px] overflow-y-auto">
+                    {selectedMessage.message}
                   </div>
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Received At
-                </label>
-                <p className="text-gray-900">
+              <div className="pt-3 border-t border-gray-200">
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold text-gray-700">Received At:</span>{" "}
                   {formatDate(selectedMessage.createdAt)}
                 </p>
               </div>
@@ -419,7 +403,7 @@ export default function ContactsPage() {
         </div>
       )}
 
-      {/* Delete Modal */}
+      {/* === DELETE MODAL === */}
       <DeleteConfirmModal
         isOpen={deleteModal.isOpen}
         itemName={`message from ${deleteModal.messageName}`}

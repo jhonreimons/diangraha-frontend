@@ -212,15 +212,15 @@ export default function ClientManagementPage() {
               </div>
             </div>
 
-            {/* Table Responsive */}
+            {/* Table */}
             <div className="bg-white rounded-xl shadow-md overflow-x-auto">
               <table className="min-w-full border-collapse text-sm md:text-base">
                 <thead className="bg-blue-50 border-b">
                   <tr>
-                    <th className="w-[55%] px-4 py-3 text-left font-semibold text-blue-700 uppercase tracking-wider">
+                    <th className="w-[50%] px-4 py-3 text-left font-semibold text-blue-700 uppercase tracking-wider">
                       Client Name
                     </th>
-                    <th className="w-[25%] px-4 py-3 text-left font-semibold text-blue-700 uppercase tracking-wider">
+                    <th className="w-[30%] px-4 py-3 text-left font-semibold text-blue-700 uppercase tracking-wider">
                       Logo
                     </th>
                     <th className="w-[20%] px-4 py-3 text-center font-semibold text-blue-700 uppercase tracking-wider">
@@ -240,7 +240,7 @@ export default function ClientManagementPage() {
                             <img
                               src={client.imageUrl}
                               alt={client.name}
-                              className="w-12 h-12 rounded-lg object-contain border shadow-sm cursor-pointer hover:opacity-80 transition"
+                              className="w-48 h-48 rounded-xl object-contain shadow-sm cursor-pointer hover:opacity-90 transition"
                               onClick={() => {
                                 setSelectedLogo({
                                   url: client.imageUrl || "",

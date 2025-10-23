@@ -41,13 +41,13 @@ export default function AchievementManagementPage() {
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  // Logo preview state
+  // Logo preview
   const [showLogoModal, setShowLogoModal] = useState(false);
   const [selectedLogo, setSelectedLogo] = useState<{ url: string; title: string } | null>(null);
 
   const { logout } = useAuth();
 
-  // Fetch data
+  // Fetch achievements
   const fetchAchievements = async () => {
     try {
       const response = await fetch(`${SERVER_BASE_URL}/api/achievements`, { cache: "no-store" });
@@ -230,19 +230,22 @@ export default function AchievementManagementPage() {
                       key={achievement.id}
                       className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all p-6 text-center group"
                     >
-                      {/* Click to open logo preview */}
-                      <img
-                        src={safeImageUrl(achievement.imageUrl)}
-                        alt={achievement.title}
-                        onClick={() => {
-                          setSelectedLogo({
-                            url: safeImageUrl(achievement.imageUrl),
-                            title: achievement.title,
-                          });
-                          setShowLogoModal(true);
-                        }}
-                        className="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover shadow mb-4 mx-auto cursor-pointer hover:opacity-80 transition"
-                      />
+                      {/* Logo Image */}
+                      <div className="bg-white p-3 rounded-lg flex justify-center items-center h-36 mb-4 shadow-inner">
+                        <img
+                          src={safeImageUrl(achievement.imageUrl)}
+                          alt={achievement.title}
+                          onClick={() => {
+                            setSelectedLogo({
+                              url: safeImageUrl(achievement.imageUrl),
+                              title: achievement.title,
+                            });
+                            setShowLogoModal(true);
+                          }}
+                          className="max-h-32 w-auto object-contain mx-auto cursor-pointer hover:scale-105 transition-transform duration-200"
+                        />
+                      </div>
+
                       <h3 className="text-base md:text-lg font-semibold text-gray-900 line-clamp-2">
                         {achievement.title}
                       </h3>
@@ -321,7 +324,7 @@ export default function AchievementManagementPage() {
               </div>
             </div>
 
-            {/*  Delete Modal */}
+            {/* Delete Modal */}
             <DeleteConfirmModal
               isOpen={showDeleteModal}
               itemName={achievementToDelete?.title || ""}
@@ -329,7 +332,7 @@ export default function AchievementManagementPage() {
               onCancel={() => setShowDeleteModal(false)}
             />
 
-            {/*  Logo Preview Modal */}
+            {/* Logo Preview Modal */}
             {showLogoModal && selectedLogo && (
               <>
                 <div

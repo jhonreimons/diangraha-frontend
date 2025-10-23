@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer/Footer";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { SERVER_BASE_URL, getImageUrl } from "@/lib/config";
 
 interface Client {
   id: number;
@@ -12,30 +13,52 @@ interface Client {
 
 export default function AboutPage() {
   const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const res = await fetch("http://103.103.20.23:8080/api/clients");
-        if (!res.ok) throw new Error("Failed to fetch clients");
+        // ✅ Gunakan SERVER_BASE_URL agar langsung ambil dari backend
+        const res = await fetch(`${SERVER_BASE_URL}/api/clients`, {
+          headers: {
+            Accept: "*/*",
+          },
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch clients (status ${res.status})`);
+        }
+
         const data = await res.json();
+
+        // Pastikan data valid array
+        if (!Array.isArray(data)) {
+          console.error("Invalid data format:", data);
+          setClients([]);
+          return;
+        }
+
         setClients(data);
       } catch (error) {
         console.error("Error fetching clients:", error);
         setClients([]);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchClients();
   }, []);
 
-  // Gandakan klien agar animasi seamless
+  // Gandakan klien agar animasi looping seamless
   const duplicatedClients = [...clients, ...clients];
 
   return (
     <main>
       <Navbar />
       <div className="min-h-screen">
-        {/* Hero Section */}
+        {/* ===== Hero Section ===== */}
         <section className="relative w-full h-[420px] md:h-[620px] flex items-center justify-center overflow-hidden">
           <video
             autoPlay
@@ -49,20 +72,20 @@ export default function AboutPage() {
           <div className="absolute inset-0 bg-black/40 z-10" />
           <div className="relative z-20 flex justify-center">
             <span className="inline-block px-6 py-3 rounded-md text-white text-3xl md:text-4xl font-extrabold 
-                     bg-gradient-to-r from-indigo-29 to-violet-60 backdrop-blur-sm shadow-lg">
+                     bg-gradient-to-r from-indigo-700 to-violet-600 backdrop-blur-sm shadow-lg">
               About Us
             </span>
           </div>
         </section>
 
-        {/* Company Info */}
+        {/* ===== Company Info Section ===== */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12">
             <div>
               <h2 className="font-bold text-gray-800 mb-8 text-3xl">
                 PT. Dian Graha Elektrika
               </h2>
-              <div className="space-y-6 text-gray-700 text-lg justify-center text-justify leading-relaxed">
+              <div className="space-y-6 text-gray-700 text-lg leading-relaxed text-justify">
                 <p>
                   Established in 1977, PT. Dian Graha Elektrika became one of the most
                   solid national companies until now, by utilizing our expertise and
@@ -79,13 +102,14 @@ export default function AboutPage() {
               </div>
             </div>
 
+            {/* Vision & Mission Card */}
             <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-xl shadow-lg border border-blue-200">
               <h3 className="text-2xl font-bold text-blue-800 mb-4">Vision</h3>
-              <p className="text-gray-700 text-lg leading-relaxed mb-8 justify-center text-justify">
+              <p className="text-gray-700 text-lg leading-relaxed mb-8 text-justify">
                 Becoming a leading partner and providing efficient, reliable, and sustainable business solutions.
               </p>
               <h3 className="text-2xl font-bold text-blue-800 mb-4">Mission</h3>
-              <ul className="text-gray-700 text-lg leading-relaxed list-disc ml-5 space-y-3 justify-center text-justify">
+              <ul className="text-gray-700 text-lg leading-relaxed list-disc ml-5 space-y-3 text-justify">
                 <li>
                   Providing high-quality, skilled, committed services in various industries, including HR, finance, and IT.
                 </li>
@@ -97,59 +121,66 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Our Clients Section */}
+        {/* ===== Our Clients Section ===== */}
         <section id="clients" className="py-16 bg-gray-50 overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 relative">
             <div className="text-center mb-12">
               <h2 className="font-bold text-gray-800 mb-4 text-2xl">Our Clients</h2>
               <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-               Trusted by companies of all sizes to achieve growth and digital transformation
+                Trusted by companies of all sizes to achieve growth and digital transformation.
               </p>
             </div>
 
-            {clients.length < 4 ? (
-              // Center jika data < 4
+            {/* Loader */}
+            {loading ? (
+              <div className="flex justify-center py-8 text-gray-500">Loading clients...</div>
+            ) : clients.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">No clients found.</div>
+            ) : clients.length < 4 ? (
+              // Jika data < 4
               <div className="flex justify-center gap-8 flex-wrap">
                 {clients.map((client) => (
                   <div
                     key={client.id}
-                    className="bg-white p-6 rounded-xl shadow-md border border-gray-100 w-64 min-h-[230px] flex flex-col justify-between items-center"
+                    className="bg-white p-6 rounded-xl shadow-md border border-gray-100 w-64 min-h-[230px] flex flex-col justify-between items-center hover:shadow-lg hover:border-blue-200 transition-all duration-300"
                   >
                     <div className="h-24 flex items-center justify-center w-full mb-4">
                       <Image
-                        src={client.imageUrl}
+                        src={getImageUrl(client.imageUrl)}
                         alt={client.name}
                         width={120}
                         height={120}
                         className="object-contain max-h-20"
+                        unoptimized
                       />
                     </div>
-                    <h3 className="font-semibold text-gray-800 text-center text-base leading-snug line-clamp-2 break-words w-full">
+                    <h3 className="font-semibold text-gray-800 text-center text-base leading-snug break-words w-full">
                       {client.name}
                     </h3>
                   </div>
                 ))}
               </div>
             ) : (
-              // Infinite scrolling carousel
+              // Jika data banyak (jalankan marquee animasi horizontal)
               <div className="w-full overflow-hidden">
                 <div className="flex gap-8 animate-marquee will-change-transform">
                   {duplicatedClients.map((client, index) => (
                     <div
-                      key={index}
-                      className="flex-shrink-0 bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-500 border border-gray-100 hover:border-blue-200 w-64 min-h-[230px] flex flex-col justify-between items-center"
+                      key={`${client.id}-${index}`}
+                      className="flex-shrink-0 bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-gray-100 hover:border-blue-200 w-64 min-h-[230px] flex flex-col justify-between items-center"
                     >
                       <div className="h-24 flex items-center justify-center w-full mb-4">
                         <Image
-                          src={client.imageUrl}
+                          src={getImageUrl(client.imageUrl)}
                           alt={client.name}
                           width={120}
                           height={120}
                           className="object-contain max-h-20"
+                          unoptimized
                         />
                       </div>
                       <h3
-                        className="font-semibold text-gray-800 text-center text-base leading-snug line-clamp-2 break-words w-full"
+                        className="font-semibold text-gray-800 text-center text-base leading-snug break-words w-full"
                         title={client.name}
                       >
                         {client.name}
@@ -160,9 +191,27 @@ export default function AboutPage() {
               </div>
             )}
           </div>
+
+          {/* Marquee animation */}
+          <style jsx>{`
+            @keyframes marquee {
+              0% {
+                transform: translate3d(0, 0, 0);
+              }
+              100% {
+                transform: translate3d(-50%, 0, 0);
+              }
+            }
+
+            .animate-marquee {
+              display: flex;
+              width: 200%;
+              animation: marquee 25s linear infinite;
+            }
+          `}</style>
         </section>
 
-        {/* Core Values Section */}
+        {/* ===== Core Values Section ===== */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-12">

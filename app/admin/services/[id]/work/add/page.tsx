@@ -1,341 +1,242 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import AdminSidebar from "@/app/components/AdminSidebar";
-import AdminHeader from "@/app/components/AdminHeader";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
-import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { SERVER_BASE_URL } from "@/lib/config";
-
-type WorkDetail = {
-  id: number;
-  description?: string;
-  subService?: { id?: number; name?: string } | null;
-};
+import { useAuth } from "@/hooks/useAuth";
+import AdminHeader from "@/app/components/AdminHeader";
+import AdminSidebar from "@/app/components/AdminSidebar";
+import { Save, ArrowLeft, Loader2, CheckCircle } from "lucide-react";
+import Link from "next/link";
 
 export default function AddWorkPage() {
-  const [user, setUser] = useState<any>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [formData, setFormData] = useState({ description: "" });
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
-  const [subServiceId, setSubServiceId] = useState<string | null>(null);
-
-  const { logout } = useAuth();
+  const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
 
-  // URL params
-  const serviceId = (params?.id as string) || undefined; // hanya untuk navigasi UI
-  const editWorkId = searchParams.get("edit"); // ID work
-  const querySub = searchParams.get("sub"); // optional sub-service id dari URL
-  const isEditMode = !!editWorkId;
+  const { id: serviceId } = params as { id: string };
+  const editId = searchParams.get("edit");
+  const subServiceId = searchParams.get("subServiceId");
 
-  // ------- Helpers -------
-  const authHeaders = () => {
-    const token = localStorage.getItem("token") || "";
-    return {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    };
-  };
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [workDescription, setWorkDescription] = useState("");
+  const [user, setUser] = useState<{ name?: string; role?: string } | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Coba resolve subServiceId dengan scan service tertentu
-  const tryResolveSubFromService = async (
-    svcId: string,
-    workId: string
-  ): Promise<string | null> => {
-    try {
-      const r = await fetch(`${SERVER_BASE_URL}/api/services/${svcId}`, {
-        headers: authHeaders(),
-        cache: "no-store",
-      });
-      if (!r.ok) return null;
-      const svc = await r.json();
-      const subs = Array.isArray(svc?.subServices) ? svc.subServices : [];
-      for (const sub of subs) {
-        const works = Array.isArray(sub?.works) ? sub.works : [];
-        if (works.some((w: any) => String(w.id) === String(workId))) {
-          return String(sub.id);
-        }
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  };
+  const { logout } = useAuth();
 
-  // Fallback terakhir: scan semua services
-  const tryResolveSubFromAllServices = async (
-    workId: string
-  ): Promise<string | null> => {
-    try {
-      const r = await fetch(`${SERVER_BASE_URL}/api/services`, {
-        headers: authHeaders(),
-        cache: "no-store",
-      });
-      if (!r.ok) return null;
-      const services = await r.json();
-      for (const svc of services || []) {
-        const subs = Array.isArray(svc?.subServices) ? svc.subServices : [];
-        for (const sub of subs) {
-          const works = Array.isArray(sub?.works) ? sub.works : [];
-          if (works.some((w: any) => String(w.id) === String(workId))) {
-            return String(sub.id);
-          }
-        }
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  };
-
-  // ------- Fetch existing Work -------
-  const fetchWorkData = async () => {
-    if (!editWorkId) return;
-    setIsFetching(true);
-    try {
-      // 1) Ambil work by ID
-      const res = await fetch(
-        `${SERVER_BASE_URL}/api/services/sub-services/works/${editWorkId}`,
-        { headers: authHeaders(), cache: "no-store" }
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data: WorkDetail = await res.json();
-
-      // Set description ke form
-      setFormData({ description: data?.description ?? "" });
-
-      // 2) Tentukan subServiceId
-      //   a) dari response langsung
-      if (data?.subService?.id) {
-        setSubServiceId(String(data.subService.id));
-        return;
-      }
-
-      //   b) dari query ?sub=
-      if (querySub) {
-        setSubServiceId(querySub);
-        return;
-      }
-
-      //   c) dari scan serviceId yang ada di URL
-      if (serviceId) {
-        const found = await tryResolveSubFromService(serviceId, editWorkId);
-        if (found) {
-          setSubServiceId(found);
-          return;
-        }
-      }
-
-      //   d) dari scan seluruh services (fallback)
-      const globalFound = await tryResolveSubFromAllServices(editWorkId);
-      if (globalFound) {
-        setSubServiceId(globalFound);
-        return;
-      }
-
-      //   e) kalau semua gagal, beri pesan yang jelas
-      alert(
-        "SubService ID could not be resolved from API. Tambahkan parameter ?sub={subServiceId} pada URL untuk melanjutkan update."
-      );
-    } catch (err) {
-      console.error("Error fetching work data:", err);
-      alert("Failed to load existing work data. Please try again.");
-    } finally {
-      setIsFetching(false);
-    }
-  };
-
-  // ------- Init -------
+  // Load user dan mode edit
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
     if (!token) {
-      window.location.href = "/login";
+      router.push("/login");
       return;
     }
     if (userData) setUser(JSON.parse(userData));
 
-    if (isEditMode) {
-      fetchWorkData();
-    } else if (querySub) {
-      // mode Add: kita sudah punya sub dari URL
-      setSubServiceId(querySub);
+    if (editId) {
+      setIsEditing(true);
+      fetchWorkDetail(editId);
     }
-  }, [isEditMode, editWorkId, querySub, serviceId]);
+  }, [editId]);
 
-  const handleLogout = () => logout();
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((p) => ({ ...p, [name]: value }));
-  };
-
-  // ------- Submit Add / Edit -------
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  // Fetch detail work jika edit
+  const fetchWorkDetail = async (workId: string) => {
     try {
-      if (!subServiceId) {
-        alert(
-          "SubService ID not found. Tambahkan ?sub={subServiceId} pada URL atau reload halaman."
-        );
-        return;
-      }
+      setLoading(true);
+      const token = localStorage.getItem("token");
 
-      const url = isEditMode
-        ? `${SERVER_BASE_URL}/api/services/sub-services/${subServiceId}/works/${editWorkId}`
-        : `${SERVER_BASE_URL}/api/services/sub-services/${subServiceId}/works`;
-
-      const res = await fetch(url, {
-        method: isEditMode ? "PUT" : "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ description: formData.description }),
+      // API yang benar sesuai dengan contoh cURL kamu
+      const res = await fetch(`${SERVER_BASE_URL}/api/services/sub-services/works/${workId}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) {
-        const t = await res.text();
-        throw new Error(`HTTP ${res.status} - ${t}`);
-      }
+      if (!res.ok) throw new Error("Failed to fetch work detail");
 
-      setShowSuccess(true);
+      const data = await res.json();
+      setWorkDescription(data.description || "");
+      setErrorMessage(null);
     } catch (err) {
-      console.error(`Error ${isEditMode ? "updating" : "adding"} work:`, err);
-      alert(`Failed to ${isEditMode ? "update" : "add"} Our Work`);
+      console.error("Error fetching work detail:", err);
+      setErrorMessage("Failed to fetch work detail. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSuccessClose = () => {
-    setShowSuccess(false);
-    // aman: kembali ke daftar services, bukan /admin/services/{id}
-    window.location.href = `/admin/services`;
+  // Submit Add/Edit Work
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!workDescription.trim()) return;
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+
+      const method = isEditing ? "PUT" : "POST";
+      const endpoint = isEditing
+        ? `${SERVER_BASE_URL}/api/services/sub-services/${subServiceId}/works/${editId}`
+        : `${SERVER_BASE_URL}/api/services/sub-services/${subServiceId}/works`;
+
+      const res = await fetch(endpoint, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ description: workDescription }),
+      });
+
+      if (!res.ok) throw new Error("Failed to save work");
+      setShowSuccessModal(true);
+    } catch (err) {
+      console.error("Error saving work:", err);
+      setErrorMessage("Failed to save work. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (!user || isFetching) {
+  // Sidebar auto open di desktop
+  useEffect(() => {
+    const handleResize = () => setSidebarOpen(window.innerWidth >= 1024);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  if (!user)
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-700">
-        {isFetching ? "Loading existing data..." : "Loading..."}
+      <div className="min-h-screen flex items-center justify-center text-gray-500">
+        Loading user...
       </div>
     );
-  }
+
+  // Modal Success
+  const SuccessModal = () => (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-lg w-[90%] max-w-sm p-6 text-center transition-all duration-200">
+        <div className="flex justify-center mb-3">
+          <CheckCircle className="text-green-500 w-12 h-12" />
+        </div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">
+          {isEditing ? "Work Updated!" : "Work Added!"}
+        </h2>
+        <p className="text-sm text-gray-600 mb-5">
+          Work "{workDescription}" {isEditing ? "updated" : "added"} successfully.
+        </p>
+        <button
+          onClick={() => router.push("/admin/services")}
+          className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 shadow"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row">
       <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
-
-      <div className="flex-1 flex flex-col ml-0 md:ml-[260px] transition-all duration-300">
+      <div className="flex-1 flex flex-col transition-all duration-300">
         <AdminHeader
-          title={isEditMode ? "Edit Our Work" : "Add Our Work"}
+          title={isEditing ? "Edit Work" : "Add Work"}
           user={user}
-          onLogout={handleLogout}
+          onLogout={logout}
           sidebarOpen={sidebarOpen}
           onToggle={setSidebarOpen}
         />
 
-        <main className="relative z-10 flex-1 bg-gray-50/50 min-h-screen pt-[100px] px-4 md:px-8">
-          <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-md hover:shadow-lg transition-all p-8">
-            <div className="mb-6">
+        {/* === Main Content === */}
+        <main
+          className={`flex-1 transition-all duration-300 mt-[80px] px-4 sm:px-6 md:px-10 py-8 ${
+            sidebarOpen ? "md:ml-72" : "md:ml-24"
+          }`}
+        >
+          <div className="max-w-3xl mx-auto bg-white shadow-md rounded-xl p-6 md:p-10 border">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+                {isEditing ? "Edit Work" : "Add New Work"}
+              </h2>
               <Link
-                href={`/admin/services`}
-                className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                href="/admin/services"
+                className="flex items-center text-gray-600 hover:text-blue-600 text-sm"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Service Management
+                <ArrowLeft className="w-4 h-4 mr-1" /> Back
               </Link>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              {isEditMode ? "Edit Our Work" : "Add New Our Work"}
-            </h2>
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-lg mb-4 text-sm">
+                {errorMessage}
+              </div>
+            )}
 
+            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Work Description */}
               <div>
-                <label
-                  htmlFor="description"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Work Description
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Work Description <span className="text-red-500">*</span>
                 </label>
                 <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={4}
+                  value={workDescription}
+                  onChange={(e) => setWorkDescription(e.target.value)}
+                  placeholder="Enter description of this work"
+                  rows={5}
+                  className="
+                    w-full border border-gray-300 rounded-lg p-3 text-sm
+                    text-gray-800
+                    bg-white
+                    focus:ring-2 focus:ring-blue-500 focus:outline-none
+                    placeholder-gray-500
+                    resize-none
+                    selection:bg-blue-100 selection:text-gray-900
+                  "
                   required
-                  placeholder="Enter work description"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm 
-                             text-gray-900 placeholder-gray-400 bg-white resize-none
-                             focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4">
-                <Link
-                  href={`/admin/services`}
-                  className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all"
+              {/* Submit Buttons */}
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => router.push("/admin/services")}
+                  className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-100 transition"
                 >
                   Cancel
-                </Link>
+                </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 disabled:opacity-50 transition-all"
+                  className="bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow hover:bg-blue-700 flex items-center transition"
                 >
-                  {loading
-                    ? isEditMode
-                      ? "Updating..."
-                      : "Adding..."
-                    : isEditMode
-                    ? "Update Work"
-                    : "Add Work"}
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      {isEditing ? "Update Work" : "Save Work"}
+                    </>
+                  )}
                 </button>
               </div>
             </form>
           </div>
-
-          {showSuccess && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
-              <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform animate-scaleIn">
-                <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {isEditMode ? "Work Updated!" : "Work Added!"}
-                </h3>
-                <p className="text-gray-600 text-sm mb-5">
-                  Our Work {isEditMode ? "updated successfully." : "added successfully."}
-                </p>
-                <button
-                  onClick={handleSuccessClose}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
-                >
-                  OK
-                </button>
-              </div>
-            </div>
-          )}
         </main>
       </div>
+
+      {/* Modal Success */}
+      {showSuccessModal && <SuccessModal />}
     </div>
   );
-}
-
-/* === Animations === */
-const style = `
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.animate-fadeIn { animation: fadeIn 0.25s ease-out; }
-.animate-scaleIn { animation: scaleIn 0.25s ease-out; }
-`;
-if (typeof document !== "undefined") {
-  const el = document.createElement("style");
-  el.textContent = style;
-  document.head.appendChild(el);
 }

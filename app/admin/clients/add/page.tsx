@@ -86,7 +86,7 @@ function ClientForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ Validasi gambar hanya saat add
+    //  Validasi gambar hanya saat add
     if (!isEditMode && !formData.image) {
       setShowImageError(true);
       return;
@@ -235,7 +235,7 @@ function ClientForm({
         </form>
       </div>
 
-      {/* ✅ Success Modal */}
+      {/*  Success Modal */}
       {showSuccess && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform animate-scaleIn">
@@ -258,7 +258,7 @@ function ClientForm({
         </div>
       )}
 
-      {/* 🔴 Image Error Modal */}
+      {/* Image Error Modal */}
       {showImageError && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform animate-scaleIn">
@@ -333,7 +333,7 @@ export default function AddClientPage() {
   );
 }
 
-/* ✅ Animations */
+/*  Animations */
 const style = `
 @keyframes fadeIn {
   from { opacity: 0; }

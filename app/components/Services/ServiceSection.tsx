@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useLayoutEffect } from "react";
 import Link from "next/link";
-import { getImageUrl } from "@/lib/config";
+import { API_BASE_URL, getImageUrl } from "@/lib/config";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Feature {
@@ -23,7 +23,7 @@ interface Service {
 export default function ServiceSection() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0); // page index (0..maxIndex)
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(4);
 
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -33,15 +33,18 @@ export default function ServiceSection() {
   const [itemWidth, setItemWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
 
-  // refs for each card to measure heights
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [cardMinHeight, setCardMinHeight] = useState<number | null>(null);
 
-  // fetch data
+  // Fetch data from API (using config)
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const res = await fetch("http://103.103.20.23:8080/api/services");
+        const res = await fetch(`${API_BASE_URL}/services`, {
+          headers: { Accept: "*/*" },
+          cache: "no-store",
+        });
+
         if (!res.ok) throw new Error("Failed to fetch services");
         const data: Service[] = await res.json();
 
@@ -53,6 +56,7 @@ export default function ServiceSection() {
           imageUrl: s.imageUrl ?? "",
           features: Array.isArray(s.features) ? s.features : [],
         }));
+
         setServices(normalized);
       } catch (err) {
         console.error("Error fetching services:", err);
@@ -65,7 +69,7 @@ export default function ServiceSection() {
     fetchServices();
   }, []);
 
-  // responsiveness: itemsPerView
+  // Responsive items per view
   useEffect(() => {
     const updateItemsPerView = () => {
       if (window.innerWidth < 640) setItemsPerView(1);
@@ -78,7 +82,7 @@ export default function ServiceSection() {
     return () => window.removeEventListener("resize", updateItemsPerView);
   }, []);
 
-  // measure viewport and item widths in pixels
+  // Measure layout dynamically
   useLayoutEffect(() => {
     const measure = () => {
       const el = viewportRef.current;
@@ -99,31 +103,28 @@ export default function ServiceSection() {
     };
   }, [itemsPerView, services.length]);
 
-  // ensure currentIndex in range when services or itemsPerView change
+  // Keep currentIndex in range
   useEffect(() => {
     const maxIndex = Math.max(0, Math.ceil(services.length / itemsPerView) - 1);
     setCurrentIndex((prev) => Math.min(prev, maxIndex));
   }, [services.length, itemsPerView]);
 
   const maxIndex = Math.max(0, Math.ceil(services.length / itemsPerView) - 1);
-
   const next = () => setCurrentIndex((prev) => (prev < maxIndex ? prev + 1 : maxIndex));
   const prev = () => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : 0));
 
-  // measure card heights and set all to the tallest (so cards equal height)
+  // Measure card heights for uniform layout
   useLayoutEffect(() => {
     if (!cardRefs.current || cardRefs.current.length === 0) {
       setCardMinHeight(null);
       return;
     }
 
-    // measure after a small delay to allow layout updates (also handles images)
     const measureHeights = () => {
       let maxH = 0;
       for (let i = 0; i < cardRefs.current.length; i++) {
         const el = cardRefs.current[i];
         if (el) {
-          // use offsetHeight to include padding
           const h = el.offsetHeight;
           if (h > maxH) maxH = h;
         }
@@ -132,8 +133,8 @@ export default function ServiceSection() {
       else setCardMinHeight(null);
     };
 
-    // measure once and also after images load
     measureHeights();
+
     const imgs: HTMLImageElement[] = [];
     cardRefs.current.forEach((el) => {
       if (!el) return;
@@ -153,7 +154,6 @@ export default function ServiceSection() {
         img.addEventListener("load", onLoad);
         img.addEventListener("error", onLoad);
       });
-      // cleanup
       return () => {
         imgs.forEach((img) => {
           img.removeEventListener("load", onLoad);
@@ -161,7 +161,6 @@ export default function ServiceSection() {
         });
       };
     }
-    // no cleanup required here
   }, [services, viewportWidth, itemsPerView]);
 
   if (loading) {
@@ -178,9 +177,9 @@ export default function ServiceSection() {
     );
   }
 
-  // compute translateX but clamp so we never overscroll
+  // Calculate horizontal translation
   const rawTranslate = -currentIndex * viewportWidth;
-  const maxTranslate = Math.min(0, viewportWidth - (containerWidth || 0)); // negative or 0
+  const maxTranslate = Math.min(0, viewportWidth - (containerWidth || 0));
   const translatePx = containerWidth
     ? Math.max(maxTranslate, Math.min(0, rawTranslate))
     : 0;
@@ -188,6 +187,7 @@ export default function ServiceSection() {
   return (
     <section className="py-16 bg-gray-50 relative">
       <div className="max-w-7xl mx-auto px-6 relative">
+        {/* ===== Section Header ===== */}
         <div className="text-center mb-12">
           <h2 className="font-bold text-gray-800 mb-4 text-[25px]">Our Services</h2>
           <p className="text-gray-600 text-lg max-w-3xl mx-auto">
@@ -195,6 +195,7 @@ export default function ServiceSection() {
           </p>
         </div>
 
+        {/* ===== Carousel Section ===== */}
         <div className="relative flex items-center justify-center">
           {services.length > itemsPerView && (
             <button
@@ -208,6 +209,7 @@ export default function ServiceSection() {
             </button>
           )}
 
+          {/* Viewport */}
           <div ref={viewportRef} className="overflow-hidden mx-6 sm:mx-12 w-full" style={{ minHeight: 340 }}>
             <div
               ref={containerRef}
@@ -217,59 +219,57 @@ export default function ServiceSection() {
                 transform: `translateX(${translatePx}px)`,
               }}
             >
-              {services.map((service, idx) => {
-                // ensure cardRefs has the right length
-                return (
+              {services.map((service, idx) => (
+                <div
+                  key={service.id}
+                  className="flex-shrink-0 px-3"
+                  style={{
+                    width: itemWidth || "100%",
+                  }}
+                >
                   <div
-                    key={service.id}
-                    className="flex-shrink-0 px-3"
-                    style={{
-                      width: itemWidth || "100%",
+                    ref={(el) => {
+                      cardRefs.current[idx] = el;
                     }}
+                    className="w-full"
                   >
                     <div
-                      // card wrapper
-                      ref={(el) => {
-                        cardRefs.current[idx] = el;
+                      className="bg-white border border-gray-200 rounded-lg shadow-md p-6 flex flex-col justify-between h-full 
+                                 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 
+                                 hover:border-blue-300 group"
+                      style={{
+                        minHeight: cardMinHeight ? `${cardMinHeight}px` : undefined,
                       }}
-                      className="w-full"
                     >
-                      <div
-                        className="bg-white border border-gray-200 rounded-lg shadow-md p-6 flex flex-col justify-between h-full hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 hover:border-blue-300 group"
-                        style={{
-                          minHeight: cardMinHeight ? `${cardMinHeight}px` : undefined,
-                        }}
-                      >
-                        <div>
-                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                            {service.imageUrl ? (
-                              <img
-                                src={getImageUrl(service.imageUrl)}
-                                alt={service.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="bg-blue-600 text-white font-bold text-lg w-full h-full flex items-center justify-center">
-                                {service.name?.[0] ?? "S"}
-                              </div>
-                            )}
-                          </div>
-
-                          <h3 className="font-semibold text-gray-800 text-lg mb-3 text-center break-words">
-                            {service.name}
-                          </h3>
-
-                          <p className="text-gray-600 text-sm leading-relaxed text-center break-words whitespace-pre-line">
-                            {service.shortDesc && service.shortDesc.trim() !== ""
-                              ? service.shortDesc
-                              : "No short description available."}
-                          </p>
+                      <div>
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                          {service.imageUrl ? (
+                            <img
+                              src={getImageUrl(service.imageUrl)}
+                              alt={service.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="bg-blue-600 text-white font-bold text-lg w-full h-full flex items-center justify-center">
+                              {service.name?.[0] ?? "S"}
+                            </div>
+                          )}
                         </div>
+
+                        <h3 className="font-semibold text-gray-800 text-lg mb-3 text-center break-words">
+                          {service.name}
+                        </h3>
+
+                        <p className="text-gray-600 text-sm leading-relaxed text-center break-words whitespace-pre-line">
+                          {service.shortDesc && service.shortDesc.trim() !== ""
+                            ? service.shortDesc
+                            : "No short description available."}
+                        </p>
                       </div>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -286,6 +286,7 @@ export default function ServiceSection() {
           )}
         </div>
 
+        {/* ===== View All Button ===== */}
         <div className="text-center mt-12">
           <Link
             href="/services"

@@ -1,10 +1,11 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer/Footer";
 import { motion } from "framer-motion";
-import { getImageUrl } from "@/lib/config";
+import { API_BASE_URL, getImageUrl } from "@/lib/config";
 
 interface Service {
   id: number;
@@ -28,7 +29,7 @@ export default function ServicesPage() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch("http://103.103.20.23:8080/api/services");
+        const response = await fetch(`${API_BASE_URL}/services`);
         if (!response.ok) throw new Error("Failed to fetch services");
         const data = await response.json();
         setServices(data);
@@ -42,7 +43,7 @@ export default function ServicesPage() {
     fetchServices();
   }, []);
 
-  // Parallax light follow mouse
+  // Parallax light effect
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
@@ -55,8 +56,8 @@ export default function ServicesPage() {
     return (
       <main>
         <Navbar />
-        <div className="min-h-screen flex items-center justify-center">
-          <div>Loading services...</div>
+        <div className="min-h-screen flex items-center justify-center text-gray-700">
+          Loading services...
         </div>
         <Footer />
       </main>
@@ -67,10 +68,9 @@ export default function ServicesPage() {
     <main>
       <Navbar />
       <div className="min-h-screen">
-
-        {/* ===== Hero Section (Upgraded) ===== */}
+        {/* ===== Hero Section ===== */}
         <section className="relative flex flex-col md:flex-row items-center justify-between px-6 md:px-12 lg:px-20 py-20 bg-gradient-to-r from-gray-100 via-white to-gray-100 overflow-hidden">
-          {/* Animated Gradient Background */}
+          {/* Animated background */}
           <motion.div
             className="absolute inset-0 bg-gradient-to-br from-blue-100 via-purple-50 to-white opacity-60"
             animate={{
@@ -84,7 +84,7 @@ export default function ServicesPage() {
             style={{ backgroundSize: "200% 200%" }}
           />
 
-          {/* Floating Particles */}
+          {/* Floating lights */}
           {Array.from({ length: 10 }).map((_, i) => (
             <motion.div
               key={i}
@@ -106,12 +106,12 @@ export default function ServicesPage() {
             />
           ))}
 
-          {/* Parallax Light Following Mouse */}
+          {/* Light following cursor */}
           <motion.div
-            className="absolute w-[400px] h-[400px] rounded-full bg-blue-500/10 blur-3xl pointer-events-none"
+            className="absolute w-[300px] h-[300px] rounded-full bg-blue-500/10 blur-3xl pointer-events-none"
             style={{
-              left: mousePosition.x - 200,
-              top: mousePosition.y - 200,
+              left: mousePosition.x - 150,
+              top: mousePosition.y - 150,
             }}
           />
 
@@ -126,9 +126,11 @@ export default function ServicesPage() {
             <h1 className="font-bold text-gray-800 mb-6 leading-tight text-[36px] md:text-[42px]">
               Our Services
             </h1>
-            <p className="text-gray-600 text-xl mb-8 leading-relaxed justify-center text-justify">
-              We provide comprehensive solutions to help your business grow and succeed in today's competitive market. 
-              Our experienced team delivers quality services tailored to meet your specific needs and requirements with excellence and reliability.
+            <p className="text-gray-600 text-lg md:text-xl mb-8 leading-relaxed text-justify">
+              We provide comprehensive solutions to help your business grow and
+              succeed in today's competitive market. Our experienced team delivers
+              quality services tailored to meet your specific needs and requirements
+              with excellence and reliability.
             </p>
             <Link href="/about#clients" scroll={true}>
               <motion.button
@@ -143,31 +145,32 @@ export default function ServicesPage() {
               >
                 Our Clients
               </motion.button>
-              </Link>
+            </Link>
           </motion.div>
-          {/* Right Image */}
+
+          {/* Right Image (Square & Proportional) */}
           <motion.div
             initial={{ opacity: 0, x: 80 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="relative flex-shrink-0"
+            className="relative flex-shrink-0 w-full md:w-[350px] lg:w-[400px] xl:w-[420px] aspect-square"
           >
             <img
-              src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80"
+              src="/OurServices.png"
               alt="Business Team"
-              className="w-full h-96 object-cover rounded-2xl shadow-2xl"
+              className="w-full h-full object-contain rounded-3xl shadow-2xl bg-white p-6"
             />
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-transparent rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-transparent rounded-3xl"></div>
           </motion.div>
         </section>
 
-        {/* ===== Services Content ===== */}
+        {/* ===== See More Link ===== */}
         <section id="services" className="py-16 bg-gray-50">
           <div className="pb-8 text-center">
             <a
               href="#services-grid"
-              className="text-blue-500 hover:text-blue-700 text-lg font-medium inline-flex items-center gap-2 transition-colors duration-300"
+              className="text-blue-600 hover:text-blue-800 text-lg font-medium inline-flex items-center gap-2 transition-colors duration-300"
             >
               See more our service
               <svg
@@ -187,18 +190,13 @@ export default function ServicesPage() {
           </div>
         </section>
 
-        {/* ===== Consultation Section ===== */}
-
-
-        {/* ===== Dynamic Services List ===== */}
+        {/* ===== Dynamic Services ===== */}
         {services.map((service, index) => {
           const isEven = index % 2 === 0;
           const bgClass = isEven
             ? "from-blue-50 to-indigo-100"
             : "from-white to-indigo-100";
-          const buttonClass = isEven
-            ? "bg-blue-600 hover:bg-blue-700"
-            : "bg-blue-600 hover:bg-blue-700";
+          const buttonClass = "bg-blue-600 hover:bg-blue-700";
 
           return (
             <motion.section
@@ -216,19 +214,16 @@ export default function ServicesPage() {
                     !isEven ? "md:flex-row-reverse" : ""
                   }`}
                 >
+                  {/* Text */}
                   <motion.div
                     whileHover={{ scale: 1.02 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 200,
-                      damping: 20,
-                    }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
                     className="max-w-2xl"
                   >
                     <h2 className="text-[30px] font-bold text-gray-800 mb-6">
                       {service.name}
                     </h2>
-                    <p className="text-[20px] text-gray-600 leading-relaxed mb-8 justify-center text-justify">
+                    <p className="text-[18px] text-gray-600 leading-relaxed mb-8 text-justify">
                       {generateSummary(service.longDesc, 255)}
                     </p>
                     <Link
@@ -239,11 +234,11 @@ export default function ServicesPage() {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`${buttonClass} text-white px-8 py-4 bg-blue-900 hover:bg-blue-900 rounded-lg font-semibold text-lg transition-all duration-300 shadow-md inline-flex items-center justify-center gap-2`}
+                        className={`${buttonClass} text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 shadow-md inline-flex items-center gap-2`}
                       >
                         View More
                         <svg
-                          className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
+                          className="w-5 h-5 transition-transform duration-300"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -263,14 +258,14 @@ export default function ServicesPage() {
                   <motion.div
                     whileHover={{ scale: 1.03 }}
                     transition={{ duration: 0.4 }}
-                    className="relative flex-shrink-0"
+                    className="relative flex-shrink-0 w-full md:w-[400px] lg:w-[450px]"
                   >
                     <img
                       src={getImageUrl(service.imageUrl)}
                       alt={service.name}
-                      className="w-full h-auto max-h-96 object-contain rounded-lg shadow-xl"
+                      className="w-full h-auto max-h-[400px] object-contain rounded-2xl shadow-xl"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent rounded-lg"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent rounded-2xl"></div>
                   </motion.div>
                 </div>
               </div>
