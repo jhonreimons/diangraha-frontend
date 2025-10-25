@@ -1,10 +1,11 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Footer() {
   return (
     <footer className="bg-blue-900 text-white py-10 w-full mt-0">
       <div className="max-w-screen-2xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
-        {/* Company Info */}
+        {/* ===== Company Info ===== */}
         <div>
           <h3 className="text-lg font-bold mb-4">PT Dian Graha Elektrika</h3>
           <p className="text-sm leading-relaxed">
@@ -20,6 +21,8 @@ export default function Footer() {
             <a
               href="https://www.instagram.com/dge.idn/"
               className="hover:opacity-80"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <Image
                 src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg"
@@ -32,6 +35,8 @@ export default function Footer() {
             <a
               href="https://www.linkedin.com/company/pt-dian-graha-elektrika/"
               className="hover:opacity-80"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <Image
                 src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg"
@@ -44,6 +49,8 @@ export default function Footer() {
             <a
               href="https://id.jobstreet.com/id/companies/dian-graha-elektrika-168555371921443/jobs"
               className="hover:opacity-80"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <Image
                 src="/jobstreet.png"
@@ -56,65 +63,90 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Jam Operasional + Logo tambahan */}
-        <div className="flex flex-col justify-start">
+        {/* ===== Operating Hours + ISO Logo ===== */}
+        <div className="flex flex-col justify-start relative z-0">
           <h4 className="font-semibold mb-4">Operating Hours</h4>
           <p className="text-sm">Monday - Friday: 08.00 – 17.00 WIB</p>
           <p className="text-sm mb-6">Saturday - Sunday: Closed</p>
 
-          <div className="flex justify-center md:justify-start items-start">
+          <div className="flex justify-center md:justify-start items-start relative">
             <div
               className="
                 transform
-                scale-[1.25]              /* mobile — ukuran seperti gambar pertama */
-                md:scale-[2.2]            /* desktop tetap besar dan proporsional */
-                md:-mt-6                  /* sejajarkan di desktop */
+                scale-[1.25]              
+                md:scale-[2.2]            
+                md:-mt-6                  
                 origin-center md:origin-left
                 transition-transform duration-300
               "
             >
+              {/* pointer-events-none agar tidak blok area klik link */}
               <Image
                 src="/logoIso.png"
                 alt="Certification Logos"
                 width={220}
                 height={130}
-                className="object-contain opacity-95 hover:opacity-100 transition-opacity duration-300"
+                className="object-contain opacity-95 hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                 unoptimized
               />
             </div>
           </div>
         </div>
 
-        {/* Company */}
-        <div>
+        {/* ===== Company Links ===== */}
+        <div className="relative z-10">
           <h4 className="font-semibold mb-4">Company</h4>
           <ul className="space-y-2 text-sm">
             <li>
-              <a href="#" className="hover:underline">
+              <Link href="/about" className="hover:underline">
                 About Us
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:underline">
+              <Link href="/career" className="hover:underline">
                 Career
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
 
-        {/* Services */}
+        {/* ===== Services Links ===== */}
         <div>
           <h4 className="font-semibold mb-4">Services</h4>
           <ul className="space-y-2 text-sm">
-            <li><a href="#" className="hover:underline">Outsourcing</a></li>
-            <li><a href="#" className="hover:underline">Medical</a></li>
-            <li><a href="#" className="hover:underline">PABX</a></li>
-            <li><a href="#" className="hover:underline">Other</a></li>
+            <li>
+              <Link
+                href="/service/outsourcing-%26-hr-management"
+                className="hover:underline"
+              >
+                Outsourcing & HR Management
+              </Link>
+            </li>
+            <li>
+              <Link href="/service/ftth-(fiber-to-the-home)" className="hover:underline">
+                FTTH (Fiber to the Home)
+              </Link>
+            </li>
+            <li>
+              <Link href="/service/medical" className="hover:underline">
+                Medical
+              </Link>
+            </li>
+            <li>
+              <Link href="/service/pabx" className="hover:underline">
+                PABX
+              </Link>
+            </li>
+            <li>
+              <Link href="/services" className="hover:underline">
+                Other
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
 
-      {/* Bottom Section */}
+      {/* ===== Bottom Section ===== */}
       <div className="max-w-screen-2xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center mt-8 pt-6 border-t border-blue-800">
         <div className="flex items-center mb-4 md:mb-0">
           <Image
@@ -122,7 +154,7 @@ export default function Footer() {
             alt="PT Dian Graha Elektrika"
             width={140}
             height={40}
-            className="h-10 w-auto"
+            className="h-10 w-auto pointer-events-none"
           />
         </div>
 
