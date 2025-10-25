@@ -39,6 +39,7 @@ export default function ClientManagementPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [userSetItems, setUserSetItems] = useState(false); // menandakan user sudah memilih jumlah show
 
   const [showLogoModal, setShowLogoModal] = useState(false);
   const [selectedLogo, setSelectedLogo] = useState<{ url: string; name: string } | null>(null);
@@ -79,12 +80,18 @@ export default function ClientManagementPage() {
 
     const handleResize = () => {
       setSidebarOpen(window.innerWidth >= 768);
-      setItemsPerPage(window.innerWidth < 768 ? 3 : 5);
+
+      // Hanya ubah itemsPerPage jika user belum memilih secara manual
+      if (!userSetItems) {
+        if (window.innerWidth < 768) setItemsPerPage(3);
+        else setItemsPerPage(5);
+      }
     };
+
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [userSetItems]);
 
   const handleLogout = () => logout();
 
@@ -167,7 +174,6 @@ export default function ClientManagementPage() {
           }`}
         >
           <div className="bg-gray-50/50">
-            {/* Header */}
             <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
               <div>
                 <h2 className="text-base md:text-2xl font-bold text-gray-900">
@@ -186,7 +192,6 @@ export default function ClientManagementPage() {
               </Link>
             </div>
 
-            {/* Search + Sort */}
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <div className="relative flex-1 sm:w-72">
@@ -212,7 +217,6 @@ export default function ClientManagementPage() {
               </div>
             </div>
 
-            {/* Table */}
             <div className="bg-white rounded-xl shadow-md overflow-x-auto">
               <table className="min-w-full border-collapse text-sm md:text-base">
                 <thead className="bg-blue-50 border-b">
@@ -285,8 +289,7 @@ export default function ClientManagementPage() {
               </table>
             </div>
 
-            {/* Pagination */}
-            <div className="flex flex-col md:flex-row justify-between items-center mt-6 border-t pt-4 text-sm text-gray-700 gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-6 border-t pt-4 text-sm text-gray-700 gap-4 flex-wrap">
               <div>
                 Showing{" "}
                 <span className="font-semibold">
@@ -296,7 +299,7 @@ export default function ClientManagementPage() {
                 of <span className="font-semibold">{clients.length}</span> clients
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap justify-center">
+              <div className="flex flex-wrap justify-center items-center gap-2">
                 <button
                   onClick={() => handlePageClick(currentPage - 1)}
                   disabled={currentPage === 1}
@@ -332,6 +335,7 @@ export default function ClientManagementPage() {
                   value={itemsPerPage}
                   onChange={(e) => {
                     setItemsPerPage(parseInt(e.target.value));
+                    setUserSetItems(true);
                     setCurrentPage(1);
                   }}
                   className="ml-2 px-2 py-1 border rounded-md text-gray-700 focus:ring-blue-400"
@@ -344,7 +348,6 @@ export default function ClientManagementPage() {
               </label>
             </div>
 
-            {/* Delete Modal */}
             <DeleteConfirmModal
               isOpen={showDeleteModal}
               itemName={clientToDelete?.name || ""}
@@ -352,7 +355,6 @@ export default function ClientManagementPage() {
               onCancel={handleDeleteCancel}
             />
 
-            {/* Logo Preview Modal */}
             {showLogoModal && selectedLogo && (
               <div
                 className="fixed inset-0 flex items-center justify-center bg-black/50 z-[9999] p-4"

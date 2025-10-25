@@ -39,15 +39,14 @@ export default function AchievementManagementPage() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
   const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [userSetItems, setUserSetItems] = useState(false);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  // Logo preview
   const [showLogoModal, setShowLogoModal] = useState(false);
   const [selectedLogo, setSelectedLogo] = useState<{ url: string; title: string } | null>(null);
 
   const { logout } = useAuth();
 
-  // Fetch achievements
   const fetchAchievements = async () => {
     try {
       const response = await fetch(`${SERVER_BASE_URL}/api/achievements`, { cache: "no-store" });
@@ -76,13 +75,17 @@ export default function AchievementManagementPage() {
 
     const handleResize = () => {
       setSidebarOpen(window.innerWidth >= 768);
-      setItemsPerPage(window.innerWidth < 768 ? 3 : 6);
+
+      if (!userSetItems) {
+        if (window.innerWidth < 768) setItemsPerPage(3);
+        else setItemsPerPage(6);
+      }
     };
 
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [userSetItems]);
 
   const handleLogout = () => logout();
 
@@ -152,14 +155,12 @@ export default function AchievementManagementPage() {
           onToggle={setSidebarOpen}
         />
 
-        {/* Main Content */}
         <main
           className={`flex-1 transition-all duration-300 mt-[80px] md:mt-[90px] px-4 sm:px-6 md:px-10 py-8 ${
             sidebarOpen ? "md:ml-72" : "md:ml-24"
           }`}
         >
           <div className="max-w-screen-2xl mx-auto bg-gray-50/50 rounded-2xl shadow-inner p-6 md:p-10">
-            {/* Header */}
             <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
               <div>
                 <h2 className="text-xl md:text-3xl font-bold text-gray-900">
@@ -178,7 +179,6 @@ export default function AchievementManagementPage() {
               </Link>
             </div>
 
-            {/* Search + Sort */}
             <div className="flex flex-wrap items-center justify-between mb-6 gap-3">
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <div className="relative w-full md:w-80">
@@ -201,13 +201,13 @@ export default function AchievementManagementPage() {
                 </button>
               </div>
 
-              {/* Items per page */}
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-700">Show:</span>
                 <select
                   value={itemsPerPage}
                   onChange={(e) => {
                     setItemsPerPage(Number(e.target.value));
+                    setUserSetItems(true);
                     setCurrentPage(1);
                   }}
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-gray-900 bg-white"
@@ -221,7 +221,6 @@ export default function AchievementManagementPage() {
               </div>
             </div>
 
-            {/* Achievement Grid */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 p-6 md:p-8">
                 {currentAchievements.length > 0 ? (
@@ -230,7 +229,6 @@ export default function AchievementManagementPage() {
                       key={achievement.id}
                       className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all p-6 text-center group"
                     >
-                      {/* Logo Image */}
                       <div className="bg-white p-3 rounded-lg flex justify-center items-center h-36 mb-4 shadow-inner">
                         <img
                           src={safeImageUrl(achievement.imageUrl)}
@@ -280,9 +278,8 @@ export default function AchievementManagementPage() {
                 )}
               </div>
 
-              {/* Pagination */}
-              <div className="bg-white px-6 py-4 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200">
-                <p className="text-sm text-gray-700 mb-2 sm:mb-0">
+              <div className="bg-white px-6 py-4 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 flex-wrap gap-3">
+                <p className="text-sm text-gray-700 text-center sm:text-left">
                   Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
                   <span className="font-medium">
                     {Math.min(startIndex + currentAchievements.length, sortedAchievements.length)}
@@ -290,7 +287,7 @@ export default function AchievementManagementPage() {
                   of <span className="font-medium">{sortedAchievements.length}</span> results
                 </p>
 
-                <div className="flex items-center space-x-1">
+                <div className="flex flex-wrap justify-center items-center gap-1">
                   <button
                     onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
                     disabled={currentPage === 1}
@@ -324,7 +321,6 @@ export default function AchievementManagementPage() {
               </div>
             </div>
 
-            {/* Delete Modal */}
             <DeleteConfirmModal
               isOpen={showDeleteModal}
               itemName={achievementToDelete?.title || ""}
@@ -332,7 +328,6 @@ export default function AchievementManagementPage() {
               onCancel={() => setShowDeleteModal(false)}
             />
 
-            {/* Logo Preview Modal */}
             {showLogoModal && selectedLogo && (
               <>
                 <div

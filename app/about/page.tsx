@@ -1,7 +1,8 @@
 "use client";
+
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer/Footer";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { SERVER_BASE_URL, getImageUrl } from "@/lib/config";
 
@@ -14,7 +15,13 @@ interface Client {
 export default function AboutPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const positionRef = useRef(0);
+  const totalWidthRef = useRef(0);
+  const [scrollSpeed, setScrollSpeed] = useState(60);
 
+  // Fetch clients
   useEffect(() => {
     const fetchClients = async () => {
       try {
@@ -23,11 +30,14 @@ export default function AboutPage() {
           cache: "no-store",
         });
 
-        if (!res.ok) throw new Error(`Failed to fetch clients (status ${res.status})`);
+        if (!res.ok) throw new Error(`Failed to fetch clients (${res.status})`);
         const data = await res.json();
-        if (!Array.isArray(data)) return setClients([]);
 
-        setClients(data);
+        if (Array.isArray(data)) {
+          setClients(data);
+        } else {
+          setClients([]);
+        }
       } catch (error) {
         console.error("Error fetching clients:", error);
         setClients([]);
@@ -38,6 +48,54 @@ export default function AboutPage() {
 
     fetchClients();
   }, []);
+
+  // Update speed on resize
+  useEffect(() => {
+    const updateSpeed = () => {
+      if (window.innerWidth < 640) setScrollSpeed(45);
+      else if (window.innerWidth < 1024) setScrollSpeed(55);
+      else setScrollSpeed(70);
+    };
+    updateSpeed();
+    window.addEventListener("resize", updateSpeed);
+    return () => window.removeEventListener("resize", updateSpeed);
+  }, []);
+
+  // Super smooth infinite scroll
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || clients.length < 4) return;
+
+    const updateWidth = () => {
+      totalWidthRef.current = container.scrollWidth / 2;
+    };
+    updateWidth();
+
+    let lastTime = performance.now();
+
+    const animate = (time: number) => {
+      const delta = time - lastTime;
+      lastTime = time;
+
+      positionRef.current += (scrollSpeed * delta) / 1000;
+
+      if (positionRef.current >= totalWidthRef.current) {
+        positionRef.current -= totalWidthRef.current;
+      }
+
+      // Gunakan toFixed agar stabil pixel-wise
+      container.style.transform = `translate3d(-${positionRef.current.toFixed(2)}px, 0, 0)`;
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+    window.addEventListener("resize", updateWidth);
+
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      window.removeEventListener("resize", updateWidth);
+    };
+  }, [clients, scrollSpeed]);
 
   const duplicatedClients = [...clients, ...clients];
 
@@ -89,15 +147,9 @@ export default function AboutPage() {
               </div>
             </div>
 
-            {/* ===== Vision & Mission Section (Improved Clearer Background) ===== */}
             <div className="relative rounded-2xl overflow-hidden shadow-xl border border-blue-200">
-              {/* Brighter background gradient */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-200 via-blue-100 to-blue-50 opacity-95"></div>
-
-              {/* Decorative subtle glow */}
               <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.6),_transparent_60%)]"></div>
-
-              {/* Content layer */}
               <div className="relative p-8 z-10">
                 <h3 className="text-2xl font-bold text-blue-900 mb-4">Vision</h3>
                 <p className="text-gray-700 text-lg leading-relaxed mb-8 text-justify">
@@ -156,12 +208,25 @@ export default function AboutPage() {
                 ))}
               </div>
             ) : (
-              <div className="w-full overflow-hidden">
-                <div className="flex gap-8 animate-marquee will-change-transform">
+              // Smooth infinite scroll
+              <div className="relative w-full overflow-hidden">
+                <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-gray-50 to-transparent z-10"></div>
+                <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-gray-50 to-transparent z-10"></div>
+
+                <div
+                  ref={containerRef}
+                  className="flex gap-8 will-change-transform"
+                  style={{
+                    transform: "translate3d(0, 0, 0)",
+                    transition: "none",
+                    backfaceVisibility: "hidden",
+                    WebkitFontSmoothing: "antialiased",
+                  }}
+                >
                   {duplicatedClients.map((client, index) => (
                     <div
                       key={`${client.id}-${index}`}
-                      className="flex-shrink-0 bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-gray-100 hover:border-blue-200 w-64 min-h-[230px] flex flex-col justify-between items-center"
+                      className="flex-shrink-0 bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-transform duration-300 border border-gray-100 hover:border-blue-200 w-64 min-h-[230px] flex flex-col justify-between items-center"
                     >
                       <div className="h-24 flex items-center justify-center w-full mb-4">
                         <Image
@@ -185,24 +250,6 @@ export default function AboutPage() {
               </div>
             )}
           </div>
-
-          {/* Marquee animation */}
-          <style jsx>{`
-            @keyframes marquee {
-              0% {
-                transform: translate3d(0, 0, 0);
-              }
-              100% {
-                transform: translate3d(-50%, 0, 0);
-              }
-            }
-
-            .animate-marquee {
-              display: flex;
-              width: 200%;
-              animation: marquee 25s linear infinite;
-            }
-          `}</style>
         </section>
 
         {/* ===== Core Values Section ===== */}

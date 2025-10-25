@@ -13,10 +13,17 @@ import {
   Trophy,
   Calendar,
 } from "lucide-react";
+import { SERVER_BASE_URL } from "@/lib/config";
 
 interface User {
   name?: string;
   role?: string;
+}
+
+interface Client {
+  id: number;
+  name: string;
+  imageUrl: string;
 }
 
 interface ContactMessage {
@@ -34,13 +41,14 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [totalServices, setTotalServices] = useState(0);
-  const [totalBrands, setTotalBrands] = useState(0);
+  const [totalClients, setTotalClients] = useState(0);
   const [totalAchievements, setTotalAchievements] = useState(0);
   const [recentMessages, setRecentMessages] = useState<ContactMessage[]>([]);
   const [readMessages, setReadMessages] = useState<Set<number>>(new Set());
   const [expandedMessage, setExpandedMessage] = useState<number | null>(null);
   const { logout } = useAuth();
 
+  // Ambil data user dari localStorage
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
@@ -52,14 +60,15 @@ export default function DashboardPage() {
     if (userData) setUser(JSON.parse(userData));
   }, []);
 
+  // Ambil data count dari API config.ts
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        const [servicesRes, brandsRes, achievementsRes, messagesRes] = await Promise.all([
-          fetch("http://103.103.20.23:8080/api/services"),
-          fetch("http://103.103.20.23:8080/api/brands"),
-          fetch("http://103.103.20.23:8080/api/achievements"),
-          fetch("http://103.103.20.23:8080/api/contact-messages", {
+        const [servicesRes, clientsRes, achievementsRes, messagesRes] = await Promise.all([
+          fetch(`${SERVER_BASE_URL}/api/services`),
+          fetch(`${SERVER_BASE_URL}/api/clients`),
+          fetch(`${SERVER_BASE_URL}/api/achievements`),
+          fetch(`${SERVER_BASE_URL}/api/contact-messages`, {
             headers: {
               Accept: "*/*",
               Authorization: "Bearer " + localStorage.getItem("token"),
@@ -68,12 +77,12 @@ export default function DashboardPage() {
         ]);
 
         const servicesData = servicesRes.ok ? await servicesRes.json() : [];
-        const brandsData = brandsRes.ok ? await brandsRes.json() : [];
+        const clientsData = clientsRes.ok ? await clientsRes.json() : [];
         const achievementsData = achievementsRes.ok ? await achievementsRes.json() : [];
         const messagesData = messagesRes.ok ? await messagesRes.json() : [];
 
         setTotalServices(Array.isArray(servicesData) ? servicesData.length : 0);
-        setTotalBrands(Array.isArray(brandsData) ? brandsData.length : 0);
+        setTotalClients(Array.isArray(clientsData) ? clientsData.length : 0);
         setTotalAchievements(Array.isArray(achievementsData) ? achievementsData.length : 0);
 
         const thirtyDaysAgo = new Date();
@@ -91,6 +100,7 @@ export default function DashboardPage() {
     fetchCounts();
   }, []);
 
+  // Responsif sidebar
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) setSidebarOpen(true);
@@ -159,7 +169,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Stats */}
+            {/* Stats Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white rounded-xl shadow-sm p-5 border hover:shadow-md transition-all">
                 <div className="flex items-center">
@@ -173,14 +183,15 @@ export default function DashboardPage() {
                 </div>
               </div>
 
+              {/* Ganti “Brands” → “Clients” */}
               <div className="bg-white rounded-xl shadow-sm p-5 border hover:shadow-md transition-all">
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
                     <Building2 className="w-5 h-5" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm text-gray-500">Total Brands</p>
-                    <p className="text-lg font-semibold text-gray-900">{totalBrands}</p>
+                    <p className="text-sm text-gray-500">Total Clients</p>
+                    <p className="text-lg font-semibold text-gray-900">{totalClients}</p>
                   </div>
                 </div>
               </div>
@@ -203,14 +214,14 @@ export default function DashboardPage() {
               <h3 className="text-lg font-medium text-gray-900 mb-4">Management Sections</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <a
-                  href="/admin/brands"
+                  href="/admin/clients"
                   className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:scale-105 transition-all flex flex-col items-center"
                 >
                   <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-3">
                     <BarChart3 className="w-5 h-5" />
                   </div>
                   <span className="text-sm font-medium text-gray-900">
-                    Brand Management
+                    Client Management
                   </span>
                 </a>
 

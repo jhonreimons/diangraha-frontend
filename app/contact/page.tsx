@@ -1,8 +1,10 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { CheckCircle } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer/Footer";
+import { SERVER_BASE_URL } from "@/lib/config";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -19,24 +21,55 @@ export default function Contact() {
   const [error, setError] = useState("");
   const [phoneError, setPhoneError] = useState("");
 
-  //  Global phone regex (E.164-style)
+  // Regex nomor telepon global
   const phoneRegex = /^\+?[1-9]\d{6,14}$/;
 
+  // Fetch list services dari API backend (gunakan SERVER_BASE_URL)
   useEffect(() => {
-    fetch("http://103.103.20.23:8080/api/services")
-      .then((res) => res.json())
-      .then((data) => setServices(data))
-      .catch((err) => console.error("Error fetching services:", err));
+    const fetchServices = async () => {
+      try {
+        const res = await fetch(`${SERVER_BASE_URL}/api/services`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        console.log("Service API status:", res.status);
+
+        let data: any[] = [];
+        try {
+          data = await res.json();
+        } catch {
+          console.warn("Service API returned no JSON body");
+        }
+
+        if (Array.isArray(data)) {
+          setServices(data);
+        } else {
+          console.warn("Unexpected response format from /services:", data);
+          setServices([]);
+        }
+      } catch (err) {
+        console.error("Error fetching services:", err);
+        setServices([]);
+      }
+    };
+
+    fetchServices();
   }, []);
 
+  // Handler input
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
 
     if (name === "phoneNumber") {
       if (value && !phoneRegex.test(value)) {
-        setPhoneError("Please enter a valid phone number (7–15 digits, may start with +).");
+        setPhoneError(
+          "Please enter a valid phone number (7–15 digits, may start with +)."
+        );
       } else {
         setPhoneError("");
       }
@@ -45,6 +78,7 @@ export default function Contact() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -55,14 +89,31 @@ export default function Contact() {
     }
 
     setLoading(true);
+
     try {
-      const response = await fetch("http://103.103.20.23:8080/api/contact-messages", {
+      const response = await fetch(`${SERVER_BASE_URL}/api/contact-messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error("Failed to send message");
+      console.log("Contact message response status:", response.status);
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error("Response text:", text);
+        throw new Error(`Failed to send message (${response.status})`);
+      }
+
+      // Aman terhadap body kosong
+      let data = null;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
+      console.log("Contact message response data:", data);
 
       setShowModal(true);
       setFormData({
@@ -74,17 +125,19 @@ export default function Contact() {
         message: "",
       });
     } catch (err) {
+      console.error("Error submitting form:", err);
       setError("Failed to send message. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  // UI
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
 
-      {/*  Hero Section */}
+      {/* Hero Section */}
       <section className="relative w-full h-[420px] md:h-[620px] flex items-center justify-center overflow-hidden">
         <video
           autoPlay
@@ -95,20 +148,16 @@ export default function Contact() {
         >
           <source src="/background.mp4" type="video/mp4" />
         </video>
-
-        {/* Overlay */}
         <div className="absolute inset-0 bg-black/40 z-10" />
-
-        {/* Transparent Title */}
         <div className="relative z-20 flex justify-center">
-          <span className="iinline-block px-6 py-3 rounded-md text-white text-3xl md:text-4xl font-extrabold 
-                     bg-gradient-to-r from-indigo-29 to-violet-60 backdrop-blur-sm shadow-lg">
+          <span className="inline-block px-6 py-3 rounded-md text-white text-3xl md:text-4xl font-extrabold 
+                     bg-gradient-to-r from-indigo-600 to-violet-600 backdrop-blur-sm shadow-lg">
             Contact Us
           </span>
         </div>
       </section>
 
-      {/*  Contact Section */}
+      {/* Contact Section */}
       <div className="w-full bg-gradient-to-b from-gray-50 to-white py-16">
         <div className="max-w-6xl mx-auto px-6">
           <h2 className="text-center text-2xl font-bold mb-12 text-gray-800">
@@ -122,7 +171,7 @@ export default function Contact() {
           )}
 
           <div className="flex flex-col md:flex-row gap-12">
-            {/*  Form */}
+            {/* Form */}
             <div className="bg-white p-8 rounded-2xl shadow-2xl flex-1 border border-gray-200 hover:shadow-3xl transition-all duration-300">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Full Name */}
@@ -153,11 +202,13 @@ export default function Contact() {
                     value={formData.phoneNumber}
                     onChange={handleChange}
                     placeholder="+62-xxx-xxxx-xxxx"
-                    className={`w-full px-4 py-3 border ${phoneError ? "border-red-400" : "border-gray-300"
-                      } rounded-lg text-gray-800 placeholder-gray-500 bg-gray-50 focus:ring-2 ${phoneError
+                    className={`w-full px-4 py-3 border ${
+                      phoneError ? "border-red-400" : "border-gray-300"
+                    } rounded-lg text-gray-800 placeholder-gray-500 bg-gray-50 focus:ring-2 ${
+                      phoneError
                         ? "focus:ring-red-400"
                         : "focus:ring-blue-500 focus:border-transparent"
-                      } outline-none transition-all duration-300 hover:border-blue-400`}
+                    } outline-none transition-all duration-300 hover:border-blue-400`}
                     required
                   />
                   {phoneError && (
@@ -199,11 +250,15 @@ export default function Contact() {
                     required
                   >
                     <option value="">Select a service</option>
-                    {services.map((service) => (
-                      <option key={service.id} value={service.name}>
-                        {service.name}
-                      </option>
-                    ))}
+                    {services.length > 0 ? (
+                      services.map((service) => (
+                        <option key={service.id} value={service.name}>
+                          {service.name}
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled>No services available</option>
+                    )}
                   </select>
                 </div>
 
@@ -253,7 +308,7 @@ export default function Contact() {
               </form>
             </div>
 
-            {/*  Contact Info */}
+            {/* Contact Info */}
             <div className="flex-1">
               <h3 className="text-lg font-bold mb-6 text-gray-800">
                 Contact Information
@@ -266,17 +321,14 @@ export default function Contact() {
                     Duren Sawit, Kota Jakarta Timur, DKI Jakarta 13430
                   </p>
                 </div>
-
                 <div>
                   <p className="font-semibold">Phone</p>
                   <p>(021)-29195270</p>
                 </div>
-
                 <div>
                   <p className="font-semibold">Email</p>
                   <p>info@diangraha.com</p>
                 </div>
-
                 <div>
                   <p className="font-semibold">Business Hours</p>
                   <p>Mon – Fri: 9:00 AM – 5:00 PM</p>
@@ -288,12 +340,14 @@ export default function Contact() {
         </div>
       </div>
 
-      {/*  Success Modal */}
+      {/* Success Modal */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 backdrop-blur-sm">
           <div className="bg-white rounded-lg p-8 text-center max-w-md mx-4 shadow-2xl border">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4 animate-bounce" />
-            <h3 className="text-xl font-bold mb-2 text-gray-800">Thank You!</h3>
+            <h3 className="text-xl font-bold mb-2 text-gray-800">
+              Thank You!
+            </h3>
             <p className="text-gray-600 mb-6">
               Your message has been sent successfully. We will get back to you
               soon.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { SERVER_BASE_URL, getImageUrl } from "@/lib/config";
 
@@ -23,56 +23,108 @@ interface ApiClient {
 export default function ClientsSection() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
-  const [itemsPerView, setItemsPerView] = useState(4);
+  const [scrollSpeed, setScrollSpeed] = useState(60);
+  const [isMounted, setIsMounted] = useState(false);
 
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const positionRef = useRef(0);
+  const contentWidthRef = useRef(0);
+
+  // Hindari SSR mismatch
+  useEffect(() => setIsMounted(true), []);
+
+  // Fetch data clients
   useEffect(() => {
+    if (!isMounted) return;
     const fetchClients = async () => {
       try {
-        // ✅ Ganti ke SERVER_BASE_URL agar pasti ke backend
-        const response = await fetch(`${SERVER_BASE_URL}/api/clients`, {
+        const res = await fetch(`${SERVER_BASE_URL}/api/clients`, {
           headers: { Accept: "*/*" },
           cache: "no-store",
         });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: ApiClient[] = await res.json();
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data: ApiClient[] = await response.json();
-
-        // Map data
-        const mappedClients: Client[] = data.map((item) => ({
-          id: item.id,
-          name: item.name,
-          img: getImageUrl(item.imageUrl || "/placeholder.png"),
-          description: item.description,
-          website: item.website,
+        const mapped = data.map((d) => ({
+          id: d.id,
+          name: d.name,
+          img: getImageUrl(d.imageUrl || "/placeholder.png"),
+          description: d.description,
+          website: d.website,
         }));
 
-        setClients(mappedClients);
-      } catch (error) {
-        console.error("Error fetching clients:", error);
-        setClients([]);
+        setClients(mapped);
+      } catch (err) {
+        console.error("Error fetching clients:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchClients();
-  }, []);
+  }, [isMounted]);
 
-  // Responsif
+  // Responsif kecepatan scroll
   useEffect(() => {
-    const updateItemsPerView = () => {
-      if (window.innerWidth < 640) setItemsPerView(1);
-      else if (window.innerWidth < 1024) setItemsPerView(2);
-      else setItemsPerView(4);
+    if (!isMounted) return;
+    const handleResize = () => {
+      if (window.innerWidth < 640) setScrollSpeed(45);
+      else if (window.innerWidth < 1024) setScrollSpeed(55);
+      else setScrollSpeed(70);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isMounted]);
+
+  // Smooth infinite scroll tanpa hentakan
+  useEffect(() => {
+    if (!isMounted || clients.length === 0) return;
+
+    const track = trackRef.current;
+    if (!track) return;
+
+    let lastTime = performance.now();
+
+    const updateWidth = () => {
+      const totalWidth = track.scrollWidth / 2;
+      contentWidthRef.current = totalWidth;
     };
 
-    updateItemsPerView();
-    window.addEventListener("resize", updateItemsPerView);
-    return () => window.removeEventListener("resize", updateItemsPerView);
-  }, []);
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+
+    const animate = (time: number) => {
+      const delta = time - lastTime;
+      lastTime = time;
+
+      positionRef.current += (scrollSpeed * delta) / 1000;
+
+      // Wrap-around halus tanpa blink
+      if (positionRef.current >= contentWidthRef.current) {
+        positionRef.current -= contentWidthRef.current;
+      }
+
+      track.style.transform = `translate3d(-${positionRef.current.toFixed(2)}px, 0, 0)`;
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      window.removeEventListener("resize", updateWidth);
+    };
+  }, [clients, scrollSpeed, isMounted]);
+
+  // Render fallback loading
+  if (!isMounted) {
+    return (
+      <section className="py-20 bg-gray-50 text-center">
+        <p className="text-gray-400 text-sm">Loading clients...</p>
+      </section>
+    );
+  }
 
   if (loading) {
     return (
@@ -90,6 +142,7 @@ export default function ClientsSection() {
     );
   }
 
+  // Gandakan list agar loop mulus
   const repeatedClients = [...clients, ...clients];
 
   return (
@@ -101,12 +154,12 @@ export default function ClientsSection() {
         </p>
 
         {clients.length < 4 ? (
-          // Static grid
           <div className="flex justify-center flex-wrap gap-6">
             {clients.map((client) => (
               <div
                 key={client.id}
-                className="bg-white border border-gray-200 rounded-lg shadow-md p-5 w-[200px] h-[220px] flex flex-col justify-between items-center hover:shadow-xl transition-all duration-300"
+                className="bg-white border border-gray-200 rounded-lg shadow-md p-5 w-[200px] h-[220px]
+                           flex flex-col justify-between items-center hover:shadow-xl transition-all duration-300"
               >
                 <div className="flex justify-center items-center h-[100px] w-full">
                   <Image
@@ -118,28 +171,36 @@ export default function ClientsSection() {
                     unoptimized
                   />
                 </div>
-                <p className="font-semibold text-gray-800 text-sm mt-2 text-center">
-                  {client.name}
-                </p>
+                <p className="font-semibold text-gray-800 text-sm mt-2 text-center">{client.name}</p>
               </div>
             ))}
           </div>
         ) : (
-          // Infinite carousel
+          // Bagian smooth scroll
           <div className="relative w-full overflow-hidden">
-            <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none"></div>
-            <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-gray-50 to-transparent z-10"></div>
+            <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-gray-50 to-transparent z-10"></div>
 
             <div
-              className="flex gap-6 animate-smoothCarousel will-change-transform"
-              style={{ animationDuration: `${clients.length * 2.5}s` }}
+              ref={trackRef}
+              className="flex gap-6 will-change-transform"
+              style={{
+                transform: "translate3d(0,0,0)",
+                transition: "none",
+                backfaceVisibility: "hidden",
+                WebkitFontSmoothing: "antialiased",
+              }}
             >
               {repeatedClients.map((client, index) => (
                 <div
                   key={`${client.id}-${index}`}
                   className="flex-shrink-0 w-[22%] min-w-[180px] max-w-[220px]"
                 >
-                  <div className="bg-white border border-gray-200 rounded-lg shadow-md p-5 h-[220px] flex flex-col justify-between items-center hover:shadow-lg transition-all duration-300 hover:scale-105 hover:border-blue-300">
+                  <div
+                    className="bg-white border border-gray-200 rounded-lg shadow-md p-5 h-[220px]
+                               flex flex-col justify-between items-center hover:shadow-lg transition-transform
+                               duration-300 hover:scale-105 hover:border-blue-300"
+                  >
                     <div className="flex justify-center items-center h-[100px] w-full">
                       <Image
                         src={client.img}
@@ -160,32 +221,6 @@ export default function ClientsSection() {
           </div>
         )}
       </div>
-
-      <style jsx>{`
-        @keyframes smoothCarousel {
-          0% {
-            transform: translate3d(0, 0, 0);
-          }
-          100% {
-            transform: translate3d(-50%, 0, 0);
-          }
-        }
-
-        .animate-smoothCarousel {
-          display: flex;
-          width: 200%;
-          animation-name: smoothCarousel;
-          animation-timing-function: linear;
-          animation-iteration-count: infinite;
-          animation-direction: normal;
-          animation-fill-mode: forwards;
-          will-change: transform;
-        }
-
-        .animate-smoothCarousel:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
     </section>
   );
 }

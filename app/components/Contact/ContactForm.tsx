@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle } from "lucide-react";
-import { API_BASE_URL } from "@/lib/config";
+import { SERVER_BASE_URL } from "@/lib/config"; // gunakan config.ts agar dinamis
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -16,7 +16,7 @@ export default function ContactForm() {
   const [showModal, setShowModal] = useState(false);
   const [phoneError, setPhoneError] = useState("");
 
-  // 🔢 Global phone regex (E.164 format)
+  // Regex nomor telepon internasional (E.164)
   const phoneRegex = /^\+?[1-9]\d{6,14}$/;
 
   const handleChange = (
@@ -24,7 +24,7 @@ export default function ContactForm() {
   ) => {
     const { name, value } = e.target;
 
-    // Validate phone
+    // Validasi nomor telepon real-time
     if (name === "phone") {
       if (value && !phoneRegex.test(value)) {
         setPhoneError(
@@ -41,39 +41,49 @@ export default function ContactForm() {
     }));
   };
 
-  // Submit form (using API_BASE_URL)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Phone validation before sending
     if (!phoneRegex.test(formData.phone)) {
       setPhoneError("Please enter a valid phone number before submitting.");
       return;
     }
 
     setLoading(true);
+
     try {
-      const res = await fetch(`${API_BASE_URL}/contact-messages`, {
+      const response = await fetch(`${SERVER_BASE_URL}/api/contact-messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        cache: "no-store",
         body: JSON.stringify({
-          fullName: formData.name,
-          email: formData.email,
-          phoneNumber: formData.phone,
-          companyName: formData.company,
-          message: formData.message,
+          fullName: formData.name.trim(),
+          email: formData.email.trim(),
+          phoneNumber: formData.phone.trim(),
+          companyName: formData.company.trim(),
+          message: formData.message.trim(),
         }),
       });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("Response Error:", errorText);
-        alert("Failed to send message. Please try again.");
+      console.log("Response status:", response.status);
+
+      // Jika gagal
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error:", errorText);
+        alert(`Failed to send message. Server responded with ${response.status}`);
         return;
       }
 
-      // Success
+      // Aman jika body kosong
+      let data = null;
+      try {
+        data = await response.json();
+      } catch {
+        console.warn("Empty or non-JSON response body");
+      }
+
+      console.log("API success response:", data);
+
       setShowModal(true);
       setFormData({
         name: "",
@@ -84,7 +94,7 @@ export default function ContactForm() {
       });
     } catch (err) {
       console.error("Error submitting form:", err);
-      alert("An unexpected error occurred. Please try again later.");
+      alert("Unable to reach API. Please try again later.");
     } finally {
       setLoading(false);
     }

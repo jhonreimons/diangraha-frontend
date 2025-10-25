@@ -50,7 +50,6 @@ export default function ContactsPage() {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const { logout } = useAuth();
 
-  // === FETCH CONTACT MESSAGES ===
   const fetchContactMessages = async () => {
     setLoading(true);
     try {
@@ -78,7 +77,6 @@ export default function ContactsPage() {
     }
   };
 
-  // === INITIAL LOAD ===
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
@@ -93,7 +91,6 @@ export default function ContactsPage() {
 
     const handleResize = () => {
       setSidebarOpen(window.innerWidth >= 768);
-      setItemsPerPage(window.innerWidth < 768 ? 3 : 5);
     };
 
     handleResize();
@@ -101,7 +98,6 @@ export default function ContactsPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // === DELETE MESSAGE ===
   const confirmDelete = async () => {
     if (!deleteModal.messageId) return;
     try {
@@ -140,7 +136,6 @@ export default function ContactsPage() {
       minute: "2-digit",
     });
 
-  // === SEARCH & PAGINATION ===
   const filteredMessages = messages.filter(
     (message) =>
       message.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -154,7 +149,10 @@ export default function ContactsPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentMessages = filteredMessages.slice(startIndex, endIndex);
 
-  // === LOADING SCREEN ===
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsPerPage]);
+
   if (!user || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center">
@@ -170,7 +168,7 @@ export default function ContactsPage() {
   }
 
   return (
-    <div className="bg-slate-100 flex flex-col md:flex-row min-h-screen relative">
+    <div className="bg-slate-100 flex flex-col md:flex-row min-h-screen relative text-gray-900">
       <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
       <div className="flex-1 flex flex-col transition-all duration-300 z-0">
         <AdminHeader
@@ -186,8 +184,8 @@ export default function ContactsPage() {
             sidebarOpen ? "md:ml-72" : "md:ml-24"
           }`}
         >
-          <div className="max-w-screen-2xl mx-auto bg-gray-50/50 rounded-2xl shadow-inner p-6 md:p-10 relative z-10">
-            {/* Header */}
+          <div className="max-w-screen-2xl mx-auto bg-gray-50 rounded-2xl shadow-inner p-6 md:p-10 relative z-10">
+            {/* HEADER */}
             <div className="flex justify-between items-center mb-8 flex-wrap gap-3">
               <div>
                 <h2 className="text-xl md:text-3xl font-bold text-gray-900">
@@ -204,12 +202,12 @@ export default function ContactsPage() {
                   placeholder="Search messages..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm text-gray-700 placeholder-gray-500"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm text-gray-700 placeholder-gray-500 bg-white"
                 />
               </div>
             </div>
 
-            {/* === MESSAGE LIST === */}
+            {/* MESSAGE LIST */}
             <div className="grid gap-6">
               {currentMessages.length > 0 ? (
                 currentMessages.map((message) => (
@@ -298,9 +296,25 @@ export default function ContactsPage() {
               )}
             </div>
 
-            {/* === PAGINATION === */}
-            <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-              <p className="text-sm text-gray-700">
+            {/* PAGINATION */}
+            <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-gray-800">
+              <div className="flex items-center space-x-3">
+                <label className="text-sm font-medium text-gray-800">Show:</label>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="border border-gray-300 rounded-md text-sm px-2 py-1 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white text-gray-800"
+                >
+                  {[3, 5, 10, 20].map((num) => (
+                    <option key={num} value={num}>
+                      {num}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-sm text-gray-800">per page</span>
+              </div>
+
+              <p className="text-sm text-gray-800">
                 Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
                 <span className="font-medium">
                   {Math.min(endIndex, filteredMessages.length || 1)}
@@ -312,21 +326,31 @@ export default function ContactsPage() {
                 <button
                   onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
                   disabled={currentPage === 1}
-                  className="p-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  className="p-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
 
-                <span className="text-sm text-gray-700">
-                  Page {currentPage} of {totalPages}
-                </span>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`px-3 py-1 text-sm rounded-lg border ${
+                      currentPage === i + 1
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
 
                 <button
                   onClick={() =>
                     setCurrentPage(Math.min(currentPage + 1, totalPages))
                   }
                   disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  className="p-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
@@ -336,74 +360,6 @@ export default function ContactsPage() {
         </main>
       </div>
 
-      {/* === VIEW DETAIL MODAL === */}
-      {selectedMessage && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-center items-center px-4 sm:px-0">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-[95%] sm:w-full sm:max-w-[750px] mx-auto animate-fadeIn relative">
-            <div className="sticky top-0 px-5 py-4 sm:px-6 sm:py-5 border-b border-gray-200 flex items-center justify-between bg-white z-10 rounded-t-2xl">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
-                Message Details
-              </h3>
-              <button
-                onClick={() => setSelectedMessage(null)}
-                className="text-gray-500 hover:text-gray-700 text-2xl font-bold transition-colors"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="px-6 py-6 space-y-4 max-h-[80vh] overflow-y-auto text-gray-800">
-              <div className="grid grid-cols-3 gap-y-2">
-                <p className="font-semibold text-gray-700 col-span-1">Full Name:</p>
-                <p className="col-span-2">{selectedMessage.fullName}</p>
-
-                <p className="font-semibold text-gray-700 col-span-1">Email:</p>
-                <p className="col-span-2">{selectedMessage.email}</p>
-
-                {selectedMessage.phoneNumber && (
-                  <>
-                    <p className="font-semibold text-gray-700 col-span-1">Phone:</p>
-                    <p className="col-span-2">{selectedMessage.phoneNumber}</p>
-                  </>
-                )}
-
-                {selectedMessage.companyName && (
-                  <>
-                    <p className="font-semibold text-gray-700 col-span-1">Company:</p>
-                    <p className="col-span-2">{selectedMessage.companyName}</p>
-                  </>
-                )}
-
-                {selectedMessage.interestedIn && (
-                  <>
-                    <p className="font-semibold text-gray-700 col-span-1">Interested In:</p>
-                    <p className="col-span-2">{selectedMessage.interestedIn}</p>
-                  </>
-                )}
-              </div>
-
-              {/* Message Section */}
-              {selectedMessage.message && (
-                <div className="mt-4">
-                  <p className="font-semibold text-gray-700 mb-2">Message:</p>
-                  <div className="bg-gray-50 rounded-lg p-4 text-gray-800 leading-relaxed whitespace-pre-wrap border border-gray-200 max-h-[300px] overflow-y-auto">
-                    {selectedMessage.message}
-                  </div>
-                </div>
-              )}
-
-              <div className="pt-3 border-t border-gray-200">
-                <p className="text-sm text-gray-600">
-                  <span className="font-semibold text-gray-700">Received At:</span>{" "}
-                  {formatDate(selectedMessage.createdAt)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* === DELETE MODAL === */}
       <DeleteConfirmModal
         isOpen={deleteModal.isOpen}
         itemName={`message from ${deleteModal.messageName}`}
