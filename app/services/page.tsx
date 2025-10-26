@@ -165,7 +165,7 @@ export default function ServicesPage() {
         </section>
 
         {/* ===== See More Link ===== */}
-        <section id="services" className="py-16 bg-gray-50">
+        {/* <section id="services" className="py-16 bg-gray-50">
           <div className="pb-8 text-center">
             <a
               href="#services-grid"
@@ -187,7 +187,7 @@ export default function ServicesPage() {
               </svg>
             </a>
           </div>
-        </section>
+        </section> */}
 
         {/* ===== Dynamic Services (Semua pakai warna biru lembut yang sama) ===== */}
         {services.map((service, index) => {

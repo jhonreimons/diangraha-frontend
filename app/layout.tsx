@@ -9,7 +9,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "PT. Dian Graha Elektrika",
+  title: "PT Dian Graha Elektrika",
   description: "Professional business solutions and services",
   icons: {
     icon: '/logoIcon.png',
