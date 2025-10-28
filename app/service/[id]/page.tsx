@@ -117,7 +117,7 @@ export default function ServiceDetailPage() {
     );
   }
 
-  //  Service not found
+  // 🚫 Service not found
   if (!service) {
     return (
       <main className="flex flex-col min-h-screen bg-gray-50">
@@ -130,13 +130,12 @@ export default function ServiceDetailPage() {
     );
   }
 
-  //  Main Content
+  // ✅ Main Content
   return (
     <main className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
 
       <div className="flex-grow flex flex-col">
-
         {/* ===== Hero Section (Blue Gradient Background) ===== */}
         <section className="relative py-16 px-6 md:px-12 lg:px-20 bg-gradient-to-r from-blue-50 via-blue-100 to-indigo-100 overflow-hidden flex-shrink-0">
           {/* Decorative overlay for subtle lighting */}
@@ -166,13 +165,13 @@ export default function ServiceDetailPage() {
               </Link>
             </div>
 
-            {/* Right Image */}
+            {/* Right Image — enlarged version */}
             <div className="md:flex-1 flex justify-end">
               <div className="relative">
                 <img
                   src={getImageUrl(service.imageUrl)}
                   alt={service.name}
-                  className="w-full md:w-4/5 h-64 md:h-72 object-cover rounded-2xl shadow-2xl"
+                  className="w-full md:w-[90%] h-64 md:h-96 object-cover rounded-2xl shadow-2xl"
                 />
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-transparent rounded-2xl" />
               </div>

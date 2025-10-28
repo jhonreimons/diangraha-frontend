@@ -67,33 +67,22 @@ export default function ServicesPage() {
     <main>
       <Navbar />
       <div className="min-h-screen">
-        {/* ===== Hero Section ===== */}
-        <section className="relative flex flex-col md:flex-row items-center justify-between px-6 md:px-12 lg:px-20 py-20 bg-gradient-to-r from-blue-50 via-blue-100 to-indigo-100 overflow-hidden">
-          {/* Animated background */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 opacity-70"
-            animate={{
-              backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-            }}
-            transition={{
-              duration: 18,
-              ease: "easeInOut",
-              repeat: Infinity,
-            }}
-            style={{ backgroundSize: "200% 200%" }}
-          />
+        {/* ===== Hero Section (lebih terang, lembut, natural) ===== */}
+        <section className="relative flex flex-col md:flex-row items-center justify-between px-6 md:px-12 lg:px-20 py-14 md:py-16 overflow-hidden bg-gradient-to-br from-[#d9e6fb] via-[#cfe3ff] to-[#bcdcff]">
+          {/* Overlay putih lembut dengan opacity tinggi */}
+          <div className="absolute inset-0 bg-white/30 backdrop-blur-[1px]" />
 
-          {/* Floating soft blue lights */}
-          {Array.from({ length: 10 }).map((_, i) => (
+          {/* Efek cahaya lembut random */}
+          {Array.from({ length: 8 }).map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-3 h-3 bg-blue-500/20 rounded-full blur-[2px]"
+              className="absolute w-3 h-3 bg-blue-400/20 rounded-full blur-[3px]"
               animate={{
-                y: [0, -20, 0],
-                opacity: [0.2, 0.8, 0.2],
+                y: [0, -10, 0],
+                opacity: [0.2, 0.6, 0.2],
               }}
               transition={{
-                duration: 3 + Math.random() * 3,
+                duration: 4 + Math.random() * 3,
                 repeat: Infinity,
                 ease: "easeInOut",
                 delay: Math.random() * 2,
@@ -105,27 +94,27 @@ export default function ServicesPage() {
             />
           ))}
 
-          {/* Cursor-following light */}
+          {/* Cahaya mengikuti kursor (lebih redup agar tidak dominan) */}
           <motion.div
-            className="absolute w-[300px] h-[300px] rounded-full bg-blue-500/10 blur-3xl pointer-events-none"
+            className="absolute w-[250px] h-[250px] rounded-full bg-blue-300/10 blur-3xl pointer-events-none"
             style={{
-              left: mousePosition.x - 150,
-              top: mousePosition.y - 150,
+              left: mousePosition.x - 125,
+              top: mousePosition.y - 125,
             }}
           />
 
-          {/* Left Content */}
+          {/* Konten kiri */}
           <motion.div
             initial={{ opacity: 0, x: -60 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="max-w-2xl mb-12 md:mb-0 md:mr-12 relative z-10 text-center md:text-left"
+            className="max-w-2xl mb-10 md:mb-0 md:mr-12 relative z-10 text-center md:text-left"
           >
-            <h1 className="font-bold text-gray-800 mb-6 leading-tight text-[36px] md:text-[42px]">
+            <h1 className="font-bold text-gray-800 mb-5 leading-tight text-[36px] md:text-[42px]">
               Our Services
             </h1>
-            <p className="text-gray-700 text-lg md:text-xl mb-8 leading-relaxed text-justify">
+            <p className="text-gray-700 text-lg md:text-xl mb-6 leading-relaxed text-justify">
               We provide comprehensive solutions to help your business grow and
               succeed in today's competitive market. Our experienced team delivers
               quality services tailored to meet your specific needs and requirements
@@ -147,13 +136,13 @@ export default function ServicesPage() {
             </Link>
           </motion.div>
 
-          {/* Right Image */}
+          {/* Gambar kanan */}
           <motion.div
             initial={{ opacity: 0, x: 80 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="relative flex-shrink-0 w-full md:w-[350px] lg:w-[400px] xl:w-[420px] aspect-square"
+            className="relative flex-shrink-0 w-full md:w-[350px] lg:w-[400px] xl:w-[420px] aspect-square z-10"
           >
             <img
               src="/OurServices.png"
@@ -164,32 +153,7 @@ export default function ServicesPage() {
           </motion.div>
         </section>
 
-        {/* ===== See More Link ===== */}
-        {/* <section id="services" className="py-16 bg-gray-50">
-          <div className="pb-8 text-center">
-            <a
-              href="#services-grid"
-              className="text-blue-600 hover:text-blue-800 text-lg font-medium inline-flex items-center gap-2 transition-colors duration-300"
-            >
-              See more our service
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </a>
-          </div>
-        </section> */}
-
-        {/* ===== Dynamic Services (Semua pakai warna biru lembut yang sama) ===== */}
+        {/* ===== Dynamic Services ===== */}
         {services.map((service, index) => {
           const isEven = index % 2 === 0;
           const buttonClass = "bg-blue-600 hover:bg-blue-700";
@@ -198,7 +162,7 @@ export default function ServicesPage() {
             <motion.section
               key={service.id}
               id={service.name.toLowerCase().replace(/\s+/g, "-")}
-              className="py-16 px-6 md:px-12 lg:px-20 bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100"
+              className="py-12 md:py-14 px-6 md:px-12 lg:px-20 bg-gradient-to-br from-[#f5f8ff] via-[#edf3ff] to-[#e7efff]"
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
@@ -206,20 +170,20 @@ export default function ServicesPage() {
             >
               <div className="max-w-7xl mx-auto">
                 <div
-                  className={`flex flex-col md:flex-row items-center justify-between gap-12 ${
+                  className={`flex flex-col md:flex-row items-center justify-between gap-10 ${
                     !isEven ? "md:flex-row-reverse" : ""
                   }`}
                 >
-                  {/* Text */}
+                  {/* Teks */}
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     transition={{ type: "spring", stiffness: 200, damping: 20 }}
                     className="max-w-2xl"
                   >
-                    <h2 className="text-[30px] font-bold text-gray-800 mb-6">
+                    <h2 className="text-[30px] font-bold text-gray-800 mb-5">
                       {service.name}
                     </h2>
-                    <p className="text-[18px] text-gray-600 leading-relaxed mb-8 text-justify">
+                    <p className="text-[18px] text-gray-600 leading-relaxed mb-7 text-justify">
                       {generateSummary(service.longDesc, 255)}
                     </p>
                     <Link
@@ -250,7 +214,7 @@ export default function ServicesPage() {
                     </Link>
                   </motion.div>
 
-                  {/* Image */}
+                  {/* Gambar */}
                   <motion.div
                     whileHover={{ scale: 1.03 }}
                     transition={{ duration: 0.4 }}
@@ -259,7 +223,7 @@ export default function ServicesPage() {
                     <img
                       src={getImageUrl(service.imageUrl)}
                       alt={service.name}
-                      className="w-full h-auto max-h-[400px] object-contain rounded-2xl shadow-xl"
+                      className="w-full h-auto max-h-[380px] object-contain rounded-2xl shadow-xl"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent rounded-2xl"></div>
                   </motion.div>
