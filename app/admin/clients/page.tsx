@@ -21,6 +21,7 @@ interface Client {
   id: number;
   name: string;
   imageUrl?: string | null;
+  createdAt: string; //  tambahkan createdAt supaya bisa sort dari API
 }
 
 interface User {
@@ -39,7 +40,7 @@ export default function ClientManagementPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [userSetItems, setUserSetItems] = useState(false); // menandakan user sudah memilih jumlah show
+  const [userSetItems, setUserSetItems] = useState(false);
 
   const [showLogoModal, setShowLogoModal] = useState(false);
   const [selectedLogo, setSelectedLogo] = useState<{ url: string; name: string } | null>(null);
@@ -56,8 +57,16 @@ export default function ClientManagementPage() {
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
       const data = await res.json();
-      setClients(Array.isArray(data) ? data : []);
+
+      /**  SORT BERDASARKAN CREATED_AT (ASC: yang paling lama muncul duluan) */
+      const sortedByCreatedDate = [...data].sort(
+        (a: Client, b: Client) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+
+      setClients(sortedByCreatedDate);
     } catch (error) {
       console.error("Error fetching clients:", error);
       setClients([]);
@@ -80,12 +89,7 @@ export default function ClientManagementPage() {
 
     const handleResize = () => {
       setSidebarOpen(window.innerWidth >= 768);
-
-      // Hanya ubah itemsPerPage jika user belum memilih secara manual
-      if (!userSetItems) {
-        if (window.innerWidth < 768) setItemsPerPage(3);
-        else setItemsPerPage(5);
-      }
+      if (!userSetItems) setItemsPerPage(window.innerWidth < 768 ? 3 : 5);
     };
 
     handleResize();
@@ -127,10 +131,12 @@ export default function ClientManagementPage() {
     setClientToDelete(null);
   };
 
+  /**  SEARCH */
   const filteredClients = clients.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  /**  SORT NAME TIDAK MENGGANGGU SORT CREATED_AT */
   const sortedClients = [...filteredClients].sort((a, b) =>
     sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
   );
@@ -192,6 +198,7 @@ export default function ClientManagementPage() {
               </Link>
             </div>
 
+            {/*  SEARCH + SORT */}
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <div className="relative flex-1 sm:w-72">
@@ -217,6 +224,7 @@ export default function ClientManagementPage() {
               </div>
             </div>
 
+            {/*  TABLE CLIENTS */}
             <div className="bg-white rounded-xl shadow-md overflow-x-auto">
               <table className="min-w-full border-collapse text-sm md:text-base">
                 <thead className="bg-blue-50 border-b">
@@ -289,6 +297,7 @@ export default function ClientManagementPage() {
               </table>
             </div>
 
+            {/*  PAGINATION */}
             <div className="flex flex-col sm:flex-row justify-between items-center mt-6 border-t pt-4 text-sm text-gray-700 gap-4 flex-wrap">
               <div>
                 Showing{" "}
@@ -348,6 +357,7 @@ export default function ClientManagementPage() {
               </label>
             </div>
 
+            {/*  MODAL IMAGE PREVIEW */}
             <DeleteConfirmModal
               isOpen={showDeleteModal}
               itemName={clientToDelete?.name || ""}

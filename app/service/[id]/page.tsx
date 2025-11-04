@@ -1,11 +1,15 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer/Footer";
-import { getImageUrl, SERVER_BASE_URL } from "@/lib/config";
 import Link from "next/link";
+import { SERVER_BASE_URL } from "@/lib/config";
 
+/* ===================================================
+   INTERFACES
+=================================================== */
 interface Work {
   id: number;
   description: string;
@@ -29,14 +33,32 @@ interface Service {
   name: string;
   shortDesc: string;
   longDesc: string;
-  imageUrl: string;
+  imageUrl: string | null;
   features: Feature[];
   subServices: SubService[];
 }
 
+/* ===================================================
+   BASE64 / URL DETECTOR
+=================================================== */
+const resolveBase64Image = (image?: string | null) => {
+  if (!image) return "/placeholder.png";
+
+  const trimmed = image.trim();
+
+  if (trimmed.startsWith("data:image")) return trimmed;
+  if (/^[A-Za-z0-9+/=]+$/.test(trimmed)) return `data:image/jpeg;base64,${trimmed}`;
+
+  return trimmed;
+};
+
+/* ===================================================
+   PAGE
+=================================================== */
 export default function ServiceDetailPage() {
   const params = useParams();
   const slug = params.id as string;
+
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -58,8 +80,7 @@ export default function ServiceDetailPage() {
         const data = await res.json();
 
         const found = data.find(
-          (s: Service) =>
-            s.name.toLowerCase().replace(/\s+/g, "-") === decodedSlug
+          (s: Service) => s.name.toLowerCase().replace(/\s+/g, "-") === decodedSlug
         );
 
         if (found) {
@@ -68,7 +89,7 @@ export default function ServiceDetailPage() {
             name: found.name ?? "Unnamed Service",
             shortDesc: found.shortDesc ?? "",
             longDesc: found.longDesc ?? "",
-            imageUrl: found.imageUrl ?? "",
+            imageUrl: found.imageBase64 || found.imageUrl || null, // ✅ BASE64 HANDLED HERE
             features: Array.isArray(found.features)
               ? found.features.map((f: Feature) => ({
                   id: f.id,
@@ -104,7 +125,9 @@ export default function ServiceDetailPage() {
     fetchServiceData();
   }, [slug]);
 
-  // 🌀 Loading State
+  /* ===================================================
+     LOADING STATE
+  =================================================== */
   if (loading) {
     return (
       <main className="flex flex-col min-h-screen bg-gray-50">
@@ -117,69 +140,70 @@ export default function ServiceDetailPage() {
     );
   }
 
-  // 🚫 Service not found
+  /* ===================================================
+     NOT FOUND
+  =================================================== */
   if (!service) {
     return (
       <main className="flex flex-col min-h-screen bg-gray-50">
         <Navbar />
-        <div className="flex-grow flex items-center justify-center">
-          <p className="text-gray-600">Service not found</p>
+        <div className="flex-grow flex items-center justify-center text-gray-600">
+          Service not found
         </div>
         <Footer />
       </main>
     );
   }
 
-  // ✅ Main Content
+  /* ===================================================
+     MAIN CONTENT
+  =================================================== */
   return (
     <main className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
 
       <div className="flex-grow flex flex-col">
-        {/* ===== Hero Section (Blue Gradient Background) ===== */}
+        {/* ✅ HERO SECTION */}
         <section className="relative py-16 px-6 md:px-12 lg:px-20 bg-gradient-to-r from-blue-50 via-blue-100 to-indigo-100 overflow-hidden flex-shrink-0">
-          {/* Decorative overlay for subtle lighting */}
+
+          {/* Decorative Lighting */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 opacity-70" />
-          <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 to-transparent" />
 
           <div className="relative z-10 max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-12">
-            {/* Left Content */}
+            
+            {/* LEFT CONTENT */}
             <div className="max-w-xl md:flex-1 text-left">
-              <h1 className="text-4xl font-bold text-gray-900 mb-6">
-                {service.name}
-              </h1>
+              <h1 className="text-4xl font-bold text-gray-900 mb-6">{service.name}</h1>
               <p
                 className="text-gray-700 leading-relaxed mb-6 text-justify"
                 style={{ whiteSpace: "pre-wrap" }}
               >
                 {service.longDesc}
               </p>
+
               <Link href="/contact">
                 <button
-                  className="bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold text-base 
-                            hover:bg-blue-900 transition-all duration-300 transform hover:scale-105 
-                            shadow-md hover:shadow-lg min-w-[200px]"
+                  className="bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold text-base hover:bg-blue-900 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg min-w-[200px]"
                 >
                   Contact Us
                 </button>
               </Link>
             </div>
 
-            {/* Right Image — enlarged version */}
+            {/* ✅ FULL IMAGE (NO WHITE SPACE) */}
             <div className="md:flex-1 flex justify-end">
-              <div className="relative">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl w-full md:w-[90%] h-64 md:h-96">
                 <img
-                  src={getImageUrl(service.imageUrl)}
+                  src={resolveBase64Image(service.imageUrl)}
                   alt={service.name}
-                  className="w-full md:w-[90%] h-64 md:h-96 object-cover rounded-2xl shadow-2xl"
+                  className="absolute inset-0 w-full h-full object-cover rounded-2xl"
                 />
-                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-transparent rounded-2xl" />
               </div>
             </div>
           </div>
         </section>
 
-        {/* ===== Our Sub Services Section ===== */}
+        {/* ✅ SUB SERVICES */}
         {service.subServices && service.subServices.length > 0 && (
           <section className="bg-white py-20 px-6 md:px-12 lg:px-24 flex-shrink-0">
             <div className="max-w-5xl mx-auto">
@@ -188,26 +212,22 @@ export default function ServiceDetailPage() {
               </h2>
 
               <div className="space-y-5">
-                {service.subServices.map((sub, index) => (
+                {service.subServices.map((sub) => (
                   <div
-                    key={index}
+                    key={sub.id}
                     className="bg-gray-50 border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 p-8"
                   >
                     <h3 className="text-2xl font-semibold text-blue-900 mb-3">
                       {sub.name}
                     </h3>
-                    <p className="text-gray-700 mb-6 text-justify">
-                      {sub.description}
-                    </p>
+                    <p className="text-gray-700 mb-6 text-justify">{sub.description}</p>
 
-                    {sub.works && sub.works.length > 0 && (
+                    {sub.works.length > 0 && (
                       <>
-                        <h4 className="text-xl font-semibold text-gray-800 mb-3">
-                          Our Work
-                        </h4>
-                        <ol className="list-decimal list-inside space-y-2 text-gray-700 text-justify">
-                          {sub.works.map((work, idx) => (
-                            <li key={idx}>{work.description}</li>
+                        <h4 className="text-xl font-semibold text-gray-800 mb-3">Our Work</h4>
+                        <ol className="list-decimal list-inside space-y-1 text-gray-700">
+                          {sub.works.map((work) => (
+                            <li key={work.id}>{work.description}</li>
                           ))}
                         </ol>
                       </>
@@ -219,8 +239,8 @@ export default function ServiceDetailPage() {
           </section>
         )}
 
-        {/* ===== Features Section ===== */}
-        {service.features && service.features.length > 0 && (
+        {/* ✅ FEATURES */}
+        {service.features.length > 0 && (
           <section className="py-20 bg-blue-50 flex-shrink-0">
             <div className="max-w-4xl mx-auto px-6">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-16">
@@ -239,10 +259,7 @@ export default function ServiceDetailPage() {
                       </h3>
                     </div>
                     <div className="px-6 py-6">
-                      <p
-                        className="text-gray-700 leading-relaxed text-justify"
-                        style={{ whiteSpace: "pre-wrap" }}
-                      >
+                      <p className="text-gray-700 text-justify leading-relaxed">
                         {feature.featureDesc}
                       </p>
                     </div>

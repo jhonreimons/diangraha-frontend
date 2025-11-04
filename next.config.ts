@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: 'standalone',
   images: {
+    domains: ['diangraha-be-production.up.railway.app'],
     remotePatterns: [
       {
         protocol: 'https',

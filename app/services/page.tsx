@@ -5,14 +5,31 @@ import Link from "next/link";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer/Footer";
 import { motion } from "framer-motion";
-import { API_BASE_URL, getImageUrl } from "@/lib/config";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Service {
   id: number;
   name: string;
   longDesc: string;
-  imageUrl: string;
+  imageUrl: string | null;
 }
+
+/* ✅ Fungsi untuk handle base64 / data:image / URL */
+const resolveBase64Image = (image?: string | null) => {
+  if (!image) return "/placeholder.png";
+
+  const trimmed = image.trim();
+
+  // already full data URI
+  if (trimmed.startsWith("data:image")) return trimmed;
+
+  // pure base64 string
+  if (/^[A-Za-z0-9+/=]+$/.test(trimmed)) {
+    return `data:image/jpeg;base64,${trimmed}`;
+  }
+
+  return trimmed; // assume URL
+};
 
 function generateSummary(text: string, maxLength = 100) {
   if (text.length <= maxLength) return text;
@@ -26,13 +43,15 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
+  /* ✅ Fetch Services */
   useEffect(() => {
     const fetchServices = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/services`);
         if (!response.ok) throw new Error("Failed to fetch services");
+
         const data = await response.json();
-        setServices(data);
+        setServices(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching services:", error);
         setServices([]);
@@ -43,6 +62,7 @@ export default function ServicesPage() {
     fetchServices();
   }, []);
 
+  /* Mouse Effect */
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
@@ -67,12 +87,10 @@ export default function ServicesPage() {
     <main>
       <Navbar />
       <div className="min-h-screen">
-        {/* ===== Hero Section (lebih terang, lembut, natural) ===== */}
+        {/* ===== Hero Section ===== */}
         <section className="relative flex flex-col md:flex-row items-center justify-between px-6 md:px-12 lg:px-20 py-14 md:py-16 overflow-hidden bg-gradient-to-br from-[#d9e6fb] via-[#cfe3ff] to-[#bcdcff]">
-          {/* Overlay putih lembut dengan opacity tinggi */}
           <div className="absolute inset-0 bg-white/30 backdrop-blur-[1px]" />
 
-          {/* Efek cahaya lembut random */}
           {Array.from({ length: 8 }).map((_, i) => (
             <motion.div
               key={i}
@@ -94,7 +112,6 @@ export default function ServicesPage() {
             />
           ))}
 
-          {/* Cahaya mengikuti kursor (lebih redup agar tidak dominan) */}
           <motion.div
             className="absolute w-[250px] h-[250px] rounded-full bg-blue-300/10 blur-3xl pointer-events-none"
             style={{
@@ -103,7 +120,6 @@ export default function ServicesPage() {
             }}
           />
 
-          {/* Konten kiri */}
           <motion.div
             initial={{ opacity: 0, x: -60 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -115,10 +131,7 @@ export default function ServicesPage() {
               Our Services
             </h1>
             <p className="text-gray-700 text-lg md:text-xl mb-6 leading-relaxed text-justify">
-              We provide comprehensive solutions to help your business grow and
-              succeed in today's competitive market. Our experienced team delivers
-              quality services tailored to meet your specific needs and requirements
-              with excellence and reliability.
+             We provide comprehensive solutions to help your business grow and succeed in today's competitive market. Our experienced team delivers quality services tailored to meet your specific needs and requirements with excellence and reliability.
             </p>
             <Link href="/about#clients" scroll={true}>
               <motion.button
@@ -136,7 +149,6 @@ export default function ServicesPage() {
             </Link>
           </motion.div>
 
-          {/* Gambar kanan */}
           <motion.div
             initial={{ opacity: 0, x: 80 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -153,15 +165,13 @@ export default function ServicesPage() {
           </motion.div>
         </section>
 
-        {/* ===== Dynamic Services ===== */}
+        {/* ===== SERVICE LIST ===== */}
         {services.map((service, index) => {
           const isEven = index % 2 === 0;
-          const buttonClass = "bg-blue-600 hover:bg-blue-700";
 
           return (
             <motion.section
               key={service.id}
-              id={service.name.toLowerCase().replace(/\s+/g, "-")}
               className="py-12 md:py-14 px-6 md:px-12 lg:px-20 bg-gradient-to-br from-[#f5f8ff] via-[#edf3ff] to-[#e7efff]"
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -174,18 +184,15 @@ export default function ServicesPage() {
                     !isEven ? "md:flex-row-reverse" : ""
                   }`}
                 >
-                  {/* Teks */}
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                    className="max-w-2xl"
-                  >
+                  {/* Text */}
+                  <div className="max-w-2xl">
                     <h2 className="text-[30px] font-bold text-gray-800 mb-5">
                       {service.name}
                     </h2>
                     <p className="text-[18px] text-gray-600 leading-relaxed mb-7 text-justify">
                       {generateSummary(service.longDesc, 255)}
                     </p>
+
                     <Link
                       href={`/service/${encodeURIComponent(
                         service.name.toLowerCase().replace(/\s+/g, "-")
@@ -194,7 +201,7 @@ export default function ServicesPage() {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`${buttonClass} text-white bg-blue-800 hover:bg-blue-900 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 shadow-md inline-flex items-center gap-2`}
+                        className="text-white bg-blue-800 hover:bg-blue-900 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 shadow-md inline-flex items-center gap-2"
                       >
                         View More
                         <svg
@@ -212,16 +219,16 @@ export default function ServicesPage() {
                         </svg>
                       </motion.button>
                     </Link>
-                  </motion.div>
+                  </div>
 
-                  {/* Gambar */}
+                  {/* ✅ FIXED IMAGE BASE64 HANDLING */}
                   <motion.div
                     whileHover={{ scale: 1.03 }}
                     transition={{ duration: 0.4 }}
                     className="relative flex-shrink-0 w-full md:w-[400px] lg:w-[450px]"
                   >
                     <img
-                      src={getImageUrl(service.imageUrl)}
+                      src={resolveBase64Image(service.imageUrl)}
                       alt={service.name}
                       className="w-full h-auto max-h-[380px] object-contain rounded-2xl shadow-xl"
                     />

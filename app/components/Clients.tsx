@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { SERVER_BASE_URL, getImageUrl } from "@/lib/config";
+import { SERVER_BASE_URL } from "@/lib/config";
 
 interface Client {
   id: number;
@@ -15,10 +15,27 @@ interface Client {
 interface ApiClient {
   id: number;
   name: string;
-  imageUrl: string | null;
+  imageUrl: string | null; // ini bisa berupa base64 dari API
   description?: string;
   website?: string;
 }
+
+// fungsi fix base64 (wajib)
+const resolveBase64Image = (value: string | null): string => {
+  if (!value) return "/placeholder.png";
+
+  const trimmed = value.trim();
+
+  if (trimmed.startsWith("data:image")) {
+    return trimmed;
+  }
+
+  // deteksi format base64
+  if (trimmed.charAt(0) === "/") return `data:image/jpeg;base64,${trimmed}`;
+  if (trimmed.charAt(0) === "i") return `data:image/png;base64,${trimmed}`;
+
+  return `data:image/png;base64,${trimmed}`;
+};
 
 export default function ClientsSection() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -31,12 +48,12 @@ export default function ClientsSection() {
   const positionRef = useRef(0);
   const contentWidthRef = useRef(0);
 
-  // Hindari SSR mismatch
   useEffect(() => setIsMounted(true), []);
 
-  // Fetch data clients
+  // fetch data clients
   useEffect(() => {
     if (!isMounted) return;
+
     const fetchClients = async () => {
       try {
         const res = await fetch(`${SERVER_BASE_URL}/api/clients`, {
@@ -44,12 +61,13 @@ export default function ClientsSection() {
           cache: "no-store",
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
         const data: ApiClient[] = await res.json();
 
         const mapped = data.map((d) => ({
           id: d.id,
           name: d.name,
-          img: getImageUrl(d.imageUrl || "/placeholder.png"),
+          img: resolveBase64Image(d.imageUrl), // <-- base64 diperbaiki
           description: d.description,
           website: d.website,
         }));
@@ -61,23 +79,24 @@ export default function ClientsSection() {
         setLoading(false);
       }
     };
+
     fetchClients();
   }, [isMounted]);
 
-  // Responsif kecepatan scroll
+  // responsif kecepatan scroll
   useEffect(() => {
     if (!isMounted) return;
-    const handleResize = () => {
+    const updateSpeed = () => {
       if (window.innerWidth < 640) setScrollSpeed(45);
       else if (window.innerWidth < 1024) setScrollSpeed(55);
       else setScrollSpeed(70);
     };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    updateSpeed();
+    window.addEventListener("resize", updateSpeed);
+    return () => window.removeEventListener("resize", updateSpeed);
   }, [isMounted]);
 
-  // Smooth infinite scroll tanpa hentakan
+  // smooth infinite scroll
   useEffect(() => {
     if (!isMounted || clients.length === 0) return;
 
@@ -90,7 +109,6 @@ export default function ClientsSection() {
       const totalWidth = track.scrollWidth / 2;
       contentWidthRef.current = totalWidth;
     };
-
     updateWidth();
     window.addEventListener("resize", updateWidth);
 
@@ -100,7 +118,6 @@ export default function ClientsSection() {
 
       positionRef.current += (scrollSpeed * delta) / 1000;
 
-      // Wrap-around halus tanpa blink
       if (positionRef.current >= contentWidthRef.current) {
         positionRef.current -= contentWidthRef.current;
       }
@@ -117,7 +134,7 @@ export default function ClientsSection() {
     };
   }, [clients, scrollSpeed, isMounted]);
 
-  // Render fallback loading
+  // fallback kantor
   if (!isMounted) {
     return (
       <section className="py-20 bg-gray-50 text-center">
@@ -142,7 +159,6 @@ export default function ClientsSection() {
     );
   }
 
-  // Gandakan list agar loop mulus
   const repeatedClients = [...clients, ...clients];
 
   return (
@@ -176,7 +192,6 @@ export default function ClientsSection() {
             ))}
           </div>
         ) : (
-          // Bagian smooth scroll
           <div className="relative w-full overflow-hidden">
             <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-gray-50 to-transparent z-10"></div>
             <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-gray-50 to-transparent z-10"></div>

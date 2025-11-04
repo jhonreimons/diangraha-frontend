@@ -4,24 +4,35 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer/Footer";
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { SERVER_BASE_URL, getImageUrl } from "@/lib/config";
+import { SERVER_BASE_URL } from "@/lib/config";
 
 interface Client {
   id: number;
   name: string;
-  imageUrl: string;
+  imageUrl: string | null;
 }
+
+/*  Detect base64 or URL */
+const resolveBase64Image = (image?: string | null) => {
+  if (!image) return "/placeholder.png";
+
+  const trimmed = image.trim();
+  if (trimmed.startsWith("data:image")) return trimmed;
+  if (/^[A-Za-z0-9+/=]+$/.test(trimmed)) return `data:image/jpeg;base64,${trimmed}`;
+  return trimmed;
+};
 
 export default function AboutPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const animationRef = useRef<number | null>(null);
   const positionRef = useRef(0);
   const totalWidthRef = useRef(0);
   const [scrollSpeed, setScrollSpeed] = useState(60);
 
-  // Fetch clients
+  /*  Fetch Clients */
   useEffect(() => {
     const fetchClients = async () => {
       try {
@@ -30,14 +41,10 @@ export default function AboutPage() {
           cache: "no-store",
         });
 
-        if (!res.ok) throw new Error(`Failed to fetch clients (${res.status})`);
-        const data = await res.json();
+        if (!res.ok) throw new Error(`Failed to fetch clients: ${res.status}`);
 
-        if (Array.isArray(data)) {
-          setClients(data);
-        } else {
-          setClients([]);
-        }
+        const data = await res.json();
+        setClients(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching clients:", error);
         setClients([]);
@@ -49,7 +56,7 @@ export default function AboutPage() {
     fetchClients();
   }, []);
 
-  // Update speed on resize
+  /*  Responsive scroll speed */
   useEffect(() => {
     const updateSpeed = () => {
       if (window.innerWidth < 640) setScrollSpeed(45);
@@ -61,7 +68,7 @@ export default function AboutPage() {
     return () => window.removeEventListener("resize", updateSpeed);
   }, []);
 
-  // Super smooth infinite scroll
+  /*  Infinite Scroll Animation */
   useEffect(() => {
     const container = containerRef.current;
     if (!container || clients.length < 4) return;
@@ -69,8 +76,8 @@ export default function AboutPage() {
     const updateWidth = () => {
       totalWidthRef.current = container.scrollWidth / 2;
     };
-    updateWidth();
 
+    updateWidth();
     let lastTime = performance.now();
 
     const animate = (time: number) => {
@@ -83,8 +90,7 @@ export default function AboutPage() {
         positionRef.current -= totalWidthRef.current;
       }
 
-      // Gunakan toFixed agar stabil pixel-wise
-      container.style.transform = `translate3d(-${positionRef.current.toFixed(2)}px, 0, 0)`;
+      container.style.transform = `translate3d(-${positionRef.current.toFixed(2)}px,0,0)`;
       animationRef.current = requestAnimationFrame(animate);
     };
 
@@ -102,47 +108,34 @@ export default function AboutPage() {
   return (
     <main>
       <Navbar />
-      <div className="min-h-screen">
-        {/* ===== Hero Section ===== */}
-        <section className="relative w-full h-[420px] md:h-[620px] flex items-center justify-center overflow-hidden">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover z-0"
-          >
-            <source src="/about.mp4" type="video/mp4" />
-          </video>
-          <div className="absolute inset-0 bg-black/40 z-10" />
-          <div className="relative z-20 flex justify-center">
-            <span className="inline-block px-6 py-3 rounded-md text-white text-3xl md:text-4xl font-extrabold 
-                     bg-gradient-to-r from-indigo-29 to-violet-60 backdrop-blur-sm shadow-lg">
-              About Us
-            </span>
-          </div>
-        </section>
 
-        {/* ===== Company Info Section ===== */}
+      {/* ===== HERO SECTION ===== */}
+      <section className="relative w-full h-[420px] md:h-[620px] flex items-center justify-center overflow-hidden">
+        <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover z-0">
+          <source src="/about.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-black/40 z-10" />
+        <div className="relative z-20 flex justify-center">
+          <span className="inline-block px-6 py-3 rounded-md text-white text-3xl md:text-4xl font-extrabold 
+                   bg-gradient-to-r from-indigo-29 to-violet-60 backdrop-blur-sm shadow-lg">
+            About Us
+          </span>
+        </div>
+      </section>
+
+      <div className="min-h-screen">
+
+        {/* ===== COMPANY INFO ===== */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12">
             <div>
-              <h2 className="font-bold text-gray-800 mb-8 text-3xl">
-                PT Dian Graha Elektrika
-              </h2>
+              <h2 className="font-bold text-gray-800 mb-6 text-3xl">PT Dian Graha Elektrika</h2>
               <div className="space-y-6 text-gray-700 text-lg leading-relaxed text-justify">
                 <p>
-                  Established in 1977, PT Dian Graha Elektrika became one of the most
-                  solid national companies until now, by utilizing our expertise and
-                  resources to prioritize high-quality services and foster existing
-                  customer relationships.
+                  Established in 1977, PT Dian Graha Elektrika became one of the most solid national companies...
                 </p>
                 <p>
-                  Our human resource management services business began in 2001 in
-                  response to market demand for human resource service. Our commitment
-                  to excellence, supported by systems that stay shoulder to shoulder
-                  with the latest technological changes, ensures the services of skilled
-                  manpower for various industries and companies.
+                  Our human resource management services began in 2001 in response to market demand...
                 </p>
               </div>
             </div>
@@ -153,26 +146,22 @@ export default function AboutPage() {
               <div className="relative p-8 z-10">
                 <h3 className="text-2xl font-bold text-blue-900 mb-4">Vision</h3>
                 <p className="text-gray-700 text-lg leading-relaxed mb-8 text-justify">
-                  Becoming a leading partner and providing efficient, reliable, and sustainable business solutions.
+                  Becoming a leading partner and providing efficient & sustainable solutions.
                 </p>
-
                 <h3 className="text-2xl font-bold text-blue-900 mb-4">Mission</h3>
                 <ul className="text-gray-700 text-lg leading-relaxed list-disc ml-5 space-y-3 text-justify">
-                  <li>
-                    Providing high-quality, skilled, committed services in various industries, including HR, finance, and IT.
-                  </li>
-                  <li>
-                    Optimizing operational efficiency and focusing on technological innovation to improve service quality.
-                  </li>
+                  <li>Providing high-quality, skilled, committed services in various industries.</li>
+                  <li>Optimizing operational efficiency with technological innovation.</li>
                 </ul>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ===== Our Clients Section ===== */}
+        {/* ===== OUR CLIENTS ===== */}
         <section id="clients" className="py-16 bg-gray-50 overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 relative">
+
             <div className="text-center mb-12">
               <h2 className="font-bold text-gray-800 mb-4 text-2xl">Our Clients</h2>
               <p className="text-gray-600 text-lg max-w-3xl mx-auto">
@@ -181,19 +170,19 @@ export default function AboutPage() {
             </div>
 
             {loading ? (
-              <div className="flex justify-center py-8 text-gray-500">Loading clients...</div>
-            ) : clients.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">No clients found.</div>
+              <div className="text-center text-gray-500 py-8">Loading clients...</div>
             ) : clients.length < 4 ? (
               <div className="flex justify-center gap-8 flex-wrap">
                 {clients.map((client) => (
                   <div
                     key={client.id}
-                    className="bg-white p-6 rounded-xl shadow-md border border-gray-100 w-64 min-h-[230px] flex flex-col justify-between items-center hover:shadow-lg hover:border-blue-200 transition-all duration-300"
+                    className="bg-white p-6 rounded-xl shadow-md w-64 min-h-[230px] flex flex-col justify-between items-center
+                    hover:border-blue-400 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                    style={{ border: "1px solid transparent" }}
                   >
                     <div className="h-24 flex items-center justify-center w-full mb-4">
                       <Image
-                        src={getImageUrl(client.imageUrl)}
+                        src={resolveBase64Image(client.imageUrl)}
                         alt={client.name}
                         width={120}
                         height={120}
@@ -201,36 +190,28 @@ export default function AboutPage() {
                         unoptimized
                       />
                     </div>
-                    <h3 className="font-semibold text-gray-800 text-center text-base leading-snug break-words w-full">
+                    <h3 className="font-semibold text-gray-800 text-center text-base leading-snug break-words">
                       {client.name}
                     </h3>
                   </div>
                 ))}
               </div>
             ) : (
-              // Smooth infinite scroll
               <div className="relative w-full overflow-hidden">
-                <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-gray-50 to-transparent z-10"></div>
-                <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-gray-50 to-transparent z-10"></div>
-
                 <div
                   ref={containerRef}
                   className="flex gap-8 will-change-transform"
-                  style={{
-                    transform: "translate3d(0, 0, 0)",
-                    transition: "none",
-                    backfaceVisibility: "hidden",
-                    WebkitFontSmoothing: "antialiased",
-                  }}
                 >
-                  {duplicatedClients.map((client, index) => (
+                  {[...duplicatedClients].map((client, index) => (
                     <div
-                      key={`${client.id}-${index}`}
-                      className="flex-shrink-0 bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-transform duration-300 border border-gray-100 hover:border-blue-200 w-64 min-h-[230px] flex flex-col justify-between items-center"
+                      key={client.id + "-" + index}
+                      className="flex-shrink-0 bg-white p-6 rounded-xl shadow-md w-64 min-h-[230px] flex flex-col justify-between items-center
+                      hover:border-blue-400 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                      style={{ border: "1px solid transparent" }}
                     >
                       <div className="h-24 flex items-center justify-center w-full mb-4">
                         <Image
-                          src={getImageUrl(client.imageUrl)}
+                          src={resolveBase64Image(client.imageUrl)}
                           alt={client.name}
                           width={120}
                           height={120}
@@ -238,10 +219,7 @@ export default function AboutPage() {
                           unoptimized
                         />
                       </div>
-                      <h3
-                        className="font-semibold text-gray-800 text-center text-base leading-snug break-words w-full"
-                        title={client.name}
-                      >
+                      <h3 className="font-semibold text-gray-800 text-center text-base leading-snug break-words">
                         {client.name}
                       </h3>
                     </div>
@@ -252,12 +230,13 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ===== Core Values Section ===== */}
+        {/* ===== CORE VALUES (unchanged) ===== */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-12">
               <h2 className="font-bold text-gray-800 mb-4 text-2xl">Core Values</h2>
             </div>
+
             <div className="grid md:grid-cols-4 gap-8">
               {[
                 {
@@ -268,13 +247,13 @@ export default function AboutPage() {
                 },
                 {
                   title: "Innovative",
-                  desc: "We continuously seek new ways to improve, adapt, and lead in a rapidly changing environment.",
+                  desc: "We continuously seek new ways to improve.",
                   icon: "light-bulb",
                   bg: "bg-yellow-100",
                 },
                 {
                   title: "Efficient",
-                  desc: "We deliver the best results using time and resources optimally, ensuring measurable value.",
+                  desc: "We deliver the best results using time and resources optimally.",
                   icon: "bolt",
                   bg: "bg-green-100",
                 },
@@ -287,29 +266,24 @@ export default function AboutPage() {
               ].map((val, idx) => (
                 <div
                   key={idx}
-                  className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300 text-center border border-gray-100 hover:border-blue-200 flex flex-col"
+                  className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center border border-transparent hover:border-blue-200 flex flex-col"
                 >
-                  <div
-                    className={`${val.bg} w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4`}
-                  >
+                  <div className={`${val.bg} w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4`}>
                     <img
                       src={`https://unpkg.com/heroicons@2.0.18/24/solid/${val.icon}.svg`}
-                      alt={`${val.title} Icon`}
+                      alt="core value icon"
                       className="w-8 h-8"
                     />
                   </div>
-                  <h3 className="font-semibold text-gray-800 text-lg mb-2">
-                    {val.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm leading-relaxed flex-grow">
-                    {val.desc}
-                  </p>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-2">{val.title}</h3>
+                  <p className="text-gray-600 text-sm">{val.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
       </div>
+
       <Footer />
     </main>
   );

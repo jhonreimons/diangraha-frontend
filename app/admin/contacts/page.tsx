@@ -14,6 +14,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 import DeleteConfirmModal from "@/app/components/DeleteConfirmModal";
 import { SERVER_BASE_URL } from "@/lib/config";
@@ -89,10 +90,7 @@ export default function ContactsPage() {
     if (userData) setUser(JSON.parse(userData));
     fetchContactMessages();
 
-    const handleResize = () => {
-      setSidebarOpen(window.innerWidth >= 768);
-    };
-
+    const handleResize = () => setSidebarOpen(window.innerWidth >= 768);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -148,10 +146,6 @@ export default function ContactsPage() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentMessages = filteredMessages.slice(startIndex, endIndex);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [itemsPerPage]);
 
   if (!user || loading) {
     return (
@@ -237,13 +231,6 @@ export default function ContactsPage() {
                               {message.companyName}
                             </div>
                           )}
-                          {message.interestedIn && (
-                            <div className="mt-1">
-                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                                Interested in: {message.interestedIn}
-                              </span>
-                            </div>
-                          )}
                         </div>
                       </div>
 
@@ -295,79 +282,57 @@ export default function ContactsPage() {
                 </div>
               )}
             </div>
-
-            {/* PAGINATION */}
-            <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-gray-800">
-              <div className="flex items-center space-x-3">
-                <label className="text-sm font-medium text-gray-800">Show:</label>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                  className="border border-gray-300 rounded-md text-sm px-2 py-1 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white text-gray-800"
-                >
-                  {[3, 5, 10, 20].map((num) => (
-                    <option key={num} value={num}>
-                      {num}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-sm text-gray-800">per page</span>
-              </div>
-
-              <p className="text-sm text-gray-800">
-                Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
-                <span className="font-medium">
-                  {Math.min(endIndex, filteredMessages.length || 1)}
-                </span>{" "}
-                of <span className="font-medium">{filteredMessages.length || 1}</span> results
-              </p>
-
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`px-3 py-1 text-sm rounded-lg border ${
-                      currentPage === i + 1
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-
-                <button
-                  onClick={() =>
-                    setCurrentPage(Math.min(currentPage + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
           </div>
         </main>
       </div>
 
-      <DeleteConfirmModal
-        isOpen={deleteModal.isOpen}
-        itemName={`message from ${deleteModal.messageName}`}
-        onConfirm={confirmDelete}
-        onCancel={() =>
-          setDeleteModal({ isOpen: false, messageId: null, messageName: "" })
-        }
-      />
+      {/* Detail Modal */}
+      {selectedMessage && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4 sm:px-0">
+          <div className="bg-white rounded-2xl shadow-xl p-8 w-full sm:max-w-2xl md:max-w-3xl relative overflow-y-auto max-h-[85vh]">
+            <button
+              onClick={() => setSelectedMessage(null)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <h3 className="text-2xl font-bold mb-6 text-gray-900 border-b pb-3">
+              Contact Detail
+            </h3>
+
+            <div className="space-y-5 text-gray-700 text-base leading-relaxed">
+              <div>
+                <p><span className="font-semibold text-gray-900">Name:</span> {selectedMessage.fullName}</p>
+                <p><span className="font-semibold text-gray-900">Email:</span> {selectedMessage.email}</p>
+                {selectedMessage.phoneNumber && (
+                  <p><span className="font-semibold text-gray-900">Phone:</span> {selectedMessage.phoneNumber}</p>
+                )}
+                {selectedMessage.companyName && (
+                  <p><span className="font-semibold text-gray-900">Company:</span> {selectedMessage.companyName}</p>
+                )}
+                {selectedMessage.interestedIn && (
+                  <p><span className="font-semibold text-gray-900">Interested In:</span> {selectedMessage.interestedIn}</p>
+                )}
+              </div>
+
+              {selectedMessage.message && (
+                <div className="pt-4 border-t">
+                  <p className="font-semibold text-gray-900 mb-2">Message:</p>
+                  <p className="text-gray-700 whitespace-pre-line">
+                    {selectedMessage.message}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex items-center text-gray-600 text-sm pt-4 border-t">
+                <Calendar className="w-4 h-4 mr-2" />
+                {formatDate(selectedMessage.createdAt)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

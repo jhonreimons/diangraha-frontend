@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useLayoutEffect } from "react";
 import Link from "next/link";
-import { API_BASE_URL, getImageUrl } from "@/lib/config";
+import { API_BASE_URL } from "@/lib/config";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Feature {
@@ -16,7 +16,7 @@ interface Service {
   name: string;
   shortDesc: string;
   longDesc: string;
-  imageUrl: string;
+  imageUrl: string; // berisi Base64 string dari backend
   features: Feature[];
 }
 
@@ -28,15 +28,13 @@ export default function ServiceSection() {
 
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-
   const [viewportWidth, setViewportWidth] = useState(0);
   const [itemWidth, setItemWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
-
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [cardMinHeight, setCardMinHeight] = useState<number | null>(null);
 
-  // Fetch data from API (using config)
+  // Fetch data from API
   useEffect(() => {
     const fetchServices = async () => {
       try {
@@ -245,7 +243,11 @@ export default function ServiceSection() {
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
                           {service.imageUrl ? (
                             <img
-                              src={getImageUrl(service.imageUrl)}
+                              src={
+                                service.imageUrl.startsWith("data:")
+                                  ? service.imageUrl
+                                  : `data:image/jpeg;base64,${service.imageUrl}`
+                              }
                               alt={service.name}
                               className="w-full h-full object-cover"
                             />

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { SERVER_BASE_URL, safeImageUrl } from "@/lib/config";
+import { SERVER_BASE_URL } from "@/lib/config";
 
 interface User {
   name?: string;
@@ -23,7 +23,7 @@ interface User {
 interface Achievement {
   id: number;
   title: string;
-  imageUrl: string;
+  imageUrl: string; // sekarang berisi Base64 string dari DB
 }
 
 function AchievementForm({
@@ -47,7 +47,15 @@ function AchievementForm({
   const editId = searchParams.get("edit");
   const isEditMode = !!editId;
 
-  // Fetch data if edit
+  // Fungsi bantu untuk menampilkan gambar base64
+  const getDisplayImage = (imageUrl: string): string => {
+    if (!imageUrl) return "";
+    return imageUrl.startsWith("data:")
+      ? imageUrl
+      : `data:image/jpeg;base64,${imageUrl}`;
+  };
+
+  // === FETCH EXISTING DATA ===
   useEffect(() => {
     if (isEditMode && editId) fetchAchievementData(editId);
   }, [isEditMode, editId]);
@@ -60,13 +68,14 @@ function AchievementForm({
 
       if (achievement) {
         setFormData({ title: achievement.title, image: null });
-        setPreviewUrl(safeImageUrl(achievement.imageUrl));
+        setPreviewUrl(getDisplayImage(achievement.imageUrl)); //tampilkan gambar Base64 yang sudah ada
       }
     } catch (error) {
       console.error("Error fetching achievement:", error);
     }
   };
 
+  // === HANDLE INPUT ===
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -76,14 +85,14 @@ function AchievementForm({
     const file = e.target.files?.[0];
     if (file) {
       setFormData((prev) => ({ ...prev, image: file }));
-      setPreviewUrl(URL.createObjectURL(file));
+      setPreviewUrl(URL.createObjectURL(file)); // preview langsung file baru
     }
   };
 
+  // === HANDLE SUBMIT ===
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate image only for add mode
     if (!isEditMode && !formData.image) {
       setShowImageError(true);
       return;
@@ -125,6 +134,7 @@ function AchievementForm({
 
   const handleImageErrorClose = () => setShowImageError(false);
 
+  // === FORM UI ===
   return (
     <div className="relative z-10 flex justify-center w-full">
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-md hover:shadow-lg transition-all p-6 md:p-8 mt-4">
@@ -201,7 +211,9 @@ function AchievementForm({
                   htmlFor="image"
                   className="cursor-pointer block mx-auto text-center text-sm text-gray-600 hover:text-blue-600 mt-2"
                 >
-                  Choose Achievement Image
+                  {isEditMode
+                    ? "Change Achievement Image"
+                    : "Choose Achievement Image"}
                 </label>
                 <input
                   id="image"
@@ -233,7 +245,7 @@ function AchievementForm({
         </form>
       </div>
 
-      {/*  Success Modal */}
+      {/* Success Modal */}
       {showSuccess && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform animate-scaleIn">
@@ -256,7 +268,7 @@ function AchievementForm({
         </div>
       )}
 
-      {/* 🔴 Error Modal */}
+      {/*  Error Modal */}
       {showImageError && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform animate-scaleIn">

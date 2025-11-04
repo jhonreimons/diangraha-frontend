@@ -1,16 +1,34 @@
 "use client";
 
 import { useEffect, useRef, useState, useLayoutEffect } from "react";
-import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { achievementsAPI } from "@/lib/api";
-import { getImageUrl } from "@/lib/config";
 
 interface Award {
   id: number;
   title: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
+  createdAt: string;
 }
+
+// helper memastikan base64 format valid
+const resolveBase64Image = (base64?: string | null) => {
+  if (!base64 || base64.trim() === "") return "";
+
+  const trimmed = base64.trim();
+
+  // Jika sudah mengandung prefix data:image...
+  if (trimmed.startsWith("data:image")) {
+    return trimmed;
+  }
+
+  // Deteksi secara simple berdasarkan karakter awal base64
+  if (trimmed.startsWith("/9j/")) return `data:image/jpeg;base64,${trimmed}`; // JPG
+  if (trimmed.startsWith("iVBOR")) return `data:image/png;base64,${trimmed}`; // PNG
+  if (trimmed.startsWith("UklGR")) return `data:image/webp;base64,${trimmed}`; // WEBP
+
+  return `data:image/jpeg;base64,${trimmed}`; // fallback
+};
 
 export default function AchievementSection() {
   const [achievements, setAchievements] = useState<Award[]>([]);
@@ -20,23 +38,26 @@ export default function AchievementSection() {
 
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-
   const [viewportWidth, setViewportWidth] = useState(0);
   const [itemWidth, setItemWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
-
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [cardMinHeight, setCardMinHeight] = useState<number | null>(null);
 
+  // === Fetch dari API dan langsung format base64 ===
   useEffect(() => {
     const fetchAchievements = async () => {
       try {
         const data = await achievementsAPI.fetchAchievements();
-        const mapped: Award[] = data.map((a) => ({
+
+        const mapped: Award[] = data.map((a: any) => ({
           id: a.id,
           title: a.title ?? "",
-          imageUrl: a.imageUrl ? getImageUrl(a.imageUrl) : "",
+          imageUrl: resolveBase64Image(a.imageUrl),
+          createdAt: a.createdAt ?? "",
         }));
+
+
         setAchievements(mapped);
       } catch (err) {
         console.error("Error fetching achievements:", err);
@@ -45,6 +66,7 @@ export default function AchievementSection() {
         setLoading(false);
       }
     };
+
     fetchAchievements();
   }, []);
 
@@ -54,6 +76,7 @@ export default function AchievementSection() {
       else if (window.innerWidth < 1024) setItemsPerView(2);
       else setItemsPerView(4);
     };
+
     updateItemsPerView();
     window.addEventListener("resize", updateItemsPerView);
     return () => window.removeEventListener("resize", updateItemsPerView);
@@ -67,7 +90,9 @@ export default function AchievementSection() {
       setItemWidth(iw);
       setContainerWidth(iw * achievements.length);
     };
+
     measure();
+
     const ro = new ResizeObserver(measure);
     if (viewportRef.current) ro.observe(viewportRef.current);
     window.addEventListener("resize", measure);
@@ -77,28 +102,15 @@ export default function AchievementSection() {
     };
   }, [itemsPerView, achievements.length]);
 
-  useEffect(() => {
-    const maxIndex = Math.max(0, Math.ceil(achievements.length / itemsPerView) - 1);
-    setCurrentIndex((prev) => Math.min(prev, maxIndex));
-  }, [achievements.length, itemsPerView]);
-
-  const maxIndex = Math.max(0, Math.ceil(achievements.length / itemsPerView) - 1);
-  const next = () => setCurrentIndex((prev) => (prev < maxIndex ? prev + 1 : maxIndex));
-  const prev = () => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : 0));
-
   useLayoutEffect(() => {
     if (!cardRefs.current.length) return;
-    const measureHeights = () => {
-      let maxH = 0;
-      for (const el of cardRefs.current) {
-        if (el) {
-          const h = el.offsetHeight;
-          if (h > maxH) maxH = h;
-        }
+    let maxH = 0;
+    cardRefs.current.forEach((el) => {
+      if (el && el.offsetHeight > maxH) {
+        maxH = el.offsetHeight;
       }
-      setCardMinHeight(maxH > 0 ? maxH : null);
-    };
-    measureHeights();
+    });
+    setCardMinHeight(maxH > 0 ? maxH : null);
   }, [achievements, viewportWidth, itemsPerView]);
 
   if (loading) {
@@ -110,10 +122,10 @@ export default function AchievementSection() {
     );
   }
 
+  const maxIndex = Math.max(0, Math.ceil(achievements.length / itemsPerView) - 1);
   const rawTranslate = -currentIndex * viewportWidth;
-  const maxTranslate = Math.min(0, viewportWidth - containerWidth);
   const translatePx = containerWidth
-    ? Math.max(maxTranslate, Math.min(0, rawTranslate))
+    ? Math.max(Math.min(0, rawTranslate), viewportWidth - containerWidth)
     : 0;
 
   return (
@@ -130,11 +142,9 @@ export default function AchievementSection() {
         <div className="relative flex items-center justify-center">
           {achievements.length > itemsPerView && (
             <button
-              onClick={prev}
+              onClick={() => setCurrentIndex((prev) => Math.max(prev - 1, 0))}
               aria-label="Previous"
-              className="absolute -left-6 sm:-left-8 top-1/2 -translate-y-1/2 z-10 
-                         bg-white border border-gray-200 rounded-full p-3 shadow-xl 
-                         hover:bg-blue-50 hover:scale-105 transition-all duration-300"
+              className="absolute -left-6 sm:-left-8 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-200 rounded-full p-3 shadow-xl hover:bg-blue-50 hover:scale-105 transition-all duration-300"
             >
               <ChevronLeft className="w-6 h-6 text-gray-800" />
             </button>
@@ -157,33 +167,33 @@ export default function AchievementSection() {
                 <div
                   key={award.id}
                   className="flex-shrink-0 px-3"
-                  style={{
-                    width: itemWidth || "100%",
-                  }}
+                  style={{ width: itemWidth || "100%" }}
                 >
-                  <div ref={(el) => { cardRefs.current[idx] = el }} className="w-full">
+                  
+                      <div
+                        ref={(el) => {
+                          cardRefs.current[idx] = el;
+                        }}
+                        className="w-full"
+                      >
+
                     <div
-                      className="bg-white border border-gray-200 rounded-xl shadow-md p-6 flex flex-col justify-between h-full 
-                                 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 
-                                 hover:border-blue-300 group"
+                      className="bg-white border border-gray-200 rounded-xl shadow-md p-6 flex flex-col justify-between h-full hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 hover:border-blue-300 group"
                       style={{
                         minHeight: cardMinHeight ? `${cardMinHeight}px` : undefined,
                       }}
                     >
                       <div className="flex flex-col items-center justify-center">
-                        {/* Hilangkan background — logo langsung tampil di dalam card */}
-                        <div className="w-full h-28 flex items-center justify-center mb-4">
+                        <div className="w-full h-28 flex items-center justify-center mb-4 overflow-hidden">
                           {award.imageUrl ? (
-                            <Image
+                            <img
                               src={award.imageUrl}
                               alt={award.title}
-                              width={120}
-                              height={120}
                               className="object-contain max-h-28"
                             />
                           ) : (
                             <div className="bg-blue-600 text-white text-xl font-bold w-24 h-24 flex items-center justify-center rounded-lg">
-                              🏅
+                              *
                             </div>
                           )}
                         </div>
@@ -201,11 +211,9 @@ export default function AchievementSection() {
 
           {achievements.length > itemsPerView && (
             <button
-              onClick={next}
+              onClick={() => setCurrentIndex((prev) => Math.min(prev + 1, maxIndex))}
               aria-label="Next"
-              className="absolute -right-6 sm:-right-8 top-1/2 -translate-y-1/2 z-10 
-                         bg-white border border-gray-200 rounded-full p-3 shadow-xl 
-                         hover:bg-blue-50 hover:scale-105 transition-all duration-300"
+              className="absolute -right-6 sm:-right-8 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-200 rounded-full p-3 shadow-xl hover:bg-blue-50 hover:scale-105 transition-all duration-300"
             >
               <ChevronRight className="w-6 h-6 text-gray-800" />
             </button>
