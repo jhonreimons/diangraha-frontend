@@ -1,16 +1,10 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useCallback, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import AdminSidebar from "@/app/components/AdminSidebar";
 import AdminHeader from "@/app/components/AdminHeader";
-import {
-  ArrowLeft,
-  Upload,
-  Trophy,
-  AlertTriangle,
-  CheckCircle2,
-} from "lucide-react";
+import { ArrowLeft, Upload, Trophy, AlertTriangle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { SERVER_BASE_URL } from "@/lib/config";
@@ -23,7 +17,7 @@ interface User {
 interface Achievement {
   id: number;
   title: string;
-  imageUrl: string; // sekarang berisi Base64 string dari DB
+  imageUrl: string;
 }
 
 function AchievementForm({
@@ -39,6 +33,7 @@ function AchievementForm({
     title: "",
     image: null as File | null,
   });
+
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [showImageError, setShowImageError] = useState(false);
@@ -47,35 +42,40 @@ function AchievementForm({
   const editId = searchParams.get("edit");
   const isEditMode = !!editId;
 
-  // Fungsi bantu untuk menampilkan gambar base64
-  const getDisplayImage = (imageUrl: string): string => {
-    if (!imageUrl) return "";
-    return imageUrl.startsWith("data:")
-      ? imageUrl
-      : `data:image/jpeg;base64,${imageUrl}`;
-  };
+  const loadingRef = useRef(false);
 
-  // === FETCH EXISTING DATA ===
+  const fetchAchievementData = useCallback(
+    async (id: string) => {
+      if (loadingRef.current) return;
+      loadingRef.current = true;
+
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${SERVER_BASE_URL}/api/achievements/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const achievement: Achievement = await response.json();
+
+        setFormData({
+          title: achievement.title,
+          image: null,
+        });
+
+        setPreviewUrl(
+          achievement.imageUrl.startsWith("http")
+            ? achievement.imageUrl
+            : `data:image/jpeg;base64,${achievement.imageUrl}`
+        );
+      } catch (error) {}
+    },
+    []
+  );
+
   useEffect(() => {
     if (isEditMode && editId) fetchAchievementData(editId);
-  }, [isEditMode, editId]);
+  }, [isEditMode, editId, fetchAchievementData]);
 
-  const fetchAchievementData = async (id: string) => {
-    try {
-      const response = await fetch(`${SERVER_BASE_URL}/api/achievements`);
-      const achievements: Achievement[] = await response.json();
-      const achievement = achievements.find((a) => a.id === parseInt(id));
-
-      if (achievement) {
-        setFormData({ title: achievement.title, image: null });
-        setPreviewUrl(getDisplayImage(achievement.imageUrl)); //tampilkan gambar Base64 yang sudah ada
-      }
-    } catch (error) {
-      console.error("Error fetching achievement:", error);
-    }
-  };
-
-  // === HANDLE INPUT ===
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -85,11 +85,10 @@ function AchievementForm({
     const file = e.target.files?.[0];
     if (file) {
       setFormData((prev) => ({ ...prev, image: file }));
-      setPreviewUrl(URL.createObjectURL(file)); // preview langsung file baru
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
-  // === HANDLE SUBMIT ===
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -98,191 +97,110 @@ function AchievementForm({
       return;
     }
 
-    try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("title", formData.title);
-      if (formData.image) {
-        formDataToSend.append("imageFile", formData.image);
-      }
+    const formDataToSend = new FormData();
+    formDataToSend.append("title", formData.title);
+    if (formData.image) formDataToSend.append("imageFile", formData.image);
 
-      const url = isEditMode
-        ? `${SERVER_BASE_URL}/api/achievements/${editId}`
-        : `${SERVER_BASE_URL}/api/achievements`;
+    const token = localStorage.getItem("token");
 
-      const response = await fetch(url, {
-        method: isEditMode ? "PUT" : "POST",
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        body: formDataToSend,
-      });
+    const url = isEditMode
+      ? `${SERVER_BASE_URL}/api/achievements/${editId}`
+      : `${SERVER_BASE_URL}/api/achievements`;
 
-      if (response.ok) {
-        setShowSuccess(true);
-      } else {
-        console.error("Failed to save achievement:", await response.text());
-      }
-    } catch (error) {
-      console.error("Error saving achievement:", error);
-    }
+    const response = await fetch(url, {
+      method: isEditMode ? "PUT" : "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formDataToSend,
+    });
+
+    if (response.ok) setShowSuccess(true);
   };
 
-  const handleSuccessClose = () => {
+  const closeSuccess = () => {
     setShowSuccess(false);
     window.location.href = "/admin/achievements";
   };
 
-  const handleImageErrorClose = () => setShowImageError(false);
+  const closeImageError = () => setShowImageError(false);
 
-  // === FORM UI ===
   return (
     <div className="relative z-10 flex justify-center w-full">
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-md hover:shadow-lg transition-all p-6 md:p-8 mt-4">
-        {/* Back Button */}
-        <div className="mb-6">
-          <Link
-            href="/admin/achievements"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Achievement Management
-          </Link>
-        </div>
 
-        {/* Title */}
+        <Link href="/admin/achievements" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Achievement Management
+        </Link>
+
         <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
           <Trophy className="w-6 h-6 mr-2 text-yellow-500" />
           {isEditMode ? "Edit Achievement" : "Add New Achievement"}
         </h2>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title Input */}
           <div>
-            <label
-              htmlFor="title"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Achievement Title
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Achievement Title</label>
             <input
               type="text"
-              id="title"
               name="title"
               value={formData.title}
               onChange={handleInputChange}
               required
               placeholder="Enter achievement title"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm 
-                         text-gray-900 placeholder-gray-400 bg-white
-                         focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 placeholder-gray-500 bg-white focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
 
-          {/* Image Upload */}
           <div>
-            <label
-              htmlFor="image"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Achievement Image{" "}
-              {!isEditMode && (
-                <span className="text-red-500 text-xs">(required)</span>
-              )}
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Achievement Image {!isEditMode && <span className="text-red-500 text-xs">(required)</span>}
             </label>
-            <div
-              className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl bg-gray-50 transition-all ${
-                !isEditMode && !formData.image
-                  ? "border-red-400"
-                  : "hover:border-blue-400"
-              }`}
-            >
-              <div className="space-y-2 text-center">
-                {previewUrl ? (
-                  <img
-                    src={previewUrl}
-                    alt="Preview"
-                    className="mx-auto h-32 w-32 object-cover rounded-lg shadow-md border"
-                  />
-                ) : (
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                )}
-                <label
-                  htmlFor="image"
-                  className="cursor-pointer block mx-auto text-center text-sm text-gray-600 hover:text-blue-600 mt-2"
-                >
-                  {isEditMode
-                    ? "Change Achievement Image"
-                    : "Choose Achievement Image"}
-                </label>
-                <input
-                  id="image"
-                  name="image"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </div>
+
+            <div className="relative border-2 border-dashed p-6 rounded-xl bg-gray-50 text-center hover:border-blue-400 transition-all">
+              {previewUrl ? (
+                <img src={previewUrl} className="mx-auto max-h-40 rounded-lg shadow-sm object-cover border" />
+              ) : (
+                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+              )}
+
+              <label htmlFor="image" className="cursor-pointer text-sm text-gray-600 hover:text-blue-600 mt-4 block">
+                {isEditMode ? "Change Image" : "Choose Image"}
+              </label>
+
+              <input type="file" id="image" accept="image/*" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex justify-end space-x-3 pt-6">
-            <Link
-              href="/admin/achievements"
-              className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all"
-            >
+            <Link href="/admin/achievements" className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all">
               Cancel
             </Link>
-            <button
-              type="submit"
-              className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition-all"
-            >
+            <button type="submit" className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition-all">
               {isEditMode ? "Update Achievement" : "Add Achievement"}
             </button>
           </div>
         </form>
       </div>
 
-      {/* Success Modal */}
       {showSuccess && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform animate-scaleIn">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full text-center animate-scaleIn">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               {isEditMode ? "Achievement Updated!" : "Achievement Added!"}
             </h3>
-            <p className="text-gray-600 text-sm mb-5">
-              {isEditMode
-                ? `Achievement "${formData.title}" updated successfully.`
-                : `Achievement "${formData.title}" added successfully.`}
-            </p>
-            <button
-              onClick={handleSuccessClose}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
-            >
+            <button onClick={closeSuccess} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all mt-4">
               OK
             </button>
           </div>
         </div>
       )}
 
-      {/*  Error Modal */}
       {showImageError && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md text-center transform animate-scaleIn">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full text-center animate-scaleIn">
             <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Image is required
-            </h3>
-            <p className="text-gray-600 text-sm mb-5">
-              Please upload an image before submitting this form.
-            </p>
-            <button
-              onClick={handleImageErrorClose}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
-            >
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Image is required</h3>
+            <button onClick={closeImageError} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all mt-4">
               OK
             </button>
           </div>
@@ -299,43 +217,24 @@ export default function AddAchievementPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
+    const stored = localStorage.getItem("user");
     if (!token) {
       window.location.href = "/login";
       return;
     }
-    if (userData) setUser(JSON.parse(userData) as User);
+    if (stored) setUser(JSON.parse(stored));
   }, []);
 
-  const handleLogout = () => logout();
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-700">
-        Loading...
-      </div>
-    );
-  }
+  if (!user) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-slate-100 flex md:flex-row flex-col">
       <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
       <div className="flex-1 flex flex-col ml-0 md:ml-[260px] transition-all duration-300">
-        <AdminHeader
-          title="Achievement Form"
-          user={user}
-          onLogout={handleLogout}
-          sidebarOpen={sidebarOpen}
-          onToggle={setSidebarOpen}
-        />
-
-        <main className="relative z-10 flex-1 bg-gray-50/50 min-h-screen pt-[100px] px-4 md:px-8">
-          <Suspense fallback={<div>Loading achievement form...</div>}>
-            <AchievementForm
-              user={user}
-              sidebarOpen={sidebarOpen}
-              handleLogout={handleLogout}
-            />
+        <AdminHeader title="Achievement Form" user={user} onLogout={logout} sidebarOpen={sidebarOpen} />
+        <main className="relative flex-1 bg-gray-50 pt-[100px] px-4 md:px-8">
+          <Suspense>
+            <AchievementForm user={user} sidebarOpen={sidebarOpen} handleLogout={logout} />
           </Suspense>
         </main>
       </div>
@@ -343,16 +242,9 @@ export default function AddAchievementPage() {
   );
 }
 
-/*  Animations */
 const style = `
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .animate-fadeIn { animation: fadeIn 0.25s ease-out; }
 .animate-scaleIn { animation: scaleIn 0.25s ease-out; }
 `;

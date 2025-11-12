@@ -5,34 +5,47 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { API_BASE_URL } from "@/lib/config";
+import { SERVER_BASE_URL } from "@/lib/config";
+
+interface ApiServiceMenu {
+  id: number;
+  name: string;
+}
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [openService, setOpenService] = useState(false);
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<ApiServiceMenu[]>([]);
   const pathname = usePathname();
 
-  // ===== Fetch Services from API =====
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/services`, {
+        const res = await fetch(`${SERVER_BASE_URL}/api/services/menu`, {
           headers: { Accept: "*/*" },
           cache: "no-store",
         });
+
         if (!res.ok) throw new Error("Failed to fetch services");
-        const data = await res.json();
-        setServices(data);
-      } catch (err) {
-        console.error("Error fetching services:", err);
+
+        const data: ApiServiceMenu[] = await res.json();
+
+        // hanya simpan ID dan name
+        setServices(
+          data.map((s) => ({
+            id: s.id,
+            name: s.name,
+          }))
+        );
+      } catch (error) {
+        console.error("Error fetching services:", error);
         setServices([]);
       }
     };
+
     fetchServices();
   }, []);
 
-  // ===== Menu Items =====
   const menuItems = [
     { href: "/", label: "Home" },
     { href: "/about", label: "About Us" },
@@ -42,9 +55,7 @@ export default function Navbar() {
   ];
 
   const serviceItems = services.map((service) => ({
-    href: `/service/${encodeURIComponent(
-      service.name.toLowerCase().replace(/\s+/g, "-")
-    )}`,
+    href: `/service/${service.id}`, // kirim id ke halaman detail
     label: service.name,
   }));
 
@@ -56,7 +67,6 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-blue-800/90 backdrop-blur-md shadow-md">
       <div className="flex items-center justify-between px-6 md:px-12 lg:px-20 py-4">
-        {/* ===== Logo ===== */}
         <Link href="/" className="flex items-center">
           <Image
             src="/diangraha-logo.png"
@@ -68,12 +78,10 @@ export default function Navbar() {
           />
         </Link>
 
-        {/* ===== Desktop Menu ===== */}
         <ul className="hidden md:flex space-x-8 text-sm font-medium relative">
           {menuItems.map((item) =>
             item.label === "Services" ? (
               <li key={item.href} className="relative group">
-                {/* === Klik Services Langsung ke /services === */}
                 <Link
                   href={item.href}
                   className={`flex items-center transition-all duration-200 ${
@@ -86,7 +94,6 @@ export default function Navbar() {
                   <ChevronDown className="ml-1 w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
                 </Link>
 
-                {/* === Dropdown (Desktop) === */}
                 <ul className="absolute left-0 mt-2 w-52 bg-white shadow-lg rounded-md py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
                   {serviceItems.length > 0 ? (
                     serviceItems.map((service) => (
@@ -121,7 +128,6 @@ export default function Navbar() {
           )}
         </ul>
 
-        {/* ===== CTA Button (Desktop) ===== */}
         <Link
           href="/contact"
           className="hidden md:block bg-white/90 text-blue-800 px-4 py-2 rounded-md font-medium hover:bg-white transition-colors text-sm"
@@ -129,24 +135,17 @@ export default function Navbar() {
           Get Started
         </Link>
 
-        {/* ===== Hamburger Menu (Mobile) ===== */}
-        <button
-          className="md:hidden text-2xl text-white"
-          onClick={() => setOpen(!open)}
-        >
+        <button className="md:hidden text-2xl text-white" onClick={() => setOpen(!open)}>
           ☰
         </button>
       </div>
 
-      {/* ===== Mobile Menu ===== */}
       {open && (
         <div className="md:hidden bg-blue-900/95 backdrop-blur-md flex flex-col items-center space-y-4 py-6 shadow-lg">
           {menuItems.map((item) =>
             item.label === "Services" ? (
               <div key={item.href} className="w-full flex flex-col items-center">
-                {/* === Services Main Row === */}
                 <div className="flex items-center space-x-2">
-                  {/* Klik ke /services */}
                   <Link
                     href={item.href}
                     onClick={() => {
@@ -154,15 +153,12 @@ export default function Navbar() {
                       setOpenService(false);
                     }}
                     className={`transition-all duration-200 ${
-                      isActive(item.href)
-                        ? "text-white font-semibold"
-                        : "text-gray-200 hover:text-white"
+                      isActive(item.href) ? "text-white font-semibold" : "text-gray-200 hover:text-white"
                     }`}
                   >
                     {item.label}
                   </Link>
 
-                  {/* Dropdown Toggle */}
                   <button
                     type="button"
                     onClick={(e) => {
@@ -171,15 +167,10 @@ export default function Navbar() {
                     }}
                     className="text-gray-200 hover:text-white focus:outline-none"
                   >
-                    {openService ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4" />
-                    )}
+                    {openService ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
                 </div>
 
-                {/* === Dropdown (Mobile) === */}
                 {openService && (
                   <div className="flex flex-col space-y-2 mt-2 items-center">
                     {serviceItems.length > 0 ? (
@@ -205,9 +196,7 @@ export default function Navbar() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={`transition-all duration-200 ${
-                  isActive(item.href)
-                    ? "text-white font-semibold"
-                    : "text-gray-200 hover:text-white"
+                  isActive(item.href) ? "text-white font-semibold" : "text-gray-200 hover:text-white"
                 }`}
               >
                 {item.label}
@@ -215,7 +204,6 @@ export default function Navbar() {
             )
           )}
 
-          {/* === CTA Button (Mobile) === */}
           <Link
             href="/contact"
             className="bg-white text-blue-800 px-4 py-2 rounded-md font-medium hover:bg-gray-200 text-sm"

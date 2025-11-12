@@ -1,3 +1,8 @@
 jon ini email kantor. sama nomer tlp kantor untuk di web 
 info@diangraha.com
 021-29195270
+
+AMAZON_ACCESS_KEY="***REMOVED***4W4BSMTEEOVUQANS"
+AMAZON_BUCKET_NAME="diangraha-backend-storage"
+AMAZON_REGION="ap-southeast-3"
+AMAZON_SECRET_KEY="nZ62ufiwHoffW1HhIHh5YVWZGRsvrniK3QIWYvFg"

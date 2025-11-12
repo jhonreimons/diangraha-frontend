@@ -5,7 +5,7 @@ import Link from "next/link";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer/Footer";
 import { motion } from "framer-motion";
-import { API_BASE_URL } from "@/lib/config";
+import { SERVER_BASE_URL } from "@/lib/config";
 
 interface Service {
   id: number;
@@ -14,22 +14,22 @@ interface Service {
   imageUrl: string | null;
 }
 
-/* ✅ Fungsi untuk handle base64 / data:image / URL */
-const resolveBase64Image = (image?: string | null) => {
+function base64ToBlobUrl(base64: string) {
+  const byteString = atob(base64);
+  const arr = new Uint8Array(byteString.length);
+  for (let i = 0; i < byteString.length; i++) arr[i] = byteString.charCodeAt(i);
+  const blob = new Blob([arr], { type: "image/jpeg" });
+  return URL.createObjectURL(blob);
+}
+
+function resolveBase64Image(image?: string | null) {
   if (!image) return "/placeholder.png";
-
   const trimmed = image.trim();
-
-  // already full data URI
+  if (trimmed.startsWith("blob:") || trimmed.startsWith("http")) return trimmed;
   if (trimmed.startsWith("data:image")) return trimmed;
-
-  // pure base64 string
-  if (/^[A-Za-z0-9+/=]+$/.test(trimmed)) {
-    return `data:image/jpeg;base64,${trimmed}`;
-  }
-
-  return trimmed; // assume URL
-};
+  if (/^[A-Za-z0-9+/=]+$/.test(trimmed)) return base64ToBlobUrl(trimmed);
+  return trimmed;
+}
 
 function generateSummary(text: string, maxLength = 100) {
   if (text.length <= maxLength) return text;
@@ -43,30 +43,24 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  /* ✅ Fetch Services */
   useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/services`);
-        if (!response.ok) throw new Error("Failed to fetch services");
-
-        const data = await response.json();
-        setServices(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Error fetching services:", error);
-        setServices([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchServices();
+    fetch(`${SERVER_BASE_URL}/api/services`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        const mapped = (Array.isArray(data) ? data : []).map((s) => ({
+          id: s.id,
+          name: s.name ?? "",
+          longDesc: s.longDesc ?? "",
+          imageUrl: s.imageUrl ? resolveBase64Image(s.imageUrl) : null,
+        }));
+        setServices(mapped);
+      })
+      .catch(() => setServices([]))
+      .finally(() => setLoading(false));
   }, []);
 
-  /* Mouse Effect */
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
+    const handleMouseMove = (e: MouseEvent) => setMousePosition({ x: e.clientX, y: e.clientY });
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
@@ -87,7 +81,7 @@ export default function ServicesPage() {
     <main>
       <Navbar />
       <div className="min-h-screen">
-        {/* ===== Hero Section ===== */}
+
         <section className="relative flex flex-col md:flex-row items-center justify-between px-6 md:px-12 lg:px-20 py-14 md:py-16 overflow-hidden bg-gradient-to-br from-[#d9e6fb] via-[#cfe3ff] to-[#bcdcff]">
           <div className="absolute inset-0 bg-white/30 backdrop-blur-[1px]" />
 
@@ -95,29 +89,20 @@ export default function ServicesPage() {
             <motion.div
               key={i}
               className="absolute w-3 h-3 bg-blue-400/20 rounded-full blur-[3px]"
-              animate={{
-                y: [0, -10, 0],
-                opacity: [0.2, 0.6, 0.2],
-              }}
+              animate={{ y: [0, -10, 0], opacity: [0.2, 0.6, 0.2] }}
               transition={{
                 duration: 4 + Math.random() * 3,
                 repeat: Infinity,
                 ease: "easeInOut",
                 delay: Math.random() * 2,
               }}
-              style={{
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-              }}
+              style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%` }}
             />
           ))}
 
           <motion.div
             className="absolute w-[250px] h-[250px] rounded-full bg-blue-300/10 blur-3xl pointer-events-none"
-            style={{
-              left: mousePosition.x - 125,
-              top: mousePosition.y - 125,
-            }}
+            style={{ left: mousePosition.x - 125, top: mousePosition.y - 125 }}
           />
 
           <motion.div
@@ -131,7 +116,7 @@ export default function ServicesPage() {
               Our Services
             </h1>
             <p className="text-gray-700 text-lg md:text-xl mb-6 leading-relaxed text-justify">
-             We provide comprehensive solutions to help your business grow and succeed in today's competitive market. Our experienced team delivers quality services tailored to meet your specific needs and requirements with excellence and reliability.
+              We provide comprehensive solutions to help your business grow and succeed in today's competitive market. Our experienced team delivers quality services tailored to meet your specific needs and requirements with excellence and reliability.
             </p>
             <Link href="/about#clients" scroll={true}>
               <motion.button
@@ -141,8 +126,7 @@ export default function ServicesPage() {
                   boxShadow: "0px 0px 25px rgba(30, 64, 175, 0.4)",
                 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold 
-                          hover:bg-blue-900 transition-all duration-300 shadow-md"
+                className="bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-900 transition-all duration-300 shadow-md"
               >
                 Our Clients
               </motion.button>
@@ -159,16 +143,15 @@ export default function ServicesPage() {
             <img
               src="/OurServices.png"
               alt="Business Team"
+              loading="lazy"
               className="w-full h-full object-contain rounded-3xl shadow-2xl bg-white p-6"
             />
             <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-transparent rounded-3xl"></div>
           </motion.div>
         </section>
 
-        {/* ===== SERVICE LIST ===== */}
         {services.map((service, index) => {
           const isEven = index % 2 === 0;
-
           return (
             <motion.section
               key={service.id}
@@ -179,57 +162,31 @@ export default function ServicesPage() {
               viewport={{ once: true }}
             >
               <div className="max-w-7xl mx-auto">
-                <div
-                  className={`flex flex-col md:flex-row items-center justify-between gap-10 ${
-                    !isEven ? "md:flex-row-reverse" : ""
-                  }`}
-                >
-                  {/* Text */}
+                <div className={`flex flex-col md:flex-row items-center justify-between gap-10 ${!isEven ? "md:flex-row-reverse" : ""}`}>
                   <div className="max-w-2xl">
-                    <h2 className="text-[30px] font-bold text-gray-800 mb-5">
-                      {service.name}
-                    </h2>
+                    <h2 className="text-[30px] font-bold text-gray-800 mb-5">{service.name}</h2>
                     <p className="text-[18px] text-gray-600 leading-relaxed mb-7 text-justify">
                       {generateSummary(service.longDesc, 255)}
                     </p>
-
-                    <Link
-                      href={`/service/${encodeURIComponent(
-                        service.name.toLowerCase().replace(/\s+/g, "-")
-                      )}`}
-                    >
+                    <Link href={`/service/${service.id}`}>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className="text-white bg-blue-800 hover:bg-blue-900 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 shadow-md inline-flex items-center gap-2"
                       >
                         View More
-                        <svg
-                          className="w-5 h-5 transition-transform duration-300"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
+                        <svg className="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </motion.button>
                     </Link>
                   </div>
 
-                  {/* ✅ FIXED IMAGE BASE64 HANDLING */}
-                  <motion.div
-                    whileHover={{ scale: 1.03 }}
-                    transition={{ duration: 0.4 }}
-                    className="relative flex-shrink-0 w-full md:w-[400px] lg:w-[450px]"
-                  >
+                  <motion.div whileHover={{ scale: 1.03 }} transition={{ duration: 0.4 }} className="relative flex-shrink-0 w-full md:w-[400px] lg:w-[450px]">
                     <img
-                      src={resolveBase64Image(service.imageUrl)}
+                      src={service.imageUrl || "/placeholder.png"}
                       alt={service.name}
+                      loading="lazy"
                       className="w-full h-auto max-h-[380px] object-contain rounded-2xl shadow-xl"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent rounded-2xl"></div>

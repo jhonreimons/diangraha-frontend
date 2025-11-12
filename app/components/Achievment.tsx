@@ -1,74 +1,59 @@
 "use client";
 
-import { useEffect, useRef, useState, useLayoutEffect } from "react";
+import { useEffect, useRef, useState, useLayoutEffect, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { achievementsAPI } from "@/lib/api";
+import { SERVER_BASE_URL } from "@/lib/config";
 
-interface Award {
+type ApiAchievement = {
   id: number;
-  title: string;
+  name?: string | null;
+  title?: string | null;
   imageUrl?: string | null;
-  createdAt: string;
-}
-
-// helper memastikan base64 format valid
-const resolveBase64Image = (base64?: string | null) => {
-  if (!base64 || base64.trim() === "") return "";
-
-  const trimmed = base64.trim();
-
-  // Jika sudah mengandung prefix data:image...
-  if (trimmed.startsWith("data:image")) {
-    return trimmed;
-  }
-
-  // Deteksi secara simple berdasarkan karakter awal base64
-  if (trimmed.startsWith("/9j/")) return `data:image/jpeg;base64,${trimmed}`; // JPG
-  if (trimmed.startsWith("iVBOR")) return `data:image/png;base64,${trimmed}`; // PNG
-  if (trimmed.startsWith("UklGR")) return `data:image/webp;base64,${trimmed}`; // WEBP
-
-  return `data:image/jpeg;base64,${trimmed}`; // fallback
+  createdAt?: string | null;
 };
 
 export default function AchievementSection() {
-  const [achievements, setAchievements] = useState<Award[]>([]);
+  const [achievements, setAchievements] = useState<ApiAchievement[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(4);
 
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
+
   const [viewportWidth, setViewportWidth] = useState(0);
   const [itemWidth, setItemWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
-  const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [cardMinHeight, setCardMinHeight] = useState<number | null>(null);
 
-  // === Fetch dari API dan langsung format base64 ===
   useEffect(() => {
     const fetchAchievements = async () => {
       try {
-        const data = await achievementsAPI.fetchAchievements();
-
-        const mapped: Award[] = data.map((a: any) => ({
-          id: a.id,
-          title: a.title ?? "",
-          imageUrl: resolveBase64Image(a.imageUrl),
-          createdAt: a.createdAt ?? "",
-        }));
-
-
-        setAchievements(mapped);
-      } catch (err) {
-        console.error("Error fetching achievements:", err);
+        const data: ApiAchievement[] = await achievementsAPI.fetchAchievements();
+        setAchievements(Array.isArray(data) ? data : []);
+      } catch {
         setAchievements([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchAchievements();
   }, []);
+
+  const formattedAchievements = useMemo(() => {
+    return achievements.map((a) => ({
+      id: a.id,
+      title: (a.name ?? a.title ?? "").toString(),
+      imageUrl: a.imageUrl
+        ? a.imageUrl.startsWith("http")
+          ? a.imageUrl
+          : `${SERVER_BASE_URL}${a.imageUrl}`
+        : "",
+      createdAt: a.createdAt ?? "",
+    }));
+  }, [achievements]);
 
   useEffect(() => {
     const updateItemsPerView = () => {
@@ -76,7 +61,6 @@ export default function AchievementSection() {
       else if (window.innerWidth < 1024) setItemsPerView(2);
       else setItemsPerView(4);
     };
-
     updateItemsPerView();
     window.addEventListener("resize", updateItemsPerView);
     return () => window.removeEventListener("resize", updateItemsPerView);
@@ -88,30 +72,28 @@ export default function AchievementSection() {
       setViewportWidth(vw);
       const iw = vw / itemsPerView;
       setItemWidth(iw);
-      setContainerWidth(iw * achievements.length);
+      setContainerWidth(iw * formattedAchievements.length);
     };
-
     measure();
 
     const ro = new ResizeObserver(measure);
     if (viewportRef.current) ro.observe(viewportRef.current);
+
     window.addEventListener("resize", measure);
     return () => {
       ro.disconnect();
       window.removeEventListener("resize", measure);
     };
-  }, [itemsPerView, achievements.length]);
+  }, [itemsPerView, formattedAchievements.length]);
 
   useLayoutEffect(() => {
     if (!cardRefs.current.length) return;
     let maxH = 0;
     cardRefs.current.forEach((el) => {
-      if (el && el.offsetHeight > maxH) {
-        maxH = el.offsetHeight;
-      }
+      if (el && el.offsetHeight > maxH) maxH = el.offsetHeight;
     });
     setCardMinHeight(maxH > 0 ? maxH : null);
-  }, [achievements, viewportWidth, itemsPerView]);
+  }, [formattedAchievements, viewportWidth, itemsPerView]);
 
   if (loading) {
     return (
@@ -122,7 +104,7 @@ export default function AchievementSection() {
     );
   }
 
-  const maxIndex = Math.max(0, Math.ceil(achievements.length / itemsPerView) - 1);
+  const maxIndex = Math.max(0, Math.ceil(formattedAchievements.length / itemsPerView) - 1);
   const rawTranslate = -currentIndex * viewportWidth;
   const translatePx = containerWidth
     ? Math.max(Math.min(0, rawTranslate), viewportWidth - containerWidth)
@@ -140,7 +122,7 @@ export default function AchievementSection() {
         </div>
 
         <div className="relative flex items-center justify-center">
-          {achievements.length > itemsPerView && (
+          {formattedAchievements.length > itemsPerView && (
             <button
               onClick={() => setCurrentIndex((prev) => Math.max(prev - 1, 0))}
               aria-label="Previous"
@@ -163,20 +145,13 @@ export default function AchievementSection() {
                 transform: `translateX(${translatePx}px)`,
               }}
             >
-              {achievements.map((award, idx) => (
+              {formattedAchievements.map((award, idx) => (
                 <div
                   key={award.id}
                   className="flex-shrink-0 px-3"
                   style={{ width: itemWidth || "100%" }}
                 >
-                  
-                      <div
-                        ref={(el) => {
-                          cardRefs.current[idx] = el;
-                        }}
-                        className="w-full"
-                      >
-
+                <div ref={(el) => { cardRefs.current[idx] = el; }} className="w-full">
                     <div
                       className="bg-white border border-gray-200 rounded-xl shadow-md p-6 flex flex-col justify-between h-full hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 hover:border-blue-300 group"
                       style={{
@@ -187,6 +162,7 @@ export default function AchievementSection() {
                         <div className="w-full h-28 flex items-center justify-center mb-4 overflow-hidden">
                           {award.imageUrl ? (
                             <img
+                              loading="lazy"
                               src={award.imageUrl}
                               alt={award.title}
                               className="object-contain max-h-28"
@@ -209,7 +185,7 @@ export default function AchievementSection() {
             </div>
           </div>
 
-          {achievements.length > itemsPerView && (
+          {formattedAchievements.length > itemsPerView && (
             <button
               onClick={() => setCurrentIndex((prev) => Math.min(prev + 1, maxIndex))}
               aria-label="Next"

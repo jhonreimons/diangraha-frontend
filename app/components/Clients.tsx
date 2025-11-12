@@ -15,27 +15,10 @@ interface Client {
 interface ApiClient {
   id: number;
   name: string;
-  imageUrl: string | null; // ini bisa berupa base64 dari API
+  imageUrl: string | null;
   description?: string;
   website?: string;
 }
-
-// fungsi fix base64 (wajib)
-const resolveBase64Image = (value: string | null): string => {
-  if (!value) return "/placeholder.png";
-
-  const trimmed = value.trim();
-
-  if (trimmed.startsWith("data:image")) {
-    return trimmed;
-  }
-
-  // deteksi format base64
-  if (trimmed.charAt(0) === "/") return `data:image/jpeg;base64,${trimmed}`;
-  if (trimmed.charAt(0) === "i") return `data:image/png;base64,${trimmed}`;
-
-  return `data:image/png;base64,${trimmed}`;
-};
 
 export default function ClientsSection() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -50,7 +33,6 @@ export default function ClientsSection() {
 
   useEffect(() => setIsMounted(true), []);
 
-  // fetch data clients
   useEffect(() => {
     if (!isMounted) return;
 
@@ -60,14 +42,17 @@ export default function ClientsSection() {
           headers: { Accept: "*/*" },
           cache: "no-store",
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data: ApiClient[] = await res.json();
 
-        const mapped = data.map((d) => ({
+        const mapped: Client[] = data.map((d) => ({
           id: d.id,
           name: d.name,
-          img: resolveBase64Image(d.imageUrl), // <-- base64 diperbaiki
+          img: d.imageUrl
+            ? d.imageUrl.startsWith("http")
+              ? d.imageUrl
+              : `${SERVER_BASE_URL}${d.imageUrl.startsWith("/") ? "" : "/"}${d.imageUrl}`
+            : "/placeholder.png",
           description: d.description,
           website: d.website,
         }));
@@ -83,20 +68,20 @@ export default function ClientsSection() {
     fetchClients();
   }, [isMounted]);
 
-  // responsif kecepatan scroll
   useEffect(() => {
     if (!isMounted) return;
+
     const updateSpeed = () => {
       if (window.innerWidth < 640) setScrollSpeed(45);
       else if (window.innerWidth < 1024) setScrollSpeed(55);
       else setScrollSpeed(70);
     };
     updateSpeed();
+
     window.addEventListener("resize", updateSpeed);
     return () => window.removeEventListener("resize", updateSpeed);
   }, [isMounted]);
 
-  // smooth infinite scroll
   useEffect(() => {
     if (!isMounted || clients.length === 0) return;
 
@@ -106,8 +91,7 @@ export default function ClientsSection() {
     let lastTime = performance.now();
 
     const updateWidth = () => {
-      const totalWidth = track.scrollWidth / 2;
-      contentWidthRef.current = totalWidth;
+      contentWidthRef.current = track.scrollWidth / 2;
     };
     updateWidth();
     window.addEventListener("resize", updateWidth);
@@ -134,7 +118,6 @@ export default function ClientsSection() {
     };
   }, [clients, scrollSpeed, isMounted]);
 
-  // fallback kantor
   if (!isMounted) {
     return (
       <section className="py-20 bg-gray-50 text-center">

@@ -127,9 +127,7 @@ export default function ServicesPage() {
         features: s.features || [],
         subServices: s.subServices || [],
       }));
-
-      normalized.sort((a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime());
-
+      normalized.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
       setServices(normalized);
     } finally {
       setLoading(false);
@@ -248,7 +246,7 @@ export default function ServicesPage() {
 
   /* ========= RENDER ========= */
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row text-gray-900 dark:text-gray-900">
       <AdminSidebar sidebarOpen={sidebarOpen} onToggle={setSidebarOpen} />
 
       <div className="flex-1 flex flex-col">
@@ -268,40 +266,43 @@ export default function ServicesPage() {
           <div className="bg-gray-50 p-6 rounded-xl shadow-md">
 
             {/* Top Bar */}
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl md:text-3xl font-bold">Services Management</h2>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+          <h2 className="text-xl md:text-3xl font-bold">Services Management</h2>
 
-              <div className="flex items-center gap-3">
-                <input
-                  type="text"
-                  placeholder="Search services..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="border rounded-lg px-3 py-2 shadow-sm"
-                />
+          <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
+            <input
+              type="text"
+              placeholder="Search services..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="border rounded-lg px-3 py-2 shadow-sm flex-1 w-full"
+            />
 
-                <Link
-                  href="/admin/services/add"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
-                >
-                  <Plus className="w-4 h-4" /> Add Service
-                </Link>
-              </div>
-            </div>
+            <Link
+              href="/admin/services/add"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 w-full sm:w-auto"
+            >
+              <Plus className="w-4 h-4" />
+              Add Service
+            </Link>
+          </div>
+        </div>
+
 
             {/* LIST CARD */}
             {currentItems.map((svc) => (
               <div key={svc.id} className="bg-white p-5 rounded-xl border shadow mb-4">
 
                 {/* HEADER */}
-                <div className="flex justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left w-full">
                     {svc.imageUrl && (
                       <img
                         src={resolveBase64Image(svc.imageUrl)}
+                        loading="lazy"
                         className="w-20 h-20 rounded-xl border shadow cursor-pointer object-contain"
                         onClick={() => {
                           setImagePreview({ url: resolveBase64Image(svc.imageUrl), name: svc.name });
@@ -403,7 +404,7 @@ export default function ServicesPage() {
                             </div>
 
                             {sub.works.map((w) => (
-                              <div key={w.id} className="flex justify-between bg-white mt-1 p-2 rounded-md border">
+                              <div key={w.id} className="flex justify-between mt-1 p-2 ">
                                 <span className="text-sm">{w.description}</span>
                                 <div className="flex gap-2">
                                   <Link

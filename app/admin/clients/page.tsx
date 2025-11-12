@@ -34,7 +34,7 @@ export default function ClientManagementPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortOrder, setSortOrder] = useState<"created_desc" | "asc" | "desc">("created_desc");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
@@ -63,7 +63,8 @@ export default function ClientManagementPage() {
       /**  SORT BERDASARKAN CREATED_AT (ASC: yang paling lama muncul duluan) */
       const sortedByCreatedDate = [...data].sort(
         (a: Client, b: Client) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          new Date(b.createdAt.replace(" ", "T")).getTime() -
+          new Date(a.createdAt.replace(" ", "T")).getTime()
       );
 
       setClients(sortedByCreatedDate);
@@ -137,9 +138,16 @@ export default function ClientManagementPage() {
   );
 
   /**  SORT NAME TIDAK MENGGANGGU SORT CREATED_AT */
-  const sortedClients = [...filteredClients].sort((a, b) =>
-    sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
-  );
+  const sortedClients = [...filteredClients].sort((a, b) => {
+    if (sortOrder === "asc") return a.name.localeCompare(b.name);
+    if (sortOrder === "desc") return b.name.localeCompare(a.name);
+
+    return (
+      new Date(b.createdAt.replace(" ", "T")).getTime() -
+      new Date(a.createdAt.replace(" ", "T")).getTime()
+    );
+  });
+
 
   const totalPages = Math.ceil(sortedClients.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -175,9 +183,8 @@ export default function ClientManagementPage() {
         />
 
         <main
-          className={`flex-1 transition-all duration-300 mt-[80px] md:mt-[88px] px-4 md:px-6 ${
-            sidebarOpen ? "md:ml-72" : "md:ml-24"
-          }`}
+          className={`flex-1 transition-all duration-300 mt-[80px] md:mt-[88px] px-4 md:px-6 ${sidebarOpen ? "md:ml-72" : "md:ml-24"
+            }`}
         >
           <div className="bg-gray-50/50">
             <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
@@ -215,7 +222,11 @@ export default function ClientManagementPage() {
                   />
                 </div>
                 <button
-                  onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                  onClick={() => {
+                    if (sortOrder === "created_desc") setSortOrder("asc");
+                    else if (sortOrder === "asc") setSortOrder("desc");
+                    else setSortOrder("created_desc");
+                  }}
                   className="flex items-center space-x-2 px-3 py-2 border rounded-lg text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
                 >
                   <ArrowUpDown className="w-4 h-4" />
@@ -243,19 +254,26 @@ export default function ClientManagementPage() {
                 <tbody className="divide-y divide-gray-100">
                   {currentClients.length > 0 ? (
                     currentClients.map((client) => (
-                      <tr key={client.id} className="hover:bg-blue-50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-gray-900 break-words">
+                      <tr
+                        key={client.id}
+                        className="hover:bg-blue-50 transition-colors"
+                      >
+                        {/* Client Name */}
+                        <td className="px-4 py-3 font-medium text-gray-900 sm:table-cell">
+                          <div className="sm:hidden text-gray-500 text-xs mb-1">Client Name</div>
                           {client.name}
                         </td>
-                        <td className="px-4 py-3">
+
+                        {/* Logo */}
+                        <td className="px-4 py-3 sm:table-cell flex justify-center sm:block">
                           {client.imageUrl ? (
                             <img
                               src={client.imageUrl}
                               alt={client.name}
-                              className="w-48 h-48 rounded-xl object-contain shadow-sm cursor-pointer hover:opacity-90 transition"
+                              className="w-28 h-28 sm:w-48 sm:h-48 rounded-xl object-contain shadow-sm cursor-pointer"
                               onClick={() => {
                                 setSelectedLogo({
-                                  url: client.imageUrl || "",
+                                  url: client.imageUrl || "/placeholder.png",
                                   name: client.name,
                                 });
                                 setShowLogoModal(true);
@@ -265,7 +283,11 @@ export default function ClientManagementPage() {
                             <span className="text-gray-400 italic text-sm">No Logo</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-center">
+
+                        {/* Actions */}
+                        <td className="px-4 py-3 text-center sm:table-cell">
+                          <div className="sm:hidden text-gray-500 text-xs mb-1">Actions</div>
+
                           <div className="flex justify-center gap-2">
                             <Link
                               href={`/admin/clients/add?edit=${client.id}`}
@@ -285,15 +307,13 @@ export default function ClientManagementPage() {
                     ))
                   ) : (
                     <tr>
-                      <td
-                        colSpan={3}
-                        className="px-4 py-6 text-center text-gray-500 text-sm"
-                      >
+                      <td colSpan={3} className="px-4 py-6 text-center text-gray-500 text-sm">
                         No clients found.
                       </td>
                     </tr>
                   )}
                 </tbody>
+
               </table>
             </div>
 
@@ -320,11 +340,10 @@ export default function ClientManagementPage() {
                   <button
                     key={i + 1}
                     onClick={() => handlePageClick(i + 1)}
-                    className={`px-3 py-1 rounded-lg border ${
-                      currentPage === i + 1
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "hover:bg-gray-100 text-gray-700"
-                    }`}
+                    className={`px-3 py-1 rounded-lg border ${currentPage === i + 1
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "hover:bg-gray-100 text-gray-700"
+                      }`}
                   >
                     {i + 1}
                   </button>

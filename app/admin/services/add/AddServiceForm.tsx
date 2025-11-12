@@ -12,6 +12,7 @@ import { SERVER_BASE_URL } from "@/lib/config";
 export default function AddServiceForm() {
   const [user, setUser] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
   const [formData, setFormData] = useState({
     name: "",
     shortDesc: "",
@@ -31,43 +32,30 @@ export default function AddServiceForm() {
   const editId = searchParams.get("edit");
   const isEditMode = !!editId;
 
-  /** Resolver untuk semua kemungkinan gambar */
-  function resolveImageSource(imageUrl?: string | null): string {
-    if (!imageUrl || imageUrl.trim() === "") return "";
-
-    const trimmed = imageUrl.trim();
-
-    if (trimmed.startsWith("data:image")) return trimmed;
-    if (/^[A-Za-z0-9+/=]+$/.test(trimmed)) return `data:image/jpeg;base64,${trimmed}`;
-    if (trimmed.startsWith("http")) return trimmed;
-
-    return `${SERVER_BASE_URL}${trimmed.startsWith("/") ? "" : "/"}${trimmed}`;
-  }
-
-  /** Fetch data service saat Edit */
+  /** FETCH SERVICE BY ID */
   const fetchServiceData = async (id: string) => {
     try {
-      const response = await fetch(`${SERVER_BASE_URL}/api/services`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const response = await fetch(`${SERVER_BASE_URL}/api/services/${id}`, {
+        cache: "no-store",
+      });
+      const service = await response.json();
 
-      const services = await response.json();
-      const service = services.find((s: any) => s.id === parseInt(id));
+      setFormData({
+        name: service.name ?? "",
+        shortDesc: service.shortDesc ?? "",
+        longDesc: service.longDesc ?? "",
+      });
 
-      if (service) {
-        setFormData({
-          name: service.name || "",
-          shortDesc: service.shortDesc || "",
-          longDesc: service.longDesc || "",
-        });
-
-        setExistingImageUrl(resolveImageSource(service.imageUrl));
-      }
+      setExistingImageUrl(
+        service.imageUrl?.startsWith("http")
+          ? service.imageUrl
+          : `${SERVER_BASE_URL}${service.imageUrl}`
+      );
     } catch (err) {
       console.error("Error fetching service:", err);
     }
   };
 
-  /** Load initial */
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
@@ -78,20 +66,17 @@ export default function AddServiceForm() {
     }
 
     if (userData) setUser(JSON.parse(userData));
-
     if (isEditMode && editId) fetchServiceData(editId);
   }, [isEditMode, editId]);
 
   const handleLogout = () => logout();
 
-  /** Handle text input */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name === "shortDesc" && value.length > 255) return;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  /** Handle image input */
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -104,10 +89,9 @@ export default function AddServiceForm() {
   const removeImage = () => {
     setSelectedImage(null);
     setImagePreview(null);
-    if (isEditMode) setExistingImageUrl(null);
   };
 
-  /** Submit */
+  /** SUBMIT FORM - FOLLOW SWAGGER EXACTLY */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -117,32 +101,37 @@ export default function AddServiceForm() {
     }
 
     setLoading(true);
+
     try {
       const token = localStorage.getItem("token");
+
+      const apiUrl = isEditMode
+        ? `${SERVER_BASE_URL}/api/services/${editId}?name=${encodeURIComponent(formData.name)}&shortDesc=${encodeURIComponent(formData.shortDesc)}&longDesc=${encodeURIComponent(formData.longDesc)}`
+        : `${SERVER_BASE_URL}/api/services?name=${encodeURIComponent(formData.name)}&shortDesc=${encodeURIComponent(formData.shortDesc)}&longDesc=${encodeURIComponent(formData.longDesc)}`;
+
       const formDataToSend = new FormData();
 
-      formDataToSend.append("name", formData.name);
-      formDataToSend.append("shortDesc", formData.shortDesc);
-      formDataToSend.append("longDesc", formData.longDesc);
+      // REQUIRED: swagger expects `imageFile` field always present
+      if (selectedImage) {
+        formDataToSend.append("imageFile", selectedImage);
+      } else {
+        formDataToSend.append("imageFile", new Blob([]), ""); // 👈 trick: send empty binary
+      }
 
-      if (selectedImage) formDataToSend.append("imageFile", selectedImage);
-      else formDataToSend.append("imageFile", "");
-
-      const url = isEditMode
-        ? `${SERVER_BASE_URL}/api/services/${editId}`
-        : `${SERVER_BASE_URL}/api/services`;
-
-      const response = await fetch(url, {
+      const response = await fetch(apiUrl, {
         method: isEditMode ? "PUT" : "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`, // ❗ NO Content-Type, let browser handle multipart
+        },
         body: formDataToSend,
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
       setShowSuccess(true);
     } catch (error) {
       console.error("Error saving service:", error);
-      alert("Failed to save service. Please try again.");
+      alert("Failed to save service.");
     } finally {
       setLoading(false);
     }
@@ -166,12 +155,10 @@ export default function AddServiceForm() {
           onToggle={setSidebarOpen}
         />
 
-        <main className="flex-1 bg-gray-50/50 min-h-screen pt-[100px] px-4 md:px-8">
+        <main className="flex-1 bg-gray-50 min-h-screen pt-[100px] px-4 md:px-8">
           <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-md p-6 md:p-8 mt-4">
-            <Link
-              href="/admin/services"
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 transition"
-            >
+
+            <Link href="/admin/services" className="inline-flex items-center text-blue-600 hover:text-blue-800 transition">
               <ArrowLeft className="w-4 h-4 mr-2" /> Back to Service Management
             </Link>
 
@@ -180,99 +167,66 @@ export default function AddServiceForm() {
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Service Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Service Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  onChange={handleInputChange}
-                  value={formData.name}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm"
-                />
+
+              {/* NAME */}
+              <input
+                type="text"
+                name="name"
+                required
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="Enter service name"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 placeholder:text-gray-500"
+              />
+
+              {/* SHORT DESC */}
+              <textarea
+                name="shortDesc"
+                rows={3}
+                maxLength={255}
+                value={formData.shortDesc}
+                onChange={handleInputChange}
+                placeholder="Short description"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none text-gray-900 placeholder:text-gray-500"
+              />
+
+              {/* LONG DESC */}
+              <textarea
+                name="longDesc"
+                rows={6}
+                value={formData.longDesc}
+                onChange={handleInputChange}
+                placeholder="Full description"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none text-gray-900 placeholder:text-gray-500"
+              />
+
+              {/* IMAGE UPLOAD */}
+              <div className="relative border-2 border-dashed p-6 rounded-xl bg-gray-50 text-center hover:border-blue-400">
+                {(imagePreview || existingImageUrl) ? (
+                  <div className="relative">
+                    <img src={imagePreview || existingImageUrl || ""} className="mx-auto max-h-48 rounded-lg shadow-sm object-cover" />
+                    <button type="button" onClick={removeImage} className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                    <p className="text-gray-600 mt-2">Click to upload</p>
+                  </>
+                )}
+                <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleImageChange} />
               </div>
 
-              {/* Short Desc */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Short Description (max 255)
-                </label>
-                <textarea
-                  name="shortDesc"
-                  rows={3}
-                  maxLength={255}
-                  value={formData.shortDesc}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
-                />
-              </div>
-
-              {/* Long Desc */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Description
-                </label>
-                <textarea
-                  name="longDesc"
-                  required
-                  rows={6}
-                  value={formData.longDesc}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
-                />
-              </div>
-
-              {/* Image Upload */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Service Image { !isEditMode && <span className="text-red-500 text-xs">(required)</span> }
-                </label>
-
-                <div className="relative border-2 border-dashed p-6 rounded-xl bg-gray-50 text-center hover:border-blue-400 transition-all">
-                  {(imagePreview || existingImageUrl) ? (
-                    <div className="relative">
-                      <img
-                        src={imagePreview || existingImageUrl || ""}
-                        className="mx-auto max-h-48 rounded-lg shadow-sm object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                      <p className="text-gray-600 mt-2">Click to upload</p>
-                    </>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    onChange={handleImageChange}
-                  />
-                </div>
-              </div>
-
-              {/* Buttons  sama seperti di Client Form) */}
               <div className="flex justify-end space-x-3 pt-6">
-                <Link
-                  href="/admin/services"
-                  className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all"
-                >
+                <Link href="/admin/services" className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
                   Cancel
                 </Link>
+
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition-all disabled:opacity-50"
+                  className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 disabled:opacity-50"
                 >
                   {loading ? (isEditMode ? "Updating..." : "Adding...") : isEditMode ? "Update Service" : "Add Service"}
                 </button>
@@ -280,7 +234,6 @@ export default function AddServiceForm() {
             </form>
           </div>
 
-          {/* Modal Success */}
           {showSuccess && (
             <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999]">
               <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full text-center">
@@ -288,32 +241,19 @@ export default function AddServiceForm() {
                 <h3 className="text-lg font-semibold text-gray-900">
                   {isEditMode ? "Service Updated!" : "Service Added!"}
                 </h3>
-                <p className="text-gray-600 text-sm mt-1 mb-5">
-                  {isEditMode
-                    ? `Service "${formData.name}" updated successfully.`
-                    : `Service "${formData.name}" added successfully.`}
-                </p>
-                <button
-                  onClick={closeSuccess}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
-                >
+                <button onClick={closeSuccess} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mt-4">
                   OK
                 </button>
               </div>
             </div>
           )}
 
-          {/*  Modal Image Error */}
           {showImageError && (
             <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999]">
               <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full text-center">
                 <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3" />
                 <h3 className="text-lg font-semibold text-gray-900">Image is required</h3>
-                <p className="text-gray-600 text-sm mb-5">Please upload an image before submitting.</p>
-                <button
-                  onClick={() => setShowImageError(false)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
-                >
+                <button onClick={() => setShowImageError(false)} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mt-4">
                   OK
                 </button>
               </div>

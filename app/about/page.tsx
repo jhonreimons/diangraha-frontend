@@ -132,10 +132,10 @@ export default function AboutPage() {
               <h2 className="font-bold text-gray-800 mb-6 text-3xl">PT Dian Graha Elektrika</h2>
               <div className="space-y-6 text-gray-700 text-lg leading-relaxed text-justify">
                 <p>
-                  Established in 1977, PT Dian Graha Elektrika became one of the most solid national companies...
+                  Established in 1977, PT Dian Graha Elektrika became one of the most solid national companies until now, by utilizing our expertise and resources to prioritize high-quality services and foster existing customer relationships.
                 </p>
                 <p>
-                  Our human resource management services began in 2001 in response to market demand...
+                  Our human resource management services business began in 2001 in response to market demand for human resource service. Our commitment to excellence, supported by systems that stay shoulder to shoulder with the latest technological changes, ensures the services of skilled manpower for various industries and companies.
                 </p>
               </div>
             </div>
